@@ -26,3 +26,5 @@ providers:
     manifest_path: provider/msx_bridge/manifest.json
     provider_path: provider/msx_bridge/
     provider_type: player_provider
+    legacy_files:
+      - .github/workflows/ci.yml

@@ -126,6 +126,15 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
             else:
                 print(f"  Unchanged: {dest_path}")
 
+        # Remove legacy files that are superseded by wrapper files
+        for legacy_path in provider.get("legacy_files", []):
+            legacy = Path(tmpdir) / legacy_path
+            if legacy.exists():
+                legacy.unlink()
+                run(["git", "rm", legacy_path], cwd=tmpdir)
+                changed = True
+                print(f"  Removed legacy: {legacy_path}")
+
         if not changed:
             print(f"  No changes needed for {repo}, skipping PR.")
             return
