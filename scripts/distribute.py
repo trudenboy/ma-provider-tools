@@ -114,8 +114,8 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
         branch_exists = bool(result.stdout.strip())
 
         if branch_exists:
-            run(["git", "fetch", "origin", f"{BRANCH_NAME}:{BRANCH_NAME}"], cwd=tmpdir)
-            run(["git", "checkout", BRANCH_NAME], cwd=tmpdir)
+            run(["git", "fetch", "origin", BRANCH_NAME], cwd=tmpdir)
+            run(["git", "checkout", "-b", BRANCH_NAME, f"origin/{BRANCH_NAME}"], cwd=tmpdir)
         else:
             run(["git", "checkout", "-b", BRANCH_NAME], cwd=tmpdir)
 
@@ -156,11 +156,8 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
             cwd=tmpdir,
         )
 
-        # Push
-        push_args = ["git", "push", "origin", BRANCH_NAME]
-        if branch_exists:
-            push_args.append("--force-with-lease")
-        run(push_args, cwd=tmpdir)
+        # Push (force is safe: this is a bot-owned throwaway branch)
+        run(["git", "push", "--force", "origin", BRANCH_NAME], cwd=tmpdir)
 
         # Check if PR already exists
         existing_pr = run(
