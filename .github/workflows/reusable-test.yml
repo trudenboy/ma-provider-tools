@@ -26,13 +26,13 @@ jobs:
         python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
           python-version: "${{ matrix.python-version }}"
-      - run: pip install uv
       - name: Install deps
         run: |
-          uv pip install --system \
+          uv pip install \
             "git+https://github.com/music-assistant/server.git@dev" \
             -e ".[test]"
       - name: Pytest
@@ -46,11 +46,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
           python-version: "3.12"
-      - run: pip install uv
-      - run: uv pip install --system -e ".[test]"
+      - run: uv pip install -e ".[test]"
       - run: SKIP=no-commit-to-branch pre-commit run --all-files
 
   # ─── Player provider: clone fork ma-server, symlink, ruff + mypy + pytest ────
@@ -93,9 +93,13 @@ jobs:
       - name: Run unit tests
         run: |
           source ma-server/.venv/bin/activate
-          pytest tests/ -v --ignore=tests/integration --tb=short -p no:cacheprovider
+          pytest tests/ -v --ignore=tests/integration --tb=short -p no:cacheprovider \
+            --cov=${{ inputs.provider_path }} --cov-report=xml
         env:
           PYTHONDONTWRITEBYTECODE: "1"
+      - uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.xml
 
   lint-player-provider:
     if: ${{ inputs.provider_type == 'player_provider' }}
@@ -129,11 +133,10 @@ jobs:
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
           ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
-      - name: Lint
+      - name: Lint (pre-commit)
         run: |
           source ma-server/.venv/bin/activate
-          ruff check ${{ inputs.provider_path }} tests/
-          ruff format --check ${{ inputs.provider_path }} tests/
+          SKIP=no-commit-to-branch,mypy pre-commit run --all-files
       - name: Type check
         run: |
           source ma-server/.venv/bin/activate
