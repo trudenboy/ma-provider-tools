@@ -12,7 +12,7 @@ on:
         default: ""
         type: string
       provider_path:
-        description: "Relative path to provider source inside repo (e.g. provider/msx_bridge) — required for player_provider"
+        description: "Relative path to provider source inside repo (e.g. provider/) — required for player_provider"
         default: ""
         type: string
 
@@ -22,10 +22,13 @@ jobs:
     if: ${{ inputs.provider_type == 'music_provider' }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -36,8 +39,8 @@ jobs:
             "git+https://github.com/music-assistant/server.git@dev" \
             -e ".[test]"
       - name: Pytest
-        run: pytest --durations 10 --cov=provider --cov-report=xml tests/
-      - uses: codecov/codecov-action@v4
+        run: pytest --durations 10 --tb=short --cov=provider --cov-report=xml tests/
+      - uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
 
@@ -46,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -53,7 +58,7 @@ jobs:
       - run: uv pip install -e ".[test]"
       - run: SKIP=no-commit-to-branch pre-commit run --all-files
 
-  # ─── Player provider: clone fork ma-server, symlink, ruff + mypy + pytest ────
+  # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
     if: ${{ inputs.provider_type == 'player_provider' }}
     name: Tests (Python ${{ matrix.python-version }})
@@ -75,16 +80,13 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
+          python-version: "${{ matrix.python-version }}"
       - name: Install dependencies
         working-directory: ma-server
         run: |
-          uv venv .venv --python ${{ matrix.python-version }}
+          uv venv .venv
           source .venv/bin/activate
-          uv pip install -e "."
-          uv pip install -e ".[test]"
-          uv pip install -r requirements_all.txt
+          uv pip install -e "." -e ".[test]" -r requirements_all.txt
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -118,16 +120,13 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - name: Set up Python
-        run: uv python install 3.12
+          python-version: "3.12"
       - name: Install dependencies
         working-directory: ma-server
         run: |
-          uv venv .venv --python 3.12
+          uv venv .venv
           source .venv/bin/activate
-          uv pip install -e "."
-          uv pip install -e ".[test]"
-          uv pip install -r requirements_all.txt
+          uv pip install -e "." -e ".[test]" -r requirements_all.txt
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
