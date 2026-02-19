@@ -114,6 +114,7 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
         branch_exists = bool(result.stdout.strip())
 
         if branch_exists:
+            run(["git", "fetch", "origin", f"{BRANCH_NAME}:{BRANCH_NAME}"], cwd=tmpdir)
             run(["git", "checkout", BRANCH_NAME], cwd=tmpdir)
         else:
             run(["git", "checkout", "-b", BRANCH_NAME], cwd=tmpdir)
