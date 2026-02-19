@@ -21,10 +21,6 @@ jobs:
   test-music-provider:
     if: ${{ inputs.provider_type == 'music_provider' }}
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,7 +28,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "${{ matrix.python-version }}"
+          python-version: "3.13"
       - name: Install deps
         run: |
           uv pip install \
@@ -61,12 +57,7 @@ jobs:
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
     if: ${{ inputs.provider_type == 'player_provider' }}
-    name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -80,7 +71,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "${{ matrix.python-version }}"
+          python-version: "3.13"
       - name: Install dependencies
         working-directory: ma-server
         run: |
