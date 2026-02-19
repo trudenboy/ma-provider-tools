@@ -1,0 +1,23 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (semver, e.g. 1.2.0)"
+        required: true
+        type: string
+      prerelease:
+        description: "Pre-release?"
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-release.yml@main
+    with:
+      manifest_path: {{ manifest_path }}
+      provider_path: {{ provider_path }}
+{% raw %}
+      version: ${{ inputs.version }}
+      prerelease: ${{ inputs.prerelease }}
+{% endraw %}

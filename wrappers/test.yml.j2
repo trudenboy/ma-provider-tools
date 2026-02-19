@@ -1,0 +1,20 @@
+name: Test
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: {% raw %}${{ github.workflow }}-${{ github.ref }}{% endraw %}
+
+  cancel-in-progress: true
+
+jobs:
+  test:
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-test.yml@main
+    with:
+      provider_type: {{ provider_type }}
+      provider_domain: {{ domain }}
+      provider_path: {{ provider_path }}

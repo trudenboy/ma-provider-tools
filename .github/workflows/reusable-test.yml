@@ -1,0 +1,140 @@
+name: Reusable — Test Provider
+
+on:
+  workflow_call:
+    inputs:
+      provider_type:
+        description: "Provider type: music_provider or player_provider"
+        required: true
+        type: string
+      provider_domain:
+        description: "Provider domain slug (e.g. msx_bridge) — required for player_provider symlink"
+        default: ""
+        type: string
+      provider_path:
+        description: "Relative path to provider source inside repo (e.g. provider/msx_bridge) — required for player_provider"
+        default: ""
+        type: string
+
+jobs:
+  # ─── Music provider: install from upstream ma-server, run pytest + codecov ───
+  test-music-provider:
+    if: ${{ inputs.provider_type == 'music_provider' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - run: pip install uv
+      - name: Install deps
+        run: |
+          uv pip install --system \
+            "git+https://github.com/music-assistant/server.git@dev" \
+            -e ".[test]"
+      - name: Pytest
+        run: pytest --durations 10 --cov=provider --cov-report=xml tests/
+      - uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+
+  lint-music-provider:
+    if: ${{ inputs.provider_type == 'music_provider' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install uv
+      - run: uv pip install --system -e ".[test]"
+      - run: SKIP=no-commit-to-branch pre-commit run --all-files
+
+  # ─── Player provider: clone fork ma-server, symlink, ruff + mypy + pytest ────
+  test-player-provider:
+    if: ${{ inputs.provider_type == 'player_provider' }}
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-server
+          ref: dev
+          path: ma-server
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        working-directory: ma-server
+        run: |
+          uv venv .venv --python ${{ matrix.python-version }}
+          source .venv/bin/activate
+          uv pip install -e "."
+          uv pip install -e ".[test]"
+          uv pip install -r requirements_all.txt
+      - name: Symlink provider
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+          ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
+                "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+      - name: Run unit tests
+        run: |
+          source ma-server/.venv/bin/activate
+          pytest tests/ -v --ignore=tests/integration --tb=short -p no:cacheprovider
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+
+  lint-player-provider:
+    if: ${{ inputs.provider_type == 'player_provider' }}
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-server
+          ref: dev
+          path: ma-server
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install dependencies
+        working-directory: ma-server
+        run: |
+          uv venv .venv --python 3.12
+          source .venv/bin/activate
+          uv pip install -e "."
+          uv pip install -e ".[test]"
+          uv pip install -r requirements_all.txt
+      - name: Symlink provider
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+          ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
+                "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+      - name: Lint
+        run: |
+          source ma-server/.venv/bin/activate
+          ruff check ${{ inputs.provider_path }} tests/
+          ruff format --check ${{ inputs.provider_path }} tests/
+      - name: Type check
+        run: |
+          source ma-server/.venv/bin/activate
+          mypy ${{ inputs.provider_path }} --ignore-missing-imports

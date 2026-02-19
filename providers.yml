@@ -1,0 +1,28 @@
+providers:
+  - domain: yandex_music
+    repo: trudenboy/ma-provider-yandex-music
+    default_branch: main
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: music_provider
+
+  - domain: kion_music
+    repo: trudenboy/ma-provider-kion-music
+    default_branch: main
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: music_provider
+
+  - domain: zvuk_music
+    repo: trudenboy/ma-provider-zvuk-music
+    default_branch: main
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: music_provider
+
+  - domain: msx_bridge
+    repo: trudenboy/ma-provider-msx-bridge
+    default_branch: main
+    manifest_path: provider/msx_bridge/manifest.json
+    provider_path: provider/msx_bridge/
+    provider_type: player_provider
