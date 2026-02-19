@@ -99,9 +99,15 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
         print(f"Cloning {repo}...")
         run(["gh", "repo", "clone", repo, tmpdir, "--", "--depth=1", f"--branch={branch}"])
 
-        # Configure git
+        # Configure git and inject token into remote URL so git push authenticates
+        token = os.environ.get("GH_TOKEN", "")
         run(["git", "config", "user.name", "github-actions[bot]"], cwd=tmpdir)
         run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"], cwd=tmpdir)
+        if token:
+            run(
+                ["git", "remote", "set-url", "origin", f"https://x-access-token:{token}@github.com/{repo}.git"],
+                cwd=tmpdir,
+            )
 
         # Check if update branch already exists
         result = run(["git", "ls-remote", "--heads", "origin", BRANCH_NAME], cwd=tmpdir, check=False)
