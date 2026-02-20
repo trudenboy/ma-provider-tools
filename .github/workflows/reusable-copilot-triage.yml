@@ -1,0 +1,28 @@
+name: Reusable — Copilot Triage
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        description: "Issue number to route to GitHub Copilot"
+        required: true
+        type: number
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Assign to Copilot and add routing comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ inputs.issue_number }}
+        run: |
+          gh issue edit "$ISSUE" \
+            --repo "$GITHUB_REPOSITORY" \
+            --add-assignee "@copilot"
+
+          gh issue comment "$ISSUE" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "Routing to GitHub Copilot coding agent for analysis."

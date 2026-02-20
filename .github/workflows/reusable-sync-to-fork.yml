@@ -79,3 +79,42 @@ jobs:
             ---
             After merging, `rebuild-integration.yml` will auto-rebuild the integration branch.
           labels: "provider-sync,${{ env.DOMAIN }}"
+
+  # ─── Report sync failure as a GitHub issue (with dedup) ─────────────────────
+  report-failure:
+    needs: [sync]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update sync incident issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Sync to fork failure — ${{ github.ref_name }}"
+          RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          LABEL="incident:ci"
+          EXISTING=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "New sync failure on \`${{ github.ref_name }}\`: $RUN_URL"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Sync to fork failed on branch \`%s\`.\n\n**Run:** %s' "${{ github.ref_name }}" "$RUN_URL")" \
+              --label "$LABEL" --label "priority:high" || \
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Sync to fork failed on branch \`%s\`.\n\n**Run:** %s' "${{ github.ref_name }}" "$RUN_URL")"
+          fi

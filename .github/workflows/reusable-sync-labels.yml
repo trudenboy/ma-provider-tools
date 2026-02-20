@@ -1,0 +1,18 @@
+name: Reusable — Sync Labels
+
+on:
+  workflow_call:
+
+jobs:
+  sync-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync labels from .github/labels.yml
+        uses: github/label-syncer@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: .github/labels.yml

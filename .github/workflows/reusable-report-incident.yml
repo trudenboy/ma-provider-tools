@@ -1,0 +1,83 @@
+name: Reusable — Report Incident
+
+on:
+  workflow_call:
+    inputs:
+      incident_type:
+        description: "Type of incident: ci_failure | release_failure | sync_failure"
+        required: true
+        type: string
+      title:
+        description: "Issue title"
+        required: true
+        type: string
+      body:
+        description: "Issue body (markdown)"
+        required: true
+        type: string
+      close:
+        description: "Close the incident issue instead of creating/updating"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update incident issue
+        if: ${{ !inputs.close }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ inputs.title }}
+          BODY: ${{ inputs.body }}
+          LABEL: ${{ inputs.incident_type == 'ci_failure' && 'incident:ci' || inputs.incident_type == 'release_failure' && 'incident:ci' || 'incident:ci' }}
+        run: |
+          # Search for existing open issue with the same title to avoid duplicates
+          EXISTING=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            echo "Found existing issue #$EXISTING — adding comment"
+            gh issue comment "$EXISTING" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "$(printf '**New occurrence**\n\n%s\n\n**Run:** %s' "$BODY" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
+          else
+            echo "Creating new incident issue"
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf '%s\n\n**Run:** %s' "$BODY" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")" \
+              --label "$LABEL,priority:high"
+          fi
+
+      - name: Close incident issue
+        if: ${{ inputs.close }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ inputs.title }}
+          LABEL: ${{ inputs.incident_type == 'ci_failure' && 'incident:ci' || inputs.incident_type == 'release_failure' && 'incident:ci' || 'incident:ci' }}
+        run: |
+          ISSUE=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$ISSUE" ]]; then
+            gh issue close "$ISSUE" \
+              --repo "$GITHUB_REPOSITORY" \
+              --comment "Incident resolved — closed automatically after successful run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "Closed issue #$ISSUE"
+          else
+            echo "No open incident issue found for '$TITLE', nothing to close."
+          fi
