@@ -51,6 +51,7 @@ WORKFLOW_FILES = [
     ("sync-to-fork.yml.j2", ".github/workflows/sync-to-fork.yml"),
     ("release.yml.j2", ".github/workflows/release.yml"),
     ("test.yml.j2", ".github/workflows/test.yml"),
+    ("setup.sh.j2", "scripts/setup.sh"),
 ]
 
 
@@ -128,6 +129,8 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
             if existing != content:
                 dest.write_text(content)
                 run(["git", "add", dest_path], cwd=tmpdir)
+                if dest_path.endswith(".sh"):
+                    run(["git", "update-index", "--chmod=+x", dest_path], cwd=tmpdir)
                 changed = True
                 print(f"  Updated: {dest_path}")
             else:
