@@ -61,6 +61,7 @@ ALL_WRAPPER_FILES = [
     # Issue templates
     ("issue-bug.yml.j2", ".github/ISSUE_TEMPLATE/bug_report.yml"),
     ("issue-upstream.yml.j2", ".github/ISSUE_TEMPLATE/upstream_api_change.yml"),
+    ("issue-config.yml.j2", ".github/ISSUE_TEMPLATE/config.yml"),
 ]
 
 
@@ -71,7 +72,7 @@ def run(
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
 
 
-def render_wrappers(provider: dict) -> dict[str, str]:
+def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]:
     """Render all wrapper templates for a provider and return {dest_path: content}."""
     env = Environment(
         loader=FileSystemLoader(str(WRAPPERS_DIR)),
@@ -84,6 +85,9 @@ def render_wrappers(provider: dict) -> dict[str, str]:
         "manifest_path": provider.get("manifest_path", ""),
         "provider_path": provider.get("provider_path", ""),
         "provider_type": provider.get("provider_type", ""),
+        "all_providers": [
+            p for p in all_providers if p.get("provider_type") != "server_fork"
+        ],
     }
 
     skip = set(provider.get("skip_wrappers", []))
@@ -97,7 +101,9 @@ def render_wrappers(provider: dict) -> dict[str, str]:
     return result
 
 
-def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
+def create_pr_for_provider(
+    provider: dict, all_providers: list[dict], dry_run: bool = False
+) -> None:
     """Clone provider repo, apply wrapper updates, and create a PR."""
     repo = provider["repo"]
     branch = provider["default_branch"]
@@ -107,7 +113,7 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
     print(f"Processing {repo} ({domain})")
     print(f"{'=' * 60}")
 
-    rendered = render_wrappers(provider)
+    rendered = render_wrappers(provider, all_providers)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Clone the repo
@@ -294,7 +300,7 @@ def main() -> None:
 
     for provider in providers:
         try:
-            create_pr_for_provider(provider, dry_run=dry_run)
+            create_pr_for_provider(provider, providers, dry_run=dry_run)
         except subprocess.CalledProcessError as e:
             print(f"ERROR processing {provider['repo']}: {e.stderr}", file=sys.stderr)
             if not dry_run:
