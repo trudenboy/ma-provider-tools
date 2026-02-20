@@ -31,7 +31,7 @@ providers:
 
   - domain: ma_server
     repo: trudenboy/ma-server
-    default_branch: main
+    default_branch: dev
     provider_type: server_fork
     skip_wrappers:
       - test.yml.j2
