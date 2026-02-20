@@ -6,6 +6,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider
+    locale: ru
 
   - domain: kion_music
     display_name: KION Music
@@ -14,6 +15,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider
+    locale: ru
 
   - domain: zvuk_music
     display_name: Zvuk Music
@@ -22,6 +24,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider
+    locale: ru
 
   - domain: msx_bridge
     display_name: MSX Bridge
@@ -30,6 +33,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
+    locale: ru
     legacy_files:
       - .github/workflows/ci.yml
 

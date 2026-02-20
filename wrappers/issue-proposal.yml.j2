@@ -1,44 +1,45 @@
-name: Improvement Proposal
-description: Suggest an improvement or new feature for the {{ domain }} provider
+name: {% if locale == 'ru' %}Предложение по улучшению{% else %}Improvement Proposal{% endif %}
+description: {% if locale == 'ru' %}Предложить улучшение или новую функцию для провайдера {{ domain }}{% else %}Suggest an improvement or new feature for the {{ domain }} provider{% endif %}
 labels: ["enhancement", "priority:medium"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this template to propose improvements or new features for the provider.
-        For bugs, use the Bug Report template instead.
+        {% if locale == 'ru' %}Используйте этот шаблон для предложения улучшений или новых функций для провайдера.
+        Для ошибок используйте шаблон «Отчёт об ошибке».{% else %}Use this template to propose improvements or new features for the provider.
+        For bugs, use the Bug Report template instead.{% endif %}
 
   - type: textarea
     id: current_behavior
     attributes:
-      label: Current behavior / limitation
-      description: What can you not do today, or what works in a suboptimal way?
+      label: {% if locale == 'ru' %}Текущее поведение / ограничение{% else %}Current behavior / limitation{% endif %}
+      description: {% if locale == 'ru' %}Что вы не можете сделать сегодня или что работает неоптимально?{% else %}What can you not do today, or what works in a suboptimal way?{% endif %}
     validations:
       required: true
 
   - type: textarea
     id: proposed_change
     attributes:
-      label: Proposed improvement
-      description: Describe what you'd like to see changed or added.
+      label: {% if locale == 'ru' %}Предлагаемое улучшение{% else %}Proposed improvement{% endif %}
+      description: {% if locale == 'ru' %}Опишите, что вы хотели бы изменить или добавить.{% else %}Describe what you'd like to see changed or added.{% endif %}
     validations:
       required: true
 
   - type: textarea
     id: motivation
     attributes:
-      label: Motivation / use case
-      description: Why is this improvement valuable? What use case does it enable?
+      label: {% if locale == 'ru' %}Мотивация / сценарий использования{% else %}Motivation / use case{% endif %}
+      description: {% if locale == 'ru' %}Почему это улучшение ценно? Какой сценарий использования оно обеспечивает?{% else %}Why is this improvement valuable? What use case does it enable?{% endif %}
     validations:
       required: true
 
   - type: dropdown
     id: willing_to_implement
     attributes:
-      label: Willing to help implement?
+      label: {% if locale == 'ru' %}Готовы помочь с реализацией?{% else %}Willing to help implement?{% endif %}
       options:
-        - "No"
-        - "Yes — I can submit a PR"
-        - "Yes — I can help test"
+        - {% if locale == 'ru' %}"Нет"{% else %}"No"{% endif %}
+        - {% if locale == 'ru' %}"Да — могу создать PR"{% else %}"Yes — I can submit a PR"{% endif %}
+        - {% if locale == 'ru' %}"Да — могу помочь с тестированием"{% else %}"Yes — I can help test"{% endif %}
     validations:
       required: false

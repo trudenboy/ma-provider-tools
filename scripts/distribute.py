@@ -86,6 +86,7 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "manifest_path": provider.get("manifest_path", ""),
         "provider_path": provider.get("provider_path", ""),
         "provider_type": provider.get("provider_type", ""),
+        "locale": provider.get("locale", "en"),
         "all_providers": [
             p for p in all_providers if p.get("provider_type") != "server_fork"
         ],
