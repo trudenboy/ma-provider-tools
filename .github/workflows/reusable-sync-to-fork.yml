@@ -63,6 +63,7 @@ jobs:
             ma-server/tests/providers/${DOMAIN}/
 
       - name: Create Pull Request in fork
+        id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
           path: ma-server
@@ -79,6 +80,23 @@ jobs:
             ---
             After merging, `rebuild-integration.yml` will auto-rebuild the integration branch.
           labels: "provider-sync,${{ env.DOMAIN }}"
+
+      - name: Track sync PR in MA Ecosystem project
+        if: success() && steps.create-pr.outputs.pull-request-url != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+        run: |
+          PROJECT_ID="PVT_kwHOCFMIf84BPvYe"
+          PR_URL="${{ steps.create-pr.outputs.pull-request-url }}"
+
+          ITEM_ID=$(gh project item-add 3 --owner trudenboy --url "$PR_URL" \
+            --format json --jq '.id')
+
+          gh api graphql \
+            -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$opt:String!){updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{singleSelectOptionId:$opt}}){projectV2Item{id}}}' \
+            -f pid="$PROJECT_ID" -f iid="$ITEM_ID" \
+            -f fid="PVTSSF_lAHOCFMIf84BPvYezg-EBfE" -f opt="3e9d1353"
 
   # ─── Report sync failure as a GitHub issue (with dedup) ─────────────────────
   report-failure:
