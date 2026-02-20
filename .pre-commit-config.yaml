@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+        exclude: ^wrappers/   # .j2 files contain Jinja2 syntax — not pure YAML
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^scripts/
+      - id: ruff-format
+        files: ^scripts/
+
+  - repo: local
+    hooks:
+      - id: validate-templates
+        name: Validate Jinja2 wrapper templates
+        entry: python scripts/validate_templates.py
+        language: python
+        additional_dependencies: [jinja2, pyyaml]
+        files: ^(wrappers/.*\.j2|providers\.yml)$
+        pass_filenames: false

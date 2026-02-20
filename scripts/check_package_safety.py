@@ -72,7 +72,8 @@ def check_typosquatting(package_name: str) -> str | None:
         # Check edit distance (1-2 character changes)
         if len(package_lower) == len(popular_normalized):
             differences = sum(
-                c1 != c2 for c1, c2 in zip(package_lower, popular_normalized, strict=True)
+                c1 != c2
+                for c1, c2 in zip(package_lower, popular_normalized, strict=True)
             )
             if differences == 1:
                 return f"Suspicious: Very similar to popular package '{popular}'"
@@ -190,7 +191,9 @@ def check_package(package_name: str) -> dict[str, Any]:
                         continue
 
     first_upload = min(upload_times) if upload_times else None
-    age_days = (datetime.now(first_upload.tzinfo) - first_upload).days if first_upload else 0
+    age_days = (
+        (datetime.now(first_upload.tzinfo) - first_upload).days if first_upload else 0
+    )
 
     # Extract metadata
     project_urls = info.get("project_urls") or {}
@@ -199,7 +202,9 @@ def check_package(package_name: str) -> dict[str, Any]:
 
     # Run automated security checks
     typosquat_check = check_typosquatting(package_name)
-    license_compatible, license_status = check_license_compatibility(info.get("license", "Unknown"))
+    license_compatible, license_status = check_license_compatibility(
+        info.get("license", "Unknown")
+    )
 
     checks = {
         "name": package_name,
@@ -246,7 +251,9 @@ def check_package(package_name: str) -> dict[str, Any]:
         risk_score += 1
 
     if checks["total_releases"] < 3:
-        checks["warnings"].append(f"Very few releases (only {checks['total_releases']})")
+        checks["warnings"].append(
+            f"Very few releases (only {checks['total_releases']})"
+        )
         risk_score += 2
 
     if not source:
@@ -348,7 +355,9 @@ def main() -> int:
     print("\n" + "=" * 80)
 
     # Automated checks summary
-    all_trusted = all(r.get("automated_checks", {}).get("trusted_source", False) for r in results)
+    all_trusted = all(
+        r.get("automated_checks", {}).get("trusted_source", False) for r in results
+    )
     all_no_typosquat = all(
         r.get("automated_checks", {}).get("typosquatting", False) for r in results
     )
@@ -372,7 +381,9 @@ def main() -> int:
     print(f"  {'✅' if all_no_typosquat else '❌'} Typosquatting: {typosquat_msg}")
 
     license_msg = (
-        "All licenses are compatible" if all_license_ok else "Some license issues detected"
+        "All licenses are compatible"
+        if all_license_ok
+        else "Some license issues detected"
     )
     print(f"  {'✅' if all_license_ok else '⚠️ '} License Compatibility: {license_msg}")
 

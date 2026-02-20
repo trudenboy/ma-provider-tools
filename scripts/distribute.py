@@ -15,7 +15,6 @@ Requires:
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -65,7 +64,9 @@ ALL_WRAPPER_FILES = [
 ]
 
 
-def run(cmd: list[str], cwd: str | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run(
+    cmd: list[str], cwd: str | None = None, check: bool = True
+) -> subprocess.CompletedProcess[str]:
     """Run a shell command and return the result."""
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
 
@@ -102,34 +103,74 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
     branch = provider["default_branch"]
     domain = provider["domain"]
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Processing {repo} ({domain})")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     rendered = render_wrappers(provider)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Clone the repo
         print(f"Cloning {repo}...")
-        run(["gh", "repo", "clone", repo, tmpdir, "--", "--depth=1", f"--branch={branch}"])
+        run(
+            [
+                "gh",
+                "repo",
+                "clone",
+                repo,
+                tmpdir,
+                "--",
+                "--depth=1",
+                f"--branch={branch}",
+            ]
+        )
 
         # Configure git and inject token into remote URL so git push authenticates
         token = os.environ.get("GH_TOKEN", "")
         run(["git", "config", "user.name", "github-actions[bot]"], cwd=tmpdir)
-        run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"], cwd=tmpdir)
+        run(
+            [
+                "git",
+                "config",
+                "user.email",
+                "github-actions[bot]@users.noreply.github.com",
+            ],
+            cwd=tmpdir,
+        )
         if token:
             run(
-                ["git", "remote", "set-url", "origin", f"https://x-access-token:{token}@github.com/{repo}.git"],
+                [
+                    "git",
+                    "remote",
+                    "set-url",
+                    "origin",
+                    f"https://x-access-token:{token}@github.com/{repo}.git",
+                ],
                 cwd=tmpdir,
             )
 
         # Check if update branch already exists
-        result = run(["git", "ls-remote", "--heads", "origin", BRANCH_NAME], cwd=tmpdir, check=False)
+        result = run(
+            ["git", "ls-remote", "--heads", "origin", BRANCH_NAME],
+            cwd=tmpdir,
+            check=False,
+        )
         branch_exists = bool(result.stdout.strip())
 
         if branch_exists:
-            run(["git", "fetch", "origin", f"{BRANCH_NAME}:refs/remotes/origin/{BRANCH_NAME}"], cwd=tmpdir)
-            run(["git", "checkout", "-b", BRANCH_NAME, f"origin/{BRANCH_NAME}"], cwd=tmpdir)
+            run(
+                [
+                    "git",
+                    "fetch",
+                    "origin",
+                    f"{BRANCH_NAME}:refs/remotes/origin/{BRANCH_NAME}",
+                ],
+                cwd=tmpdir,
+            )
+            run(
+                ["git", "checkout", "-b", BRANCH_NAME, f"origin/{BRANCH_NAME}"],
+                cwd=tmpdir,
+            )
         else:
             run(["git", "checkout", "-b", BRANCH_NAME], cwd=tmpdir)
 
@@ -168,7 +209,12 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
 
         # Commit
         run(
-            ["git", "commit", "-m", "chore: sync workflow wrappers from ma-provider-tools"],
+            [
+                "git",
+                "commit",
+                "-m",
+                "chore: sync workflow wrappers from ma-provider-tools",
+            ],
             cwd=tmpdir,
         )
 
@@ -177,7 +223,18 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
 
         # Check if PR already exists
         existing_pr = run(
-            ["gh", "pr", "view", BRANCH_NAME, "--repo", repo, "--json", "url", "-q", ".url"],
+            [
+                "gh",
+                "pr",
+                "view",
+                BRANCH_NAME,
+                "--repo",
+                repo,
+                "--json",
+                "url",
+                "-q",
+                ".url",
+            ],
             cwd=tmpdir,
             check=False,
         )
@@ -188,12 +245,19 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
         else:
             result = run(
                 [
-                    "gh", "pr", "create",
-                    "--repo", repo,
-                    "--title", PR_TITLE,
-                    "--body", PR_BODY,
-                    "--base", branch,
-                    "--head", BRANCH_NAME,
+                    "gh",
+                    "pr",
+                    "create",
+                    "--repo",
+                    repo,
+                    "--title",
+                    PR_TITLE,
+                    "--body",
+                    PR_BODY,
+                    "--base",
+                    branch,
+                    "--head",
+                    BRANCH_NAME,
                 ],
                 cwd=tmpdir,
             )
