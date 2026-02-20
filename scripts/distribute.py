@@ -276,6 +276,33 @@ def create_pr_for_provider(
             pr_url = result.stdout.strip()
             print(f"  PR created: {pr_url}")
 
+        # Enable auto-merge on the repo and PR
+        run(
+            [
+                "gh",
+                "api",
+                f"repos/{repo}",
+                "--method",
+                "PATCH",
+                "--field",
+                "allow_auto_merge=true",
+            ],
+            cwd=tmpdir,
+            check=False,
+        )
+        auto = run(
+            ["gh", "pr", "merge", "--auto", "--squash", "--repo", repo, pr_url],
+            cwd=tmpdir,
+            check=False,
+        )
+        if auto.returncode == 0:
+            print("  Auto-merge enabled (squash)")
+        else:
+            print(
+                f"  Warning: could not enable auto-merge: {auto.stderr.strip()}",
+                file=sys.stderr,
+            )
+
 
 def main() -> None:
     dry_run = "--dry-run" in sys.argv
