@@ -28,4 +28,12 @@ providers:
     provider_type: player_provider
     legacy_files:
       - .github/workflows/ci.yml
-      - scripts/link-to-ma.sh
+
+  - domain: ma_server
+    repo: trudenboy/ma-server
+    default_branch: main
+    provider_type: server_fork
+    skip_wrappers:
+      - test.yml.j2
+      - release.yml.j2
+      - sync-to-fork.yml.j2

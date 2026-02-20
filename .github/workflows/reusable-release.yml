@@ -58,3 +58,42 @@ jobs:
             -f version="v${{ inputs.version }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─── Report release failure as a GitHub issue (with dedup) ──────────────────
+  report-failure:
+    needs: [release]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update release incident issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Release failure — v${{ inputs.version }}"
+          RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          LABEL="incident:ci"
+          EXISTING=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "New release failure for \`v${{ inputs.version }}\`: $RUN_URL"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Release \`v%s\` failed.\n\n**Run:** %s' "${{ inputs.version }}" "$RUN_URL")" \
+              --label "$LABEL" --label "priority:critical" || \
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Release \`v%s\` failed.\n\n**Run:** %s' "${{ inputs.version }}" "$RUN_URL")"
+          fi
