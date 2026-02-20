@@ -64,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Track release in MA Ecosystem project
-        if: success() && secrets.FORK_SYNC_PAT != ''
+        if: success()
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
