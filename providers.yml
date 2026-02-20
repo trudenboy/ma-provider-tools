@@ -23,8 +23,8 @@ providers:
   - domain: msx_bridge
     repo: trudenboy/ma-provider-msx-bridge
     default_branch: dev
-    manifest_path: provider/msx_bridge/manifest.json
-    provider_path: provider/msx_bridge/
+    manifest_path: provider/manifest.json
+    provider_path: provider/
     provider_type: player_provider
     legacy_files:
       - .github/workflows/ci.yml
