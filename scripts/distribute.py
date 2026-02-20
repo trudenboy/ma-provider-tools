@@ -221,19 +221,24 @@ def create_pr_for_provider(provider: dict, dry_run: bool = False) -> None:
         # Push (force is safe: this is a bot-owned throwaway branch)
         run(["git", "push", "--force", "origin", BRANCH_NAME], cwd=tmpdir)
 
-        # Check if PR already exists
+        # Check if an OPEN PR already exists for this branch.
+        # gh pr view also returns merged/closed PRs, so we use gh pr list
+        # with --state open to avoid mistaking a merged PR for an active one.
         existing_pr = run(
             [
                 "gh",
                 "pr",
-                "view",
-                BRANCH_NAME,
+                "list",
                 "--repo",
                 repo,
+                "--head",
+                BRANCH_NAME,
+                "--state",
+                "open",
                 "--json",
                 "url",
                 "-q",
-                ".url",
+                ".[0].url",
             ],
             cwd=tmpdir,
             check=False,
