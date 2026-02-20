@@ -28,3 +28,4 @@ providers:
     provider_type: player_provider
     legacy_files:
       - .github/workflows/ci.yml
+      - scripts/link-to-ma.sh
