@@ -61,6 +61,7 @@ ALL_WRAPPER_FILES = [
     # Issue templates
     ("issue-bug.yml.j2", ".github/ISSUE_TEMPLATE/bug_report.yml"),
     ("issue-upstream.yml.j2", ".github/ISSUE_TEMPLATE/upstream_api_change.yml"),
+    ("issue-proposal.yml.j2", ".github/ISSUE_TEMPLATE/improvement_proposal.yml"),
     ("issue-config.yml.j2", ".github/ISSUE_TEMPLATE/config.yml"),
 ]
 
