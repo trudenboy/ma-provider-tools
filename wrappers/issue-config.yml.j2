@@ -1,0 +1,9 @@
+{% if provider_type == 'server_fork' -%}
+blank_issues_enabled: false
+contact_links:{% for p in all_providers %}
+  - name: "{{ p.display_name | default(p.domain) }} — bug report"
+    url: "https://github.com/{{ p.repo }}/issues/new?template=bug_report.yml"
+    about: "Report a bug in the {{ p.display_name | default(p.domain) }} provider"{% endfor %}
+{%- else -%}
+blank_issues_enabled: true
+{%- endif %}

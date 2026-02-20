@@ -40,6 +40,9 @@ def main() -> int:
         "manifest_path": base.get("manifest_path", ""),
         "provider_path": base.get("provider_path", ""),
         "provider_type": base.get("provider_type", ""),
+        "all_providers": [
+            p for p in providers if p.get("provider_type") != "server_fork"
+        ],
     }
 
     env = Environment(
