@@ -1,0 +1,163 @@
+{% if locale == 'ru' %}
+[← Разработка](development.md) · [← Участие в разработке](contributing.md) · [README](../README.md)
+
+# {{ display_name }} — Руководство по тестированию
+
+## Быстрый старт
+
+```bash
+uv run pytest {{ provider_path }}tests/ -v
+```
+
+С отчётом о покрытии:
+
+```bash
+uv run pytest {{ provider_path }}tests/ -v --cov={{ provider_path }} --cov-report=term-missing
+```
+
+## CI-пайплайн
+
+Каждый push и PR запускают два параллельных задания через `test.yml`:
+
+| Задание | Что делает |
+|---------|-----------|
+| `test-*` | Запускает pytest с проверкой покрытия, загружает отчёт в Codecov |
+| `lint-*` | Запускает ruff, mypy, codespell, pre-commit |
+
+{% if provider_type == 'music_provider' %}
+Тесты запускаются на основе `music-assistant/server@dev` (без форка — лёгкий CI).
+{% else %}
+Тесты запускаются на основе `trudenboy/ma-server@dev` (форк с поддержкой плагинов — полный CI с ruff + mypy).
+{% endif %}
+
+## Инструменты
+
+| Инструмент | Назначение |
+|-----------|-----------|
+| `uv` | Управление виртуальным окружением и зависимостями |
+| `Python 3.12` | Целевая версия языка |
+| `pytest` | Фреймворк для тестов |
+| `pytest-cov` | Сбор данных о покрытии |
+| `Codecov` | Загрузка отчётов о покрытии (автоматически в CI) |
+| `ruff` | Линтер и форматтер Python |
+| `mypy` | Статический анализ типов |
+| `codespell` | Проверка орфографии в исходном коде |
+| `pre-commit` | Хуки для проверки перед коммитом |
+
+## Запуск линтеров локально
+
+Запустить все хуки pre-commit (рекомендуется перед PR):
+
+```bash
+uv run pre-commit run --all-files
+```
+
+Только проверка типов:
+
+```bash
+uv run mypy {{ provider_path }}
+```
+
+Только линтинг:
+
+```bash
+uv run ruff check {{ provider_path }}
+uv run ruff format --check {{ provider_path }}
+```
+
+## Покрытие
+
+Отчёты о покрытии автоматически загружаются в Codecov при каждом push в CI.
+Локально просмотреть покрытие:
+
+```bash
+uv run pytest {{ provider_path }}tests/ --cov={{ provider_path }} --cov-report=html
+open htmlcov/index.html
+```
+
+## Если CI упал
+
+Если тесты или линтеры упали в CI, автоматически создаётся GitHub-задача с меткой `incident:ci`.
+Подробнее о процессе работы с инцидентами: [Управление инцидентами](incident-management.md).
+{% else %}
+[← Development](development.md) · [← Contributing](contributing.md) · [README](../README.md)
+
+# {{ display_name }} — Testing Guide
+
+## Quick Start
+
+```bash
+uv run pytest {{ provider_path }}tests/ -v
+```
+
+With coverage report:
+
+```bash
+uv run pytest {{ provider_path }}tests/ -v --cov={{ provider_path }} --cov-report=term-missing
+```
+
+## CI Pipeline
+
+Every push and pull request triggers two parallel jobs via `test.yml`:
+
+| Job | What it does |
+|-----|-------------|
+| `test-*` | Runs pytest with coverage, uploads report to Codecov |
+| `lint-*` | Runs ruff, mypy, codespell, pre-commit |
+
+{% if provider_type == 'music_provider' %}
+Tests run against `music-assistant/server@dev` (no fork — lightweight CI).
+{% else %}
+Tests run against `trudenboy/ma-server@dev` (plugin-enabled fork — full CI with ruff + mypy).
+{% endif %}
+
+## Tools
+
+| Tool | Purpose |
+|------|---------|
+| `uv` | Virtual environment and dependency management |
+| `Python 3.12` | Target Python version |
+| `pytest` | Test framework |
+| `pytest-cov` | Coverage collection |
+| `Codecov` | Coverage report upload (automatic in CI) |
+| `ruff` | Python linter and formatter |
+| `mypy` | Static type checker |
+| `codespell` | Spell-checking for source code |
+| `pre-commit` | Pre-commit hook runner |
+
+## Running Linters Locally
+
+Run all pre-commit hooks (recommended before opening a PR):
+
+```bash
+uv run pre-commit run --all-files
+```
+
+Type checking only:
+
+```bash
+uv run mypy {{ provider_path }}
+```
+
+Linting only:
+
+```bash
+uv run ruff check {{ provider_path }}
+uv run ruff format --check {{ provider_path }}
+```
+
+## Coverage
+
+Coverage reports are automatically uploaded to Codecov on every CI push.
+To view coverage locally:
+
+```bash
+uv run pytest {{ provider_path }}tests/ --cov={{ provider_path }} --cov-report=html
+open htmlcov/index.html
+```
+
+## When CI Fails
+
+When tests or linters fail in CI, a GitHub issue is automatically created with the `incident:ci` label.
+See [Incident Management](incident-management.md) for how the incident workflow operates.
+{% endif %}

@@ -10,28 +10,76 @@ Add an entry to `providers.yml` in this repository:
 
 ```yaml
 - domain: my_provider          # must match manifest.json domain field
+  display_name: My Provider    # human-readable name used in docs and issue templates
   repo: trudenboy/ma-provider-my-provider
   default_branch: main
   manifest_path: provider/manifest.json
   provider_path: provider/
   provider_type: music_provider  # or player_provider
+  locale: en                   # en or ru — controls language in docs and issue templates
 ```
 
-**`provider_type` values:**
+### `provider_type` values
+
 - `music_provider` — uses upstream `music-assistant/server` for testing (lighter CI)
 - `player_provider` — uses `trudenboy/ma-server` fork with symlink (heavier CI with ruff + mypy)
+
+### Optional fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `locale` | `en` \| `ru` | Language for distributed docs and issue templates. Defaults to `en`. |
+| `skip_wrappers` | list of filenames | Template files to skip for this repo. Use to preserve manual files or exclude irrelevant templates. |
+| `legacy_files` | list of paths | Files to delete from the provider repo during distribution (superseded by wrapper files). |
+
+### `skip_wrappers` example
+
+```yaml
+skip_wrappers:
+  - contributing.md.j2         # repo has a custom contributing guide
+  - docs/testing.md.j2         # not applicable (e.g., server fork)
+```
 
 ## 3. Run the distribute workflow
 
 After merging the `providers.yml` update, the `distribute.yml` workflow automatically creates PRs
-in the new provider repo with the initial wrapper workflow files. The PRs have auto-merge
-(squash) enabled — they merge themselves once CI passes.
+in the new provider repo with the initial wrapper files. The PRs have auto-merge (squash) enabled —
+they merge themselves once CI passes.
 
 Alternatively, run manually:
+
 ```bash
 pip install jinja2 pyyaml
 GH_TOKEN=<your-pat> python3 scripts/distribute.py
+
+# Dry run (no PRs created):
+GH_TOKEN=<your-pat> python3 scripts/distribute.py --dry-run
 ```
+
+### Default distributed files (20 templates)
+
+| Template | Destination |
+|----------|-------------|
+| `sync-to-fork.yml.j2` | `.github/workflows/sync-to-fork.yml` |
+| `release.yml.j2` | `.github/workflows/release.yml` |
+| `test.yml.j2` | `.github/workflows/test.yml` |
+| `security.yml.j2` | `.github/workflows/security.yml` |
+| `sync-labels.yml.j2` | `.github/workflows/sync-labels.yml` |
+| `labels.yml.j2` | `.github/labels.yml` |
+| `copilot-triage.yml.j2` | `.github/workflows/copilot-triage.yml` |
+| `issue-project.yml.j2` | `.github/workflows/issue-project.yml` |
+| `SECURITY.md.j2` | `SECURITY.md` |
+| `issue-bug.yml.j2` | `.github/ISSUE_TEMPLATE/bug_report.yml` |
+| `issue-upstream.yml.j2` | `.github/ISSUE_TEMPLATE/upstream_api_change.yml` |
+| `issue-proposal.yml.j2` | `.github/ISSUE_TEMPLATE/improvement_proposal.yml` |
+| `issue-config.yml.j2` | `.github/ISSUE_TEMPLATE/config.yml` |
+| `contributing.md.j2` | `docs/contributing.md` |
+| `docker-compose.dev.yml.j2` | `docker-compose.dev.yml` |
+| `scripts/docker-init.sh.j2` | `scripts/docker-init.sh` |
+| `docs/dev-docker.md.j2` | `docs/dev-docker.md` |
+| `docs/testing.md.j2` | `docs/testing.md` |
+| `docs/incident-management.md.j2` | `docs/incident-management.md` |
+| `.github/PULL_REQUEST_TEMPLATE.md.j2` | `.github/PULL_REQUEST_TEMPLATE.md` |
 
 ## 4. Add `FORK_SYNC_PAT` secret
 
