@@ -137,9 +137,58 @@ jobs:
           mypy ${{ inputs.provider_path }} --ignore-missing-imports
 
   # ─── Report CI failure as a GitHub issue (with dedup) ────────────────────────
-  report-failure:
-    needs: [test-music-provider, lint-music-provider, test-player-provider, lint-player-provider]
-    if: ${{ failure() }}
+  # Split into two jobs to avoid GitHub startup_failure: when all needs-jobs are
+  # conditional, GitHub fails the entire reusable workflow at startup because it
+  # cannot resolve the dependency graph (2 of 4 jobs are always skipped).
+  report-failure-music:
+    needs: [test-music-provider, lint-music-provider]
+    if: >-
+      ${{ always() &&
+          inputs.provider_type == 'music_provider' &&
+          (needs.test-music-provider.result == 'failure' ||
+           needs.lint-music-provider.result == 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update CI incident issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "CI test failure — ${{ github.ref_name }}"
+          RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          LABEL="incident:ci"
+          EXISTING=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "New failure on \`${{ github.ref_name }}\`: $RUN_URL"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Tests failed on branch \`%s\`.\n\n**Run:** %s' "${{ github.ref_name }}" "$RUN_URL")" \
+              --label "$LABEL" --label "priority:high" || \
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Tests failed on branch \`%s\`.\n\n**Run:** %s' "${{ github.ref_name }}" "$RUN_URL")"
+          fi
+
+  report-failure-player:
+    needs: [test-player-provider, lint-player-provider]
+    if: >-
+      ${{ always() &&
+          inputs.provider_type == 'player_provider' &&
+          (needs.test-player-provider.result == 'failure' ||
+           needs.lint-player-provider.result == 'failure') }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
