@@ -2,7 +2,7 @@ providers:
   - domain: yandex_music
     display_name: Yandex Music
     repo: trudenboy/ma-provider-yandex-music
-    default_branch: dev
+    default_branch: refactor/yandex-config-categories
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider
@@ -29,15 +29,13 @@ providers:
   - domain: msx_bridge
     display_name: MSX Bridge
     repo: trudenboy/ma-provider-msx-bridge
-    default_branch: dev
+    default_branch: feat/msx-bridge-player-provider
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
     locale: en
     legacy_files:
       - .github/workflows/ci.yml
-    skip_wrappers:
-      - contributing.md.j2
 
   - domain: ma_server
     repo: trudenboy/ma-server
@@ -50,3 +48,9 @@ providers:
       - security.yml.j2
       - contributing.md.j2
       - issue-project.yml.j2
+      - docker-compose.dev.yml.j2
+      - scripts/docker-init.sh.j2
+      - docs/dev-docker.md.j2
+      - docs/testing.md.j2
+      - docs/incident-management.md.j2
+      - .github/PULL_REQUEST_TEMPLATE.md.j2

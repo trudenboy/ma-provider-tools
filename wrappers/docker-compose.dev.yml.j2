@@ -1,0 +1,26 @@
+# Development docker-compose for {{ display_name }}
+# Runs a local Music Assistant instance with {{ display_name }} provider pre-loaded.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up       # foreground
+#   docker compose -f docker-compose.dev.yml up -d    # background
+#   docker compose -f docker-compose.dev.yml down      # stop
+#   docker compose -f docker-compose.dev.yml logs -f  # follow logs
+#
+# UI: http://localhost:8095
+# Note: add .ma-data/ to your .gitignore
+
+name: ma-{{ domain }}-dev
+
+services:
+  ma:
+    image: ghcr.io/music-assistant/server:latest
+    network_mode: host
+    privileged: true
+    restart: "no"
+    volumes:
+      - ./.ma-data:/data
+      - ./{{ provider_path }}:/tmp/provider:ro
+      - ./pyproject.toml:/tmp/pyproject.toml:ro
+      - ./scripts/docker-init.sh:/init.sh:ro
+    entrypoint: ["/bin/sh", "/init.sh"]

@@ -68,6 +68,15 @@ ALL_WRAPPER_FILES = [
     ("contributing.md.j2", "docs/contributing.md"),
     # Project automation
     ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
+    # Docker dev environment
+    ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
+    ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
+    ("docs/dev-docker.md.j2", "docs/dev-docker.md"),
+    # Testing and incident management docs
+    ("docs/testing.md.j2", "docs/testing.md"),
+    ("docs/incident-management.md.j2", "docs/incident-management.md"),
+    # PR template
+    (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
 ]
 
 
@@ -139,7 +148,7 @@ def create_pr_for_provider(
             ]
         )
 
-        # Configure git and inject token into remote URL so git push authenticates
+        # Configure git and inject credentials via GH_TOKEN environment variable
         token = os.environ.get("GH_TOKEN", "")
         run(["git", "config", "user.name", "github-actions[bot]"], cwd=tmpdir)
         run(
@@ -155,10 +164,10 @@ def create_pr_for_provider(
             run(
                 [
                     "git",
-                    "remote",
-                    "set-url",
-                    "origin",
-                    f"https://x-access-token:{token}@github.com/{repo}.git",
+                    "config",
+                    "--global",
+                    f"url.https://x-access-token:{token}@github.com/.insteadOf",
+                    "https://github.com/",
                 ],
                 cwd=tmpdir,
             )
@@ -314,13 +323,21 @@ def main() -> None:
     if dry_run:
         print("[DRY RUN MODE — no PRs will be created]\n")
 
+    os.environ["GIT_TERMINAL_PROMPT"] = "0"
+
+    errors: list[str] = []
     for provider in providers:
         try:
             create_pr_for_provider(provider, providers, dry_run=dry_run)
         except subprocess.CalledProcessError as e:
             print(f"ERROR processing {provider['repo']}: {e.stderr}", file=sys.stderr)
-            if not dry_run:
-                raise
+            errors.append(provider["repo"])
+
+    if errors:
+        print(
+            f"\nFailed providers ({len(errors)}): {', '.join(errors)}", file=sys.stderr
+        )
+        sys.exit(1)
 
     print("\nDone.")
 
