@@ -1,0 +1,34 @@
+name: Security Audit
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "{{ manifest_path }}"
+  pull_request:
+    branches: [main]
+    paths:
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "{{ manifest_path }}"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+{% raw %}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-security.yml@main
+    with:
+      provider_type: "{% endraw %}{{ provider_type }}{% raw %}"
+      provider_domain: "{% endraw %}{{ domain }}{% raw %}"
+      provider_path: "{% endraw %}{{ provider_path }}{% raw %}"
+      manifest_path: "{% endraw %}{{ manifest_path }}{% raw %}"
+    permissions:
+      issues: write
+{%- endraw %}

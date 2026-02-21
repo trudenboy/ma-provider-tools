@@ -45,3 +45,4 @@ providers:
       - test.yml.j2
       - release.yml.j2
       - sync-to-fork.yml.j2
+      - security.yml.j2
