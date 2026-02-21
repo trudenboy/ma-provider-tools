@@ -68,6 +68,8 @@ ALL_WRAPPER_FILES = [
     ("contributing.md.j2", "docs/contributing.md"),
     # Project automation
     ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
+    # Ruff configuration
+    ("ruff.toml.j2", "ruff.toml"),
     # Docker dev environment
     ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
     ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
@@ -273,7 +275,7 @@ def create_pr_for_provider(
             pr_url = result.stdout.strip()
             print(f"  PR created: {pr_url}")
 
-        # Enable auto-merge on the repo and PR
+        # Enable auto-merge and auto-delete branches on the repo
         run(
             [
                 "gh",
@@ -283,6 +285,8 @@ def create_pr_for_provider(
                 "PATCH",
                 "--field",
                 "allow_auto_merge=true",
+                "--field",
+                "delete_branch_on_merge=true",
             ],
             cwd=tmpdir,
             check=False,
