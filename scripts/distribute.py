@@ -68,6 +68,8 @@ ALL_WRAPPER_FILES = [
     ("contributing.md.j2", "docs/contributing.md"),
     # Project automation
     ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
+    # Ruff configuration
+    ("ruff.toml.j2", "ruff.toml"),
     # Docker dev environment
     ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
     ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
