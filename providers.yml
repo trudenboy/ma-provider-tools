@@ -2,7 +2,7 @@ providers:
   - domain: yandex_music
     display_name: Yandex Music
     repo: trudenboy/ma-provider-yandex-music
-    default_branch: dev
+    default_branch: refactor/yandex-config-categories
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider
@@ -29,7 +29,7 @@ providers:
   - domain: msx_bridge
     display_name: MSX Bridge
     repo: trudenboy/ma-provider-msx-bridge
-    default_branch: dev
+    default_branch: feat/msx-bridge-player-provider
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
