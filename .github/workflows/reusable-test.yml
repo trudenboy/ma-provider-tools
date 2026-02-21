@@ -95,7 +95,7 @@ jobs:
           source ma-server/.venv/bin/activate
           SKIP=no-commit-to-branch,mypy pre-commit run --all-files
       - name: Install project type check dependencies
-        run: uv pip install ma-server/ mypy
+        run: uv pip install ma-server/ ".[test]"
       - name: Type check
         run: uv run mypy ${{ inputs.provider_path }}
 
