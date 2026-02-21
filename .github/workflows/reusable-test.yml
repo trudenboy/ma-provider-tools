@@ -35,26 +35,38 @@ jobs:
           ref: dev
           path: ma-server
           fetch-depth: 1
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Install dependencies
         working-directory: ma-server
         run: |
           uv venv .venv
           source .venv/bin/activate
           uv pip install -e "." -e ".[test]" -r requirements_all.txt
+      - name: Install provider dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          uv pip install -e ".[test]"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
           ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
       - name: Run unit tests
+        working-directory: ma-server
         run: |
-          source ma-server/.venv/bin/activate
-          pytest tests/ -v --ignore=tests/integration --tb=short -p no:cacheprovider \
-            --cov=${{ inputs.provider_path }} --cov-report=xml
+          source .venv/bin/activate
+          pytest --durations 10 --cov-report term-missing \
+            --cov=music_assistant/providers/${{ inputs.provider_domain }} \
+            --cov-report=xml:${{ github.workspace }}/coverage.xml \
+            ${{ github.workspace }}/tests/ \
+            --ignore=${{ github.workspace }}/tests/integration \
+            --ignore=${{ github.workspace }}/tests/test_integration.py
         env:
           PYTHONDONTWRITEBYTECODE: "1"
       - uses: codecov/codecov-action@v5
@@ -78,13 +90,18 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Install dependencies
         working-directory: ma-server
         run: |
           uv venv .venv
           source .venv/bin/activate
           uv pip install -e "." -e ".[test]" -r requirements_all.txt
+      - name: Install provider dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          uv pip install -e ".[test]"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -94,10 +111,11 @@ jobs:
         run: |
           source ma-server/.venv/bin/activate
           SKIP=no-commit-to-branch,mypy pre-commit run --all-files
-      - name: Install project type check dependencies
-        run: uv pip install ".[test]"
       - name: Type check
-        run: uv run mypy ${{ inputs.provider_path }}
+        working-directory: ma-server
+        run: |
+          source .venv/bin/activate
+          mypy music_assistant/providers/${{ inputs.provider_domain }}
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
@@ -113,26 +131,38 @@ jobs:
           ref: dev
           path: ma-server
           fetch-depth: 1
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Install dependencies
         working-directory: ma-server
         run: |
           uv venv .venv
           source .venv/bin/activate
           uv pip install -e "." -e ".[test]" -r requirements_all.txt
+      - name: Install provider dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          uv pip install -e ".[test]"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
           ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
       - name: Run unit tests
+        working-directory: ma-server
         run: |
-          source ma-server/.venv/bin/activate
-          pytest tests/ -v --ignore=tests/integration --tb=short -p no:cacheprovider \
-            --cov=${{ inputs.provider_path }} --cov-report=xml
+          source .venv/bin/activate
+          pytest --durations 10 --cov-report term-missing \
+            --cov=music_assistant/providers/${{ inputs.provider_domain }} \
+            --cov-report=xml:${{ github.workspace }}/coverage.xml \
+            ${{ github.workspace }}/tests/ \
+            --ignore=${{ github.workspace }}/tests/integration \
+            --ignore=${{ github.workspace }}/tests/test_integration.py
         env:
           PYTHONDONTWRITEBYTECODE: "1"
       - uses: codecov/codecov-action@v5
@@ -156,13 +186,18 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Install dependencies
         working-directory: ma-server
         run: |
           uv venv .venv
           source .venv/bin/activate
           uv pip install -e "." -e ".[test]" -r requirements_all.txt
+      - name: Install provider dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          uv pip install -e ".[test]"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -173,9 +208,10 @@ jobs:
           source ma-server/.venv/bin/activate
           SKIP=no-commit-to-branch,mypy pre-commit run --all-files
       - name: Type check
+        working-directory: ma-server
         run: |
-          source ma-server/.venv/bin/activate
-          mypy ${{ inputs.provider_path }} --ignore-missing-imports
+          source .venv/bin/activate
+          mypy music_assistant/providers/${{ inputs.provider_domain }}
 
   # ─── Report CI failure as a GitHub issue (with dedup) ────────────────────────
   # Split into two jobs to avoid GitHub startup_failure: when all needs-jobs are
