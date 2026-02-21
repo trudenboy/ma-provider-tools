@@ -37,6 +37,7 @@ def main() -> int:
     base = next((p for p in providers if p.get("manifest_path")), providers[0])
     context = {
         "domain": base["domain"],
+        "display_name": base.get("display_name", ""),
         "manifest_path": base.get("manifest_path", ""),
         "provider_path": base.get("provider_path", ""),
         "provider_type": base.get("provider_type", ""),

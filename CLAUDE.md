@@ -53,7 +53,7 @@ providers:
 
 ## Jinja2 Template Conventions
 
-Templates in `wrappers/` receive these variables: `domain`, `manifest_path`, `provider_path`, `provider_type`.
+Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`.
 
 GitHub Actions expressions (`${{ }}`) must be wrapped in `{% raw %}...{% endraw %}` blocks to prevent Jinja2 from interpreting them.
 

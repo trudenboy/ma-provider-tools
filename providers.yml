@@ -36,6 +36,8 @@ providers:
     locale: en
     legacy_files:
       - .github/workflows/ci.yml
+    skip_wrappers:
+      - contributing.md.j2
 
   - domain: ma_server
     repo: trudenboy/ma-server
@@ -46,3 +48,4 @@ providers:
       - release.yml.j2
       - sync-to-fork.yml.j2
       - security.yml.j2
+      - contributing.md.j2
