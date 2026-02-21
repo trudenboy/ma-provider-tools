@@ -72,6 +72,11 @@ ALL_WRAPPER_FILES = [
     ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
     ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
     ("docs/dev-docker.md.j2", "docs/dev-docker.md"),
+    # Testing and incident management docs
+    ("docs/testing.md.j2", "docs/testing.md"),
+    ("docs/incident-management.md.j2", "docs/incident-management.md"),
+    # PR template
+    (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
 ]
 
 

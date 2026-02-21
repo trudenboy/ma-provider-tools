@@ -36,8 +36,6 @@ providers:
     locale: en
     legacy_files:
       - .github/workflows/ci.yml
-    skip_wrappers:
-      - contributing.md.j2
 
   - domain: ma_server
     repo: trudenboy/ma-server
@@ -53,3 +51,6 @@ providers:
       - docker-compose.dev.yml.j2
       - scripts/docker-init.sh.j2
       - docs/dev-docker.md.j2
+      - docs/testing.md.j2
+      - docs/incident-management.md.j2
+      - .github/PULL_REQUEST_TEMPLATE.md.j2
