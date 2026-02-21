@@ -88,6 +88,7 @@ In the project → **Workflows** tab, enable:
 | Auto-add to project | Issue opened with label `incident:bug` | Add to project, Status = Triage |
 | Auto-add to project | Issue opened with label `incident:upstream` | Add to project, Status = Triage |
 | Auto-add to project | Issue opened with label `incident:security` | Add to project, Status = Triage |
+| Auto-add to project | Issue opened with label `incident:proposal` | Add to project, Status = Triage |
 | Auto-archive | Item closed | Archive after 7 days |
 | Auto-close | PR merged | Status = Done |
 
@@ -95,7 +96,7 @@ In the project → **Workflows** tab, enable:
 
 Manually add any existing open issues from provider repos:
 ```
-gh issue list --repo trudenboy/ma-provider-yandex-music --label "incident:ci,incident:bug,incident:upstream,incident:security" --state open
+gh issue list --repo trudenboy/ma-provider-yandex-music --label "incident:ci,incident:bug,incident:upstream,incident:security,incident:proposal" --state open
 ```
 Then add each to the project via the UI or:
 ```bash
