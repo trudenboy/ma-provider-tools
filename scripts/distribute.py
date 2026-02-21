@@ -51,6 +51,7 @@ ALL_WRAPPER_FILES = [
     ("sync-to-fork.yml.j2", ".github/workflows/sync-to-fork.yml"),
     ("release.yml.j2", ".github/workflows/release.yml"),
     ("test.yml.j2", ".github/workflows/test.yml"),
+    ("security.yml.j2", ".github/workflows/security.yml"),
     # Label management
     ("sync-labels.yml.j2", ".github/workflows/sync-labels.yml"),
     ("labels.yml.j2", ".github/labels.yml"),

@@ -1,0 +1,105 @@
+name: Reusable — Security Audit
+
+on:
+  workflow_call:
+    inputs:
+      provider_type:
+        description: "Provider type: music_provider or player_provider"
+        required: true
+        type: string
+      provider_domain:
+        description: "Provider domain slug (e.g. msx_bridge)"
+        default: ""
+        type: string
+      provider_path:
+        description: "Relative path to provider source inside repo (e.g. provider/)"
+        default: ""
+        type: string
+      manifest_path:
+        description: "Path to manifest.json inside the provider repo"
+        default: "provider/manifest.json"
+        type: string
+
+jobs:
+  # ─── Music provider: install from upstream ma-server, run pip-audit ──────────
+  audit-music-provider:
+    if: ${{ inputs.provider_type == 'music_provider' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Install deps
+        run: |
+          uv pip install \
+            "git+https://github.com/music-assistant/server.git@dev" \
+            -e ".[test]" \
+            pip-audit
+      - name: Run pip-audit
+        run: pip-audit --local
+
+  # ─── Player provider: clone fork ma-server, audit requirements_all.txt ───────
+  audit-player-provider:
+    if: ${{ inputs.provider_type == 'player_provider' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-server
+          ref: dev
+          path: ma-server
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Install pip-audit
+        run: uv pip install pip-audit
+      - name: Run pip-audit against requirements_all.txt
+        run: pip-audit --requirement ma-server/requirements_all.txt
+
+  # ─── Report security audit failure as a GitHub issue (with dedup) ────────────
+  report-failure:
+    needs: [audit-music-provider, audit-player-provider]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update security incident issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "Security audit failure — ${{ github.ref_name }}"
+          RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          LABEL="incident:ci"
+          EXISTING=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "New pip-audit finding on \`${{ github.ref_name }}\`: $RUN_URL"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'pip-audit found vulnerabilities on branch \`%s\`.\n\n**Run:** %s' "${{ github.ref_name }}" "$RUN_URL")" \
+              --label "$LABEL" --label "priority:high" || \
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'pip-audit found vulnerabilities on branch \`%s\`.\n\n**Run:** %s' "${{ github.ref_name }}" "$RUN_URL")"
+          fi
