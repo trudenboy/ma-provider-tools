@@ -131,7 +131,8 @@ jobs:
         env:
           UV_PYTHON: "3.12"
         run: |
-          SKIP=no-commit-to-branch,mypy uvx pre-commit run --all-files
+          uv tool install pre-commit
+          SKIP=no-commit-to-branch,mypy pre-commit run --all-files
       - name: Type check
         working-directory: ma-server
         run: |
@@ -248,7 +249,8 @@ jobs:
         env:
           UV_PYTHON: "3.12"
         run: |
-          SKIP=no-commit-to-branch,mypy uvx pre-commit run --all-files
+          uv tool install pre-commit
+          SKIP=no-commit-to-branch,mypy pre-commit run --all-files
       - name: Type check
         working-directory: ma-server
         run: |
