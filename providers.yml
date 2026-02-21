@@ -1,52 +1,7 @@
+# Providers Configuration
+
 providers:
-  - domain: yandex_music
-    display_name: Yandex Music
-    repo: trudenboy/ma-provider-yandex-music
-    default_branch: dev
-    manifest_path: provider/manifest.json
-    provider_path: provider/
-    provider_type: music_provider
-    locale: ru
-
-  - domain: kion_music
-    display_name: KION Music
-    repo: trudenboy/ma-provider-kion-music
-    default_branch: dev
-    manifest_path: provider/manifest.json
-    provider_path: provider/
-    provider_type: music_provider
-    locale: ru
-
-  - domain: zvuk_music
-    display_name: Zvuk Music
-    repo: trudenboy/ma-provider-zvuk-music
-    default_branch: dev
-    manifest_path: provider/manifest.json
-    provider_path: provider/
-    provider_type: music_provider
-    locale: ru
-
-  - domain: msx_bridge
-    display_name: MSX Bridge
-    repo: trudenboy/ma-provider-msx-bridge
-    default_branch: dev
-    manifest_path: provider/manifest.json
-    provider_path: provider/
-    provider_type: player_provider
-    locale: en
-    legacy_files:
-      - .github/workflows/ci.yml
-    skip_wrappers:
-      - contributing.md.j2
-
-  - domain: ma_server
-    repo: trudenboy/ma-server
-    default_branch: dev
-    provider_type: server_fork
-    skip_wrappers:
-      - test.yml.j2
-      - release.yml.j2
-      - sync-to-fork.yml.j2
-      - security.yml.j2
-      - contributing.md.j2
-      - issue-project.yml.j2
+  yandex_music:
+    default_branch: refactor/yandex-config-categories
+  msx_bridge:
+    default_branch: feat/msx-bridge-player-provider
