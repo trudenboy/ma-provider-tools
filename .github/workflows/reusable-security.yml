@@ -55,11 +55,11 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Install pip-audit
         run: uv pip install pip-audit
       - name: Run pip-audit against requirements_all.txt
-        run: pip-audit --no-deps --requirement ma-server/requirements_all.txt
+        run: pip-audit --requirement ma-server/requirements_all.txt
 
   # ─── Report security audit failure as a GitHub issue (with dedup) ────────────
   report-failure:
