@@ -66,6 +66,8 @@ ALL_WRAPPER_FILES = [
     ("issue-config.yml.j2", ".github/ISSUE_TEMPLATE/config.yml"),
     # Documentation
     ("contributing.md.j2", "docs/contributing.md"),
+    # Project automation
+    ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
 ]
 
 

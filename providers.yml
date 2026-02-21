@@ -49,3 +49,4 @@ providers:
       - sync-to-fork.yml.j2
       - security.yml.j2
       - contributing.md.j2
+      - issue-project.yml.j2
