@@ -61,7 +61,7 @@ jobs:
         run: |
           gh workflow run sync-to-fork.yml \
             --repo "${{ github.repository }}" \
-            --ref main \
+            --ref "${{ github.ref_name }}" \
             -f target_branch=dev \
             -f version="v${{ inputs.version }}"
           RUN_ID=$(gh run list --repo "${{ github.repository }}" \
