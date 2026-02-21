@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Sync labels from .github/labels.yml
-        uses: github/label-syncer@v1
+        uses: EndBug/label-sync@v2
         with:
+          config-file: .github/labels.yml
           token: ${{ secrets.GITHUB_TOKEN }}
-          labels: .github/labels.yml
