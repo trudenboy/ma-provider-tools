@@ -81,7 +81,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
       - uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
 
   lint-music-provider:
     if: ${{ inputs.provider_type == 'music_provider' }}
@@ -197,7 +197,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
       - uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
 
   lint-player-provider:
     if: ${{ inputs.provider_type == 'player_provider' }}
