@@ -275,7 +275,7 @@ def create_pr_for_provider(
             pr_url = result.stdout.strip()
             print(f"  PR created: {pr_url}")
 
-        # Enable auto-merge on the repo and PR
+        # Enable auto-merge and auto-delete branches on the repo
         run(
             [
                 "gh",
@@ -285,6 +285,8 @@ def create_pr_for_provider(
                 "PATCH",
                 "--field",
                 "allow_auto_merge=true",
+                "--field",
+                "delete_branch_on_merge=true",
             ],
             cwd=tmpdir,
             check=False,
