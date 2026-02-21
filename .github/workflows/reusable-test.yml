@@ -51,8 +51,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]" \
-            --override "music-assistant @ file://$GITHUB_WORKSPACE/ma-server"
+          uv pip install -e ".[test]"
+          uv pip install -e "ma-server"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -102,8 +102,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]" \
-            --override "music-assistant @ file://$GITHUB_WORKSPACE/ma-server"
+          uv pip install -e ".[test]"
+          uv pip install -e "ma-server"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -149,8 +149,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]" \
-            --override "music-assistant @ file://$GITHUB_WORKSPACE/ma-server"
+          uv pip install -e ".[test]"
+          uv pip install -e "ma-server"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -200,8 +200,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]" \
-            --override "music-assistant @ file://$GITHUB_WORKSPACE/ma-server"
+          uv pip install -e ".[test]"
+          uv pip install -e "ma-server"
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
