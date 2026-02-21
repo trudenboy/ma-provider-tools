@@ -68,6 +68,10 @@ ALL_WRAPPER_FILES = [
     ("contributing.md.j2", "docs/contributing.md"),
     # Project automation
     ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
+    # Docker dev environment
+    ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
+    ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
+    ("docs/dev-docker.md.j2", "docs/dev-docker.md"),
 ]
 
 
@@ -325,7 +329,9 @@ def main() -> None:
             errors.append(provider["repo"])
 
     if errors:
-        print(f"\nFailed providers ({len(errors)}): {', '.join(errors)}", file=sys.stderr)
+        print(
+            f"\nFailed providers ({len(errors)}): {', '.join(errors)}", file=sys.stderr
+        )
         sys.exit(1)
 
     print("\nDone.")

@@ -1,0 +1,126 @@
+{% if locale == 'ru' %}
+# {{ display_name }} — локальная разработка через Docker
+
+Запусти полноценный Music Assistant с провайдером {{ display_name }} одной командой —
+без установки Python, FFmpeg и прочих зависимостей.
+
+## Требования
+
+- [Docker](https://docs.docker.com/get-docker/)
+
+## Быстрый старт
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+Открой **http://localhost:8095** в браузере.
+
+## Первый запуск: создание пользователя
+
+При первом старте MA запускает мастер настройки:
+
+1. **Создай пользователя** — задай логин и пароль (хранится в `.ma-data/` локально)
+2. Пропусти интеграцию с Home Assistant, если предложат
+3. Данные входа сохраняются между перезапусками контейнера через том `.ma-data/`
+
+## Подключение провайдера {{ display_name }}
+
+После входа:
+
+1. Перейди в **Settings** → **Providers**
+2. Найди **{{ display_name }}** в списке — он уже доступен, код загружен автоматически
+3. Нажми **Add** и введи свои учётные данные
+4. Конфигурация провайдера сохраняется в `.ma-data/` и переживает перезапуски
+
+> 💡 Если провайдер не появляется — проверь логи (`docker compose -f docker-compose.dev.yml logs`).
+> Ошибка при старте будет видна там.
+
+## Управление контейнером
+
+| Действие | Команда |
+|----------|---------|
+| Запустить | `docker compose -f docker-compose.dev.yml up` |
+| Запустить в фоне | `docker compose -f docker-compose.dev.yml up -d` |
+| Остановить | `docker compose -f docker-compose.dev.yml down` |
+| Перезапустить | `docker compose -f docker-compose.dev.yml restart` |
+| Логи | `docker compose -f docker-compose.dev.yml logs -f` |
+| Сбросить состояние | `rm -rf .ma-data/` → запустить заново |
+
+## Изменения в коде провайдера
+
+Код из `{{ provider_path }}` смонтирован в контейнер через симлинк.
+Изменения подхватываются после перезапуска контейнера — пересборка образа не нужна:
+
+```bash
+docker compose -f docker-compose.dev.yml restart
+```
+
+## Сохранение состояния
+
+Весь конфиг MA, учётные данные провайдера и кеш хранятся в `.ma-data/` (добавь в `.gitignore`).
+Папка создаётся автоматически при первом запуске.
+{% else %}
+# {{ display_name }} — Local Development with Docker
+
+Run a full Music Assistant instance with {{ display_name }} provider pre-loaded locally —
+no Python, FFmpeg, or other dependencies required.
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+
+## Quick Start
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+Open **http://localhost:8095** in your browser.
+
+## First Run: Create a User
+
+On first launch, Music Assistant runs an onboarding wizard:
+
+1. **Create a user** — set a username and password (stored locally in `.ma-data/`)
+2. Skip the Home Assistant integration if prompted
+3. Your login state persists between container restarts via the `.ma-data/` volume
+
+## Adding the {{ display_name }} Provider
+
+After login:
+
+1. Go to **Settings** → **Providers**
+2. Find **{{ display_name }}** in the list — it's already available, the code is pre-loaded
+3. Click **Add** and enter your credentials
+4. Provider configuration is saved to `.ma-data/` and persists across restarts
+
+> 💡 If the provider doesn't appear, check the logs:
+> `docker compose -f docker-compose.dev.yml logs`
+> Any startup error will be visible there.
+
+## Container Commands
+
+| Action | Command |
+|--------|---------|
+| Start | `docker compose -f docker-compose.dev.yml up` |
+| Start in background | `docker compose -f docker-compose.dev.yml up -d` |
+| Stop | `docker compose -f docker-compose.dev.yml down` |
+| Restart | `docker compose -f docker-compose.dev.yml restart` |
+| Follow logs | `docker compose -f docker-compose.dev.yml logs -f` |
+| Reset state | `rm -rf .ma-data/` then start again |
+
+## Updating Provider Code
+
+Provider code from `{{ provider_path }}` is mounted via symlink — no image rebuild needed.
+Changes take effect after restarting the container:
+
+```bash
+docker compose -f docker-compose.dev.yml restart
+```
+
+## Persistent State
+
+All MA configuration, credentials, and cache are stored in `.ma-data/` (add to `.gitignore`).
+This directory is created automatically on first run.
+{% endif %}
