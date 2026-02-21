@@ -21,6 +21,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  issues: write  # Required by report-failure job in reusable workflow
+
 jobs:
   security:
     uses: trudenboy/ma-provider-tools/.github/workflows/reusable-security.yml@main
@@ -28,7 +31,4 @@ jobs:
       provider_type: "{% endraw %}{{ provider_type }}{% raw %}"
       provider_domain: "{% endraw %}{{ domain }}{% raw %}"
       provider_path: "{% endraw %}{{ provider_path }}{% raw %}"
-      manifest_path: "{% endraw %}{{ manifest_path }}{% raw %}"
-    permissions:
-      issues: write
-{%- endraw %}
+      manifest_path: "{% endraw %}{{ manifest_path }}{% endraw %}
