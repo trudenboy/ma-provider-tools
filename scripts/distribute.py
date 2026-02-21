@@ -64,6 +64,8 @@ ALL_WRAPPER_FILES = [
     ("issue-upstream.yml.j2", ".github/ISSUE_TEMPLATE/upstream_api_change.yml"),
     ("issue-proposal.yml.j2", ".github/ISSUE_TEMPLATE/improvement_proposal.yml"),
     ("issue-config.yml.j2", ".github/ISSUE_TEMPLATE/config.yml"),
+    # Documentation
+    ("contributing.md.j2", "docs/contributing.md"),
 ]
 
 
@@ -84,6 +86,7 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
 
     context = {
         "domain": provider["domain"],
+        "display_name": provider.get("display_name", ""),
         "manifest_path": provider.get("manifest_path", ""),
         "provider_path": provider.get("provider_path", ""),
         "provider_type": provider.get("provider_type", ""),
