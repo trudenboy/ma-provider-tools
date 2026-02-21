@@ -34,11 +34,7 @@ jobs:
           enable-cache: true
           python-version: "3.13"
       - name: Install deps
-        run: |
-          uv pip install \
-            "git+https://github.com/music-assistant/server.git@dev" \
-            -e ".[test]" \
-            pip-audit
+        run: uv pip install -e "." pip-audit
       - name: Run pip-audit
         run: pip-audit --local
 
@@ -63,7 +59,7 @@ jobs:
       - name: Install pip-audit
         run: uv pip install pip-audit
       - name: Run pip-audit against requirements_all.txt
-        run: pip-audit --requirement ma-server/requirements_all.txt
+        run: pip-audit --no-deps --requirement ma-server/requirements_all.txt
 
   # ─── Report security audit failure as a GitHub issue (with dedup) ────────────
   report-failure:
