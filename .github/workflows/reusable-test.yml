@@ -63,6 +63,7 @@ jobs:
 
   lint-music-provider:
     if: ${{ inputs.provider_type == 'music_provider' }}
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +93,11 @@ jobs:
       - name: Lint (pre-commit)
         run: |
           source ma-server/.venv/bin/activate
-          SKIP=no-commit-to-branch pre-commit run --all-files
+          SKIP=no-commit-to-branch,mypy pre-commit run --all-files
+      - name: Type check
+        run: |
+          source ma-server/.venv/bin/activate
+          mypy ${{ inputs.provider_path }}
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
