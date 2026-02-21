@@ -128,9 +128,10 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
       - name: Lint (pre-commit)
+        env:
+          UV_PYTHON: "3.12"
         run: |
-          unset VIRTUAL_ENV
-          SKIP=no-commit-to-branch,mypy ma-server/.venv/bin/pre-commit run --all-files
+          SKIP=no-commit-to-branch,mypy uvx pre-commit run --all-files
       - name: Type check
         working-directory: ma-server
         run: |
@@ -244,9 +245,10 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
       - name: Lint (pre-commit)
+        env:
+          UV_PYTHON: "3.12"
         run: |
-          unset VIRTUAL_ENV
-          SKIP=no-commit-to-branch,mypy ma-server/.venv/bin/pre-commit run --all-files
+          SKIP=no-commit-to-branch,mypy uvx pre-commit run --all-files
       - name: Type check
         working-directory: ma-server
         run: |
