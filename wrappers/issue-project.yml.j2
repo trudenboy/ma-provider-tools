@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   add-to-project:
-    if: {% raw %}${{ github.event.label.name == 'incident:ci' }}{% endraw %}
+    if: {% raw %}${{ startsWith(github.event.label.name, 'incident:') }}{% endraw %}
     runs-on: ubuntu-latest
     steps:
       - name: Add to MA Ecosystem project
