@@ -157,30 +157,11 @@ def create_pr_for_provider(
                 cwd=tmpdir,
             )
 
-        # Check if update branch already exists
-        result = run(
-            ["git", "ls-remote", "--heads", "origin", BRANCH_NAME],
-            cwd=tmpdir,
-            check=False,
-        )
-        branch_exists = bool(result.stdout.strip())
-
-        if branch_exists:
-            run(
-                [
-                    "git",
-                    "fetch",
-                    "origin",
-                    f"{BRANCH_NAME}:refs/remotes/origin/{BRANCH_NAME}",
-                ],
-                cwd=tmpdir,
-            )
-            run(
-                ["git", "checkout", "-b", BRANCH_NAME, f"origin/{BRANCH_NAME}"],
-                cwd=tmpdir,
-            )
-        else:
-            run(["git", "checkout", "-b", BRANCH_NAME], cwd=tmpdir)
+        # Always create branch fresh from default_branch. Checking out from the
+        # existing remote branch accumulates commits across runs; when squash-merged
+        # into the default branch the old and new commits cancel each other out,
+        # producing a net-zero diff and leaving provider repos unchanged.
+        run(["git", "checkout", "-b", BRANCH_NAME], cwd=tmpdir)
 
         # Write rendered wrapper files
         changed = False
