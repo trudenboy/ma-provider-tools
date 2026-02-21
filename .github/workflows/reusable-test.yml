@@ -94,10 +94,10 @@ jobs:
         run: |
           source ma-server/.venv/bin/activate
           SKIP=no-commit-to-branch,mypy pre-commit run --all-files
+      - name: Install project type check dependencies
+        run: uv pip install ma-server/
       - name: Type check
-        run: |
-          source ma-server/.venv/bin/activate
-          mypy ${{ inputs.provider_path }}
+        run: uv run mypy ${{ inputs.provider_path }}
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
