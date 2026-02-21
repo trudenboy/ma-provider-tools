@@ -33,7 +33,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TITLE: ${{ inputs.title }}
           BODY: ${{ inputs.body }}
-          LABEL: ${{ inputs.incident_type == 'ci_failure' && 'incident:ci' || inputs.incident_type == 'release_failure' && 'incident:ci' || 'incident:ci' }}
+          LABEL: ${{ inputs.incident_type == 'ci_failure' && 'incident:ci' || inputs.incident_type == 'release_failure' && 'incident:release' || 'incident:sync' }}
         run: |
           # Search for existing open issue with the same title to avoid duplicates
           EXISTING=$(gh issue list \
@@ -63,7 +63,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TITLE: ${{ inputs.title }}
-          LABEL: ${{ inputs.incident_type == 'ci_failure' && 'incident:ci' || inputs.incident_type == 'release_failure' && 'incident:ci' || 'incident:ci' }}
+          LABEL: ${{ inputs.incident_type == 'ci_failure' && 'incident:ci' || inputs.incident_type == 'release_failure' && 'incident:release' || 'incident:sync' }}
         run: |
           ISSUE=$(gh issue list \
             --repo "$GITHUB_REPOSITORY" \
