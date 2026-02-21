@@ -8,11 +8,11 @@ on:
         required: true
         type: string
       provider_domain:
-        description: "Provider domain slug (e.g. msx_bridge) — required for player_provider symlink"
+        description: "Provider domain slug (e.g. msx_bridge) — required for symlink"
         default: ""
         type: string
       provider_path:
-        description: "Relative path to provider source inside repo (e.g. provider/) — required for player_provider"
+        description: "Relative path to provider source inside repo (e.g. provider/) — required for symlink and coverage"
         default: ""
         type: string
       manifest_path:
@@ -21,7 +21,7 @@ on:
         type: string
 
 jobs:
-  # ─── Music provider: install from upstream ma-server, run pytest + codecov ───
+  # ─── Music provider: clone upstream ma-server, symlink, run pytest + codecov ───
   test-music-provider:
     if: ${{ inputs.provider_type == 'music_provider' }}
     runs-on: ubuntu-latest
@@ -29,17 +29,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: music-assistant/server
+          ref: dev
+          path: ma-server
+          fetch-depth: 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: "3.13"
-      - name: Install deps
+      - name: Install dependencies
+        working-directory: ma-server
         run: |
-          uv pip install \
-            "git+https://github.com/music-assistant/server.git@dev" \
-            -e ".[test]"
-      - name: Pytest
-        run: pytest --durations 10 --tb=short --cov=provider --cov-report=xml tests/
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -e "." -e ".[test]" -r requirements_all.txt
+      - name: Symlink provider
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+          ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
+                "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+      - name: Run unit tests
+        run: |
+          source ma-server/.venv/bin/activate
+          pytest tests/ -v --ignore=tests/integration --tb=short -p no:cacheprovider \
+            --cov=${{ inputs.provider_path }} --cov-report=xml
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
       - uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
@@ -51,12 +68,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: music-assistant/server
+          ref: dev
+          path: ma-server
+          fetch-depth: 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.12"
-      - run: uv pip install -e ".[test]"
-      - run: SKIP=no-commit-to-branch pre-commit run --all-files
+          python-version: "3.13"
+      - name: Install dependencies
+        working-directory: ma-server
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -e "." -e ".[test]" -r requirements_all.txt
+      - name: Symlink provider
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+          ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
+                "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+      - name: Lint (pre-commit)
+        run: |
+          source ma-server/.venv/bin/activate
+          SKIP=no-commit-to-branch pre-commit run --all-files
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
