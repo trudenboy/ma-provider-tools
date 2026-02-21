@@ -19,6 +19,10 @@ on:
         description: "Version tag (e.g. v2.0.0) — leave empty to use latest release tag"
         default: ""
         type: string
+      fork_repo:
+        description: "Target fork repository (owner/repo)"
+        default: "trudenboy/ma-server"
+        type: string
     secrets:
       FORK_SYNC_PAT:
         required: true
@@ -46,7 +50,7 @@ jobs:
       - name: Checkout fork
         uses: actions/checkout@v4
         with:
-          repository: trudenboy/ma-server
+          repository: ${{ inputs.fork_repo }}
           path: ma-server
           token: ${{ secrets.FORK_SYNC_PAT }}
           ref: ${{ inputs.target_branch || 'dev' }}
@@ -58,9 +62,13 @@ jobs:
           rsync -av --delete \
             provider-repo/${{ inputs.provider_path }} \
             ma-server/music_assistant/providers/${DOMAIN}/
-          rsync -av --delete \
-            provider-repo/tests/ \
-            ma-server/tests/providers/${DOMAIN}/
+          if [ -d "provider-repo/tests" ]; then
+            rsync -av --delete \
+              provider-repo/tests/ \
+              ma-server/tests/providers/${DOMAIN}/
+          else
+            echo "No tests/ directory found in provider-repo, skipping test sync."
+          fi
 
       - name: Create Pull Request in fork
         id: create-pr

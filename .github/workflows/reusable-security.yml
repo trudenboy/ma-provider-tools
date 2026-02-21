@@ -32,7 +32,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.13"
+          python-version: "3.12"
       - name: Install deps
         run: uv pip install -e "." pip-audit
       - name: Run pip-audit
@@ -61,9 +61,19 @@ jobs:
       - name: Run pip-audit against requirements_all.txt
         run: pip-audit --requirement ma-server/requirements_all.txt
 
+  # ─── Guard: reject unknown provider_type ─────────────────────────────────────
+  guard-unknown-type:
+    if: ${{ inputs.provider_type != 'music_provider' && inputs.provider_type != 'player_provider' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail on unknown provider_type
+        run: |
+          echo "ERROR: Unknown provider_type '${{ inputs.provider_type }}'. Must be 'music_provider' or 'player_provider'."
+          exit 1
+
   # ─── Report security audit failure as a GitHub issue (with dedup) ────────────
   report-failure:
-    needs: [audit-music-provider, audit-player-provider]
+    needs: [audit-music-provider, audit-player-provider, guard-unknown-type]
     if: ${{ failure() }}
     runs-on: ubuntu-latest
     permissions:
