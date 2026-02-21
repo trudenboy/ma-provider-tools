@@ -24,7 +24,8 @@ Add an entry to `providers.yml` in this repository:
 ## 3. Run the distribute workflow
 
 After merging the `providers.yml` update, the `distribute.yml` workflow automatically creates PRs
-in the new provider repo with the initial wrapper workflow files.
+in the new provider repo with the initial wrapper workflow files. The PRs have auto-merge
+(squash) enabled — they merge themselves once CI passes.
 
 Alternatively, run manually:
 ```bash

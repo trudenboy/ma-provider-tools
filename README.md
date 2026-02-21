@@ -29,4 +29,5 @@ take effect immediately on next run — no need to push to individual repos.
 ## Updating Wrapper Files
 
 Edit `wrappers/*.j2` templates. The `distribute.yml` workflow auto-creates PRs in all provider
-repos when these files change.
+repos when these files change. PRs have auto-merge (squash) enabled and merge automatically
+once CI passes.

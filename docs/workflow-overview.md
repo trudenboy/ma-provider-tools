@@ -56,13 +56,28 @@ Located in `wrappers/*.j2`. These are Jinja2 templates rendered by `distribute.p
 provider. The rendered files are small (~20 lines) and only contain provider-specific inputs,
 delegating everything else to the reusable workflows.
 
+| Template | Destination | Purpose |
+|----------|-------------|---------|
+| `sync-to-fork.yml.j2` | `.github/workflows/sync-to-fork.yml` | Sync provider files to fork |
+| `release.yml.j2` | `.github/workflows/release.yml` | Create releases |
+| `test.yml.j2` | `.github/workflows/test.yml` | CI (lint + tests) |
+| `sync-labels.yml.j2` | `.github/workflows/sync-labels.yml` | Sync issue labels |
+| `labels.yml.j2` | `.github/labels.yml` | Label definitions |
+| `copilot-triage.yml.j2` | `.github/workflows/copilot-triage.yml` | AI-assisted issue triage |
+| `SECURITY.md.j2` | `SECURITY.md` | Security policy |
+| `issue-bug.yml.j2` | `.github/ISSUE_TEMPLATE/bug_report.yml` | Bug report form |
+| `issue-upstream.yml.j2` | `.github/ISSUE_TEMPLATE/upstream_api_change.yml` | Upstream API change form |
+| `issue-proposal.yml.j2` | `.github/ISSUE_TEMPLATE/improvement_proposal.yml` | Improvement proposal form |
+| `issue-config.yml.j2` | `.github/ISSUE_TEMPLATE/config.yml` | Issue chooser config |
+
 ### 4. distribute.yml — Auto-Distribution
 
 Triggers on push to `main` when `wrappers/` or `providers.yml` changes.
 Runs `scripts/distribute.py` which:
 1. Reads `providers.yml`
 2. Renders wrapper templates for each provider
-3. Creates PRs in each provider repo with the updated files
+3. Creates a PR in each provider repo with the updated files
+4. Enables auto-merge (squash) on the PR — merges automatically once CI passes
 
 ## Updating Shared Logic
 
