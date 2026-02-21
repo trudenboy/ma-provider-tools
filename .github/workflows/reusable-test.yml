@@ -51,8 +51,17 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]"
-          uv pip install -e "ma-server"
+          python3 << 'PYEOF'
+          import tomllib, subprocess, sys
+          try:
+              with open("pyproject.toml", "rb") as f:
+                  d = tomllib.load(f)
+          except FileNotFoundError:
+              sys.exit(0)
+          deps = d.get("project", {}).get("dependencies", [])
+          if deps:
+              subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
+          PYEOF
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -102,8 +111,17 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]"
-          uv pip install -e "ma-server"
+          python3 << 'PYEOF'
+          import tomllib, subprocess, sys
+          try:
+              with open("pyproject.toml", "rb") as f:
+                  d = tomllib.load(f)
+          except FileNotFoundError:
+              sys.exit(0)
+          deps = d.get("project", {}).get("dependencies", [])
+          if deps:
+              subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
+          PYEOF
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -149,8 +167,17 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]"
-          uv pip install -e "ma-server"
+          python3 << 'PYEOF'
+          import tomllib, subprocess, sys
+          try:
+              with open("pyproject.toml", "rb") as f:
+                  d = tomllib.load(f)
+          except FileNotFoundError:
+              sys.exit(0)
+          deps = d.get("project", {}).get("dependencies", [])
+          if deps:
+              subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
+          PYEOF
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -200,8 +227,17 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           source ma-server/.venv/bin/activate
-          uv pip install -e ".[test]"
-          uv pip install -e "ma-server"
+          python3 << 'PYEOF'
+          import tomllib, subprocess, sys
+          try:
+              with open("pyproject.toml", "rb") as f:
+                  d = tomllib.load(f)
+          except FileNotFoundError:
+              sys.exit(0)
+          deps = d.get("project", {}).get("dependencies", [])
+          if deps:
+              subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
+          PYEOF
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
