@@ -33,7 +33,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
-    locale: ru
+    locale: en
     legacy_files:
       - .github/workflows/ci.yml
 
