@@ -26,7 +26,7 @@ uv run pytest {{ provider_path }}tests/ -v --cov={{ provider_path }} --cov-repor
 
 {% if provider_type == 'music_provider' %}
 Тесты запускаются на основе `music-assistant/server@dev` (без форка — лёгкий CI).
-{% else %}
+{%- else %}
 Тесты запускаются на основе `trudenboy/ma-server@dev` (форк с поддержкой плагинов — полный CI с ruff + mypy).
 {% endif %}
 
@@ -79,7 +79,7 @@ open htmlcov/index.html
 
 Если тесты или линтеры упали в CI, автоматически создаётся GitHub-задача с меткой `incident:ci`.
 Подробнее о процессе работы с инцидентами: [Управление инцидентами](incident-management.md).
-{% else %}
+{%- else %}
 [← Development](development.md) · [← Contributing](contributing.md) · [README](../README.md)
 
 # {{ display_name }} — Testing Guide
@@ -107,7 +107,7 @@ Every push and pull request triggers two parallel jobs via `test.yml`:
 
 {% if provider_type == 'music_provider' %}
 Tests run against `music-assistant/server@dev` (no fork — lightweight CI).
-{% else %}
+{%- else %}
 Tests run against `trudenboy/ma-server@dev` (plugin-enabled fork — full CI with ruff + mypy).
 {% endif %}
 
