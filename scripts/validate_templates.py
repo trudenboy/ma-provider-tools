@@ -42,6 +42,8 @@ def main() -> int:
         "provider_path": base.get("provider_path", ""),
         "provider_type": base.get("provider_type", ""),
         "locale": base.get("locale", "en"),
+        "repo": base["repo"],
+        "default_branch": base["default_branch"],
         "all_providers": [
             p for p in providers if p.get("provider_type") != "server_fork"
         ],
