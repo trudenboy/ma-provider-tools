@@ -1,0 +1,81 @@
+{%- if locale == 'ru' -%}
+# Известные проблемы
+
+## Истечение срока действия OAuth-токена
+
+**Симптомы:** Провайдер перестаёт работать после нескольких дней или недель без явных ошибок конфигурации.
+
+**Причина:** OAuth-токены {{ display_name }} имеют ограниченный срок действия. После истечения провайдер теряет доступ к API.
+
+**Решение:** Переавторизуйтесь в настройках провайдера: удалите текущую конфигурацию, добавьте провайдер заново и пройдите авторизацию.
+
+---
+
+## Разрывы соединения при длительных сессиях
+
+**Симптомы:** Воспроизведение прерывается или треки не загружаются после нескольких часов работы.
+
+**Причина:** API {{ display_name }} закрывает долгоживущие соединения. Это поведение на стороне сервиса.
+
+**Решение:** Перезапустите Music Assistant или переподключитесь к провайдеру. Ошибка устраняется сама при следующем запросе.
+
+---
+
+## Геоблокировка плейлистов и треков
+
+**Симптомы:** Часть плейлистов или треков недоступна, хотя в приложении {{ display_name }} они открываются.
+
+**Причина:** Некоторый контент ограничен по географическому признаку или по типу подписки.
+
+**Решение:** Контент, недоступный из-за геоблокировки или ограничений подписки, не может быть воспроизведён через провайдер. Это ограничение на стороне {{ display_name }}.
+
+---
+
+## Несколько аккаунтов пока не поддерживаются
+
+**Симптомы:** При попытке добавить второй аккаунт {{ display_name }} первый перестаёт работать.
+
+**Причина:** Провайдер в текущей версии поддерживает только одну учётную запись {{ display_name }}.
+
+**Решение:** Используйте один аккаунт. Поддержка нескольких аккаунтов планируется в будущих версиях.
+{%- else -%}
+# Known Issues
+
+## OAuth Token Expiry
+
+**Symptoms:** The provider stops working after several days or weeks with no obvious configuration errors.
+
+**Cause:** {{ display_name }} OAuth tokens have a limited lifetime. After expiry, the provider loses API access.
+
+**Fix:** Re-authorise in the provider settings: remove the current configuration, add the provider again, and complete the authorisation flow.
+
+---
+
+## API Disconnects During Long Sessions
+
+**Symptoms:** Playback stops or tracks fail to load after several hours of use.
+
+**Cause:** The {{ display_name }} API closes long-lived connections. This is upstream service behaviour.
+
+**Fix:** Restart Music Assistant or reconnect the provider. The error resolves itself on the next request.
+
+---
+
+## Geo-Restricted Playlists and Tracks
+
+**Symptoms:** Some playlists or tracks are unavailable even though they open fine in the {{ display_name }} app.
+
+**Cause:** Certain content is restricted by geography or subscription tier.
+
+**Fix:** Content blocked by geo-restrictions or subscription limits cannot be played through the provider. This is a {{ display_name }}-side limitation.
+
+---
+
+## Multiple Accounts Not Yet Supported
+
+**Symptoms:** Adding a second {{ display_name }} account causes the first to stop working.
+
+**Cause:** The provider currently supports only one {{ display_name }} account.
+
+**Fix:** Use a single account. Multi-account support is planned for a future release.
+{%- endif %}

@@ -79,6 +79,11 @@ ALL_WRAPPER_FILES = [
     ("docs/incident-management.md.j2", "docs/incident-management.md"),
     # PR template
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
+    # GitHub Pages documentation
+    ("docs.yml.j2", ".github/workflows/docs.yml"),
+    ("mkdocs.yml.j2", "mkdocs.yml"),
+    ("docs/index.md.j2", "docs/index.md"),
+    ("docs/known-issues.md.j2", "docs/known-issues.md"),
 ]
 
 
@@ -104,6 +109,8 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "provider_path": provider.get("provider_path", ""),
         "provider_type": provider.get("provider_type", ""),
         "locale": provider.get("locale", "en"),
+        "repo": provider["repo"],
+        "default_branch": provider["default_branch"],
         "all_providers": [
             p for p in all_providers if p.get("provider_type") != "server_fork"
         ],

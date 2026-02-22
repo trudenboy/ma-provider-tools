@@ -7,6 +7,11 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    skip_wrappers:
+      - docs.yml.j2
+      - mkdocs.yml.j2
+      - docs/index.md.j2
+      - docs/known-issues.md.j2
 
   - domain: kion_music
     display_name: KION Music
@@ -36,6 +41,8 @@ providers:
     locale: en
     legacy_files:
       - .github/workflows/ci.yml
+    skip_wrappers:
+      - docs/known-issues.md.j2
 
   - domain: ma_server
     repo: trudenboy/ma-server
@@ -55,3 +62,7 @@ providers:
       - docs/incident-management.md.j2
       - .github/PULL_REQUEST_TEMPLATE.md.j2
       - ruff.toml.j2
+      - docs.yml.j2
+      - mkdocs.yml.j2
+      - docs/index.md.j2
+      - docs/known-issues.md.j2
