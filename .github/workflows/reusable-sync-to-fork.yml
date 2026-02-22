@@ -95,6 +95,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
         run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "FORK_SYNC_PAT not set, skipping project tracking"
+            exit 0
+          fi
           PROJECT_ID="PVT_kwHOCFMIf84BPvYe"
           PR_URL="${{ steps.create-pr.outputs.pull-request-url }}"
 
