@@ -11,6 +11,10 @@ on:
         description: "Pre-release?"
         type: boolean
         default: false
+      target_branch:
+        description: "Target branch in fork for sync (default: dev)"
+        type: string
+        default: "dev"
       manifest_path:
         description: "Path to manifest.json (used to trigger sync)"
         required: true
@@ -62,7 +66,7 @@ jobs:
           gh workflow run sync-to-fork.yml \
             --repo "${{ github.repository }}" \
             --ref "${{ github.ref_name }}" \
-            -f target_branch=dev \
+            -f target_branch="${{ inputs.target_branch || 'dev' }}" \
             -f version="v${{ inputs.version }}"
           RUN_ID=$(gh run list --repo "${{ github.repository }}" \
             --workflow=sync-to-fork.yml --limit 1 \
