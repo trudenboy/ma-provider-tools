@@ -7,8 +7,9 @@
 
 - [Настройка](configuration.md) — токен и параметры провайдера
 - [Разработка](development.md) — окружение, тесты, ветки
-{% if provider_type == 'music_provider' %}- [Известные проблемы](known-issues.md) — типичные ошибки и решения
-{% endif %}
+{%- if provider_type == 'music_provider' %}
+- [Известные проблемы](known-issues.md) — типичные ошибки и решения
+{%- endif %}
 {%- else -%}
 # {{ display_name }} Provider for Music Assistant
 
@@ -18,6 +19,7 @@ Documentation for the {{ display_name }} provider for [Music Assistant](https://
 
 - [Configuration](configuration.md) — token and provider settings
 - [Development](development.md) — dev setup, tests, branches
-{% if provider_type == 'music_provider' %}- [Known Issues](known-issues.md) — common issues and solutions
-{% endif %}
+{%- if provider_type == 'music_provider' %}
+- [Known Issues](known-issues.md) — common issues and solutions
+{%- endif %}
 {%- endif %}
