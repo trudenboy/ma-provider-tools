@@ -28,7 +28,7 @@ changes take effect immediately across all repos without any PRs.
 
 ### Wrapper File Distribution
 
-`scripts/distribute.py` renders 20 Jinja2 templates per provider and creates PRs with the results.
+`scripts/distribute.py` renders 24 Jinja2 templates per provider and creates PRs with the results.
 Triggered automatically by `distribute.yml` on push to `main` when `wrappers/` or `providers.yml` changes.
 
 **CI & automation**
@@ -63,6 +63,15 @@ Triggered automatically by `distribute.yml` on push to `main` when `wrappers/` o
 | `docs/incident-management.md.j2` → `docs/incident-management.md` | Labels, auto-incidents, Copilot triage |
 | `docs/dev-docker.md.j2` → `docs/dev-docker.md` | Docker dev environment guide |
 | `SECURITY.md.j2` → `SECURITY.md` | Security policy |
+
+**GitHub Pages docs** (skipped for `player_provider`: `docs/known-issues.md.j2`; skipped for providers with custom versions via `skip_wrappers`)
+
+| Template → Destination | Purpose |
+|------------------------|---------|
+| `docs.yml.j2` → `.github/workflows/docs.yml` | MkDocs build + GitHub Pages deploy workflow |
+| `mkdocs.yml.j2` → `mkdocs.yml` | MkDocs Material config (bilingual, `site_url` from `repo`) |
+| `docs/index.md.j2` → `docs/index.md` | Landing page with links to key sections |
+| `docs/known-issues.md.j2` → `docs/known-issues.md` | Common issues for music providers (OAuth, geo-blocks, etc.) |
 
 **Docker dev environment**
 

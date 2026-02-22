@@ -56,7 +56,7 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py
 GH_TOKEN=<your-pat> python3 scripts/distribute.py --dry-run
 ```
 
-### Default distributed files (20 templates)
+### Default distributed files (24 templates)
 
 | Template | Destination |
 |----------|-------------|
@@ -80,6 +80,10 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py --dry-run
 | `docs/testing.md.j2` | `docs/testing.md` |
 | `docs/incident-management.md.j2` | `docs/incident-management.md` |
 | `.github/PULL_REQUEST_TEMPLATE.md.j2` | `.github/PULL_REQUEST_TEMPLATE.md` |
+| `docs.yml.j2` | `.github/workflows/docs.yml` |
+| `mkdocs.yml.j2` | `mkdocs.yml` |
+| `docs/index.md.j2` | `docs/index.md` |
+| `docs/known-issues.md.j2` | `docs/known-issues.md` _(music_provider only)_ |
 
 ## 4. Add `FORK_SYNC_PAT` secret
 
@@ -89,7 +93,23 @@ The provider repo needs `FORK_SYNC_PAT` set to a PAT with `contents:write` on `t
 gh secret set FORK_SYNC_PAT --body "$PAT" --repo trudenboy/ma-provider-my-provider
 ```
 
-## 5. Update `ma-server` references
+## 5. Enable GitHub Pages
+
+The `docs.yml` workflow builds and deploys MkDocs documentation, but GitHub Pages must be enabled once per repo:
+
+1. Go to **Settings → Pages → Source** → set to **GitHub Actions**
+2. Or via CLI:
+   ```bash
+   # After the first docs.yml run, enable Pages:
+   gh api repos/trudenboy/ma-provider-my-provider/pages --method POST \
+     --field build_type=workflow
+   ```
+
+The docs site will be live at `https://trudenboy.github.io/ma-provider-my-provider/` after the first successful `docs.yml` run.
+
+> **Note:** For `player_provider`, `docs/known-issues.md.j2` is automatically skipped (add it to `skip_wrappers` is not needed — the template type check handles it). The `mkdocs.yml` and `docs/index.md` conditional nav/links are also adapted automatically via `provider_type`.
+
+## 6. Update `ma-server` references
 
 The `create-upstream-pr.yml` workflow in `trudenboy/ma-server` reads providers from this registry
 dynamically — no manual update needed.

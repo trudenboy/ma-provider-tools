@@ -53,9 +53,45 @@ providers:
 
 ## Jinja2 Template Conventions
 
-Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`.
+Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`, `repo`, `default_branch`.
 
 GitHub Actions expressions (`${{ }}`) must be wrapped in `{% raw %}...{% endraw %}` blocks to prevent Jinja2 from interpreting them.
+
+**Whitespace gotcha:** `{% if cond %}` on its own line emits a blank line when the condition is False. Use `{%- if cond %}` (dash before `%`) to suppress it — the `-` strips the preceding `\n` unconditionally, for both True and False branches.
+
+## Skipping Wrappers Per Provider
+
+Add `skip_wrappers` to a provider entry in `providers.yml` to exclude specific templates:
+
+```yaml
+skip_wrappers:
+  - docs.yml.j2
+  - docs/known-issues.md.j2
+```
+
+Use this when a provider already has a custom version of a file, or when a template doesn't apply (e.g. `player_provider` skips music-specific docs).
+
+## Template Validation
+
+`python3 scripts/validate_templates.py` — checks all top-level `wrappers/*.j2` for syntax errors, missing trailing newline, and double trailing newlines. **Does not check `wrappers/docs/*.j2` subdirectory templates.** Must be updated when new context variables are added.
+
+**Distribute runs immediately after merge** — `distribute.yml` triggers within seconds of a push to `main`. CI failures in provider repos appear almost immediately. Test templates locally before merging:
+
+```bash
+python3 scripts/validate_templates.py
+
+# Render a specific template without GitHub auth:
+python3 - <<'EOF'
+from pathlib import Path; import yaml
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+env = Environment(loader=FileSystemLoader('wrappers'), undefined=StrictUndefined, keep_trailing_newline=True)
+registry = yaml.safe_load(Path('providers.yml').read_text())
+provider = next(p for p in registry['providers'] if p['domain'] == 'kion_music')
+ctx = {k: provider.get(k, '') for k in ['domain','display_name','manifest_path','provider_path','provider_type','locale']}
+ctx.update(repo=provider['repo'], default_branch=provider['default_branch'], all_providers=registry['providers'])
+print(env.get_template('docs/index.md.j2').render(**ctx))
+EOF
+```
 
 ## Secrets
 
