@@ -55,7 +55,7 @@ jobs:
           token: ${{ secrets.FORK_SYNC_PAT }}
           ref: ${{ inputs.target_branch || 'dev' }}
 
-      - name: Sync provider files
+      - name: Sync provider files into integration/dev
         run: |
           DOMAIN=$(python3 -c "import json; print(json.load(open('provider-repo/${{ inputs.manifest_path }}'))['domain'])")
           echo "DOMAIN=$DOMAIN" >> $GITHUB_ENV
@@ -70,27 +70,21 @@ jobs:
             echo "No tests/ directory found in provider-repo, skipping test sync."
           fi
 
-      - name: Create Pull Request in fork
-        id: create-pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          path: ma-server
-          token: ${{ secrets.FORK_SYNC_PAT }}
-          commit-message: "feat(${{ env.DOMAIN }}): sync provider from ${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}"
-          branch: "provider/${{ env.DOMAIN }}-${{ steps.tag.outputs.version }}"
-          delete-branch: true
-          title: "feat(${{ env.DOMAIN }}): update provider to ${{ steps.tag.outputs.version }}"
-          body: |
-            ## Auto-sync from provider repo
+      - name: Commit and push to integration/dev
+        run: |
+          cd ma-server
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to push"
+            exit 0
+          fi
+          git commit -m "feat(${{ env.DOMAIN }}): sync provider from ${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}"
+          git push origin ${{ inputs.target_branch || 'integration/dev' }}
 
-            **Source**: [${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}](https://github.com/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.version }})
-
-            ---
-            After merging, `rebuild-integration.yml` will auto-rebuild the integration branch.
-          labels: "provider-sync,${{ env.DOMAIN }}"
-
-      - name: Track sync PR in MA Ecosystem project
-        if: success() && steps.create-pr.outputs.pull-request-url != ''
+      - name: Track sync in MA Ecosystem project
+        if: success()
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
@@ -100,10 +94,14 @@ jobs:
             exit 0
           fi
           PROJECT_ID="PVT_kwHOCFMIf84BPvYe"
-          PR_URL="${{ steps.create-pr.outputs.pull-request-url }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          VERSION="${{ steps.tag.outputs.version }}"
 
-          ITEM_ID=$(gh project item-add 3 --owner trudenboy --url "$PR_URL" \
-            --format json --jq '.id')
+          ITEM_ID=$(gh api graphql \
+            -f query='mutation($pid:ID!,$title:String!){addProjectV2DraftIssue(input:{projectId:$pid,title:$title}){projectItem{id}}}' \
+            -f pid="$PROJECT_ID" \
+            -f title="Sync ${REPO_NAME} ${VERSION} → integration/dev" \
+            --jq '.data.addProjectV2DraftIssue.projectItem.id')
 
           gh api graphql \
             -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$opt:String!){updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{singleSelectOptionId:$opt}}){projectV2Item{id}}}' \
