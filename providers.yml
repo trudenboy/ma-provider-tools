@@ -10,6 +10,8 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - mkdocs.yml.j2
+      - docs/index.md.j2
 
   - domain: kion_music
     display_name: KION Music
