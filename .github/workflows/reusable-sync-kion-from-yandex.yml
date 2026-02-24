@@ -72,6 +72,10 @@ jobs:
               -e '/http/!s/\byandex\b/kion/g' \
               -e 's/My Wave/My Mix/g' \
               -e 's/my wave/my mix/g' \
+              -e 's/AI Wave Sets/AI Mix Sets/g' \
+              -e 's/Featured Waves/Featured Mixes/g' \
+              -e 's/Моя волна/Мой микс/g' \
+              -e 's/Избранные волны/Избранные миксы/g' \
               "$f"
           done
 
