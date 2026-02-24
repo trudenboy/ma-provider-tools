@@ -51,6 +51,12 @@ jobs:
           set -euo pipefail
 
           rsync -av --delete \
+            --exclude="*.svg" \
+            --exclude="*.png" \
+            --exclude="*.jpg" \
+            --exclude="*.jpeg" \
+            --exclude="*.ico" \
+            --exclude="*.webp" \
             yandex-repo/${{ inputs.yandex_provider_path }} \
             kion-repo/${{ inputs.yandex_provider_path }}
 
