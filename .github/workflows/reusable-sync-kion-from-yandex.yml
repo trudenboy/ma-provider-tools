@@ -85,6 +85,21 @@ jobs:
           EOF
           fi
 
+          # Override DEFAULT_BASE_URL in kion's constants.py
+          if [ -f "kion-repo/${{ inputs.yandex_provider_path }}constants.py" ]; then
+            python3 - <<'EOF'
+          import re, pathlib
+          p = pathlib.Path("kion-repo/${{ inputs.yandex_provider_path }}constants.py")
+          content = p.read_text()
+          content = re.sub(
+              r'(DEFAULT_BASE_URL: Final\[str\] = ")[^"]*(")',
+              r'\1https://music.mts.ru/ya_proxy_api\2',
+              content
+          )
+          p.write_text(content)
+          EOF
+          fi
+
           # Check if anything changed vs HEAD
           cd kion-repo
           git diff --quiet && echo "sync_made_changes=false" >> $GITHUB_OUTPUT \
