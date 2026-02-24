@@ -96,6 +96,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Trigger Kion Music sync (yandex_music only)
+        run: |
+          gh workflow run sync-kion-from-yandex.yml \
+            --repo "${{ github.repository }}" \
+            --ref "${{ github.ref_name }}" || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Track release in MA Ecosystem project
         if: success()
         continue-on-error: true
