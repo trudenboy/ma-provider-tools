@@ -81,6 +81,8 @@ ALL_WRAPPER_FILES = [
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
     # Fork upstream sync (server_fork only)
     ("sync-from-upstream.yml.j2", ".github/workflows/sync-from-upstream.yml"),
+    # Upstream PR submission (server_fork only)
+    ("upstream-pr.yml.j2", ".github/workflows/upstream-pr.yml"),
     # GitHub Pages documentation
     ("docs.yml.j2", ".github/workflows/docs.yml"),
     ("mkdocs.yml.j2", "mkdocs.yml"),
