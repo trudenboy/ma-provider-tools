@@ -85,7 +85,7 @@ jobs:
           TITLE: "Security audit failure — ${{ github.ref_name }}"
           RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
-          LABEL="incident:ci"
+          LABEL="incident:security"
           EXISTING=$(gh issue list \
             --repo "$GITHUB_REPOSITORY" \
             --label "$LABEL" \

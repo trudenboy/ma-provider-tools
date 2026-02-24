@@ -105,6 +105,25 @@ jobs:
             -f pid="$PROJECT_ID" -f iid="$ITEM_ID" \
             -f fid="PVTF_lAHOCFMIf84BPvYezg-EBpg" -f v="$VERSION"
 
+          case "$REPO_NAME" in
+            "ma-provider-yandex-music") PROVIDER_OPT="97d12d8f" ;;
+            "ma-provider-kion-music")   PROVIDER_OPT="3b727476" ;;
+            "ma-provider-zvuk-music")   PROVIDER_OPT="562dfe7b" ;;
+            "ma-provider-msx-bridge")   PROVIDER_OPT="39fcac6d" ;;
+            *)                          PROVIDER_OPT="" ;;
+          esac
+          if [[ -n "$PROVIDER_OPT" ]]; then
+            gh api graphql \
+              -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$opt:String!){updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{singleSelectOptionId:$opt}}){projectV2Item{id}}}' \
+              -f pid="$PROJECT_ID" -f iid="$ITEM_ID" \
+              -f fid="PVTSSF_lAHOCFMIf84BPvYezg-EBos" -f opt="$PROVIDER_OPT"
+          fi
+
+          gh api graphql \
+            -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$opt:String!){updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{singleSelectOptionId:$opt}}){projectV2Item{id}}}' \
+            -f pid="$PROJECT_ID" -f iid="$ITEM_ID" \
+            -f fid="PVTSSF_lAHOCFMIf84BPvYezg-EBow" -f opt="3c05d86e"
+
   # ─── Report release failure as a GitHub issue (with dedup) ──────────────────
   report-failure:
     needs: [release]
