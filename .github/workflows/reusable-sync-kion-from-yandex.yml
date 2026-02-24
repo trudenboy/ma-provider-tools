@@ -65,11 +65,14 @@ jobs:
             sed -i \
               -e '/\(from\|import\) yandex_music/!s/yandex_music/kion_music/g' \
               -e 's/YandexMusic/KionMusic/g' \
+              -e 's/yandexmusic/kionmusic/g' \
               -e 's/Yandex Music/KION Music/g' \
               -e 's/Яндекс Музыка/KION Music/g' \
               -e 's/Яндекс\.Музыка/KION Music/g' \
+              -e 's/яндекс\.музыка/кион.музыка/g' \
               -e '/http/!s/\bYandex\b/Kion/g' \
               -e '/http/!s/\byandex\b/kion/g' \
+              -e 's/яндекс/кион/g' \
               -e 's/My Wave/My Mix/g' \
               -e 's/my wave/my mix/g' \
               -e 's/AI Wave Sets/AI Mix Sets/g' \
