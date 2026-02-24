@@ -107,6 +107,11 @@ jobs:
               r'\1https://music.mts.ru/ya_proxy_api\2',
               content
           )
+          content = re.sub(
+              r'(WEB_BASE_URL: Final\[str\] = ")[^"]*(")',
+              r'\1https://music.mts.ru\2',
+              content
+          )
           p.write_text(content)
           EOF
           fi
