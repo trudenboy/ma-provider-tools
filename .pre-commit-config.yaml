@@ -8,6 +8,8 @@ repos:
         exclude: ^wrappers/   # .j2 files contain Jinja2 syntax — not pure YAML
       - id: check-merge-conflict
       - id: check-added-large-files
+        args: [--maxkb=1024]
+        exclude: ^package-lock\.json$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.6

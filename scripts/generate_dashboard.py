@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Generate docs/dashboard.md with live stats for all providers.
+"""Generate static/dashboard-data.json with live stats for all providers.
 
 Fetches data from GitHub API via `gh api` for each provider defined in
-providers.yml, then writes a Markdown dashboard page for MkDocs.
+providers.yml, then writes a JSON file consumed by the Docusaurus
+React dashboard component.
 
 Usage:
     python3 scripts/generate_dashboard.py
@@ -25,7 +26,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
 PROVIDERS_FILE = REPO_ROOT / "providers.yml"
-OUTPUT_FILE = REPO_ROOT / "docs" / "dashboard.md"
+OUTPUT_FILE = REPO_ROOT / "static" / "dashboard-data.json"
 
 # Providers skipped in CI status check (no test.yml)
 CI_SKIP_WORKFLOW = {"server_fork"}
@@ -93,47 +94,6 @@ def gh_api_single(path: str, retries: int = 3, retry_delay: float = 5.0) -> obje
 def count_list(data: object) -> int:
     """Return length of list, or 0 if not a list."""
     return len(data) if isinstance(data, list) else 0
-
-
-def ci_emoji(conclusion: str | None) -> str:
-    mapping = {
-        "success": "✅",
-        "failure": "❌",
-        "cancelled": "⚫",
-        "skipped": "⏭️",
-        "timed_out": "⏱️",
-        "action_required": "⚠️",
-        "neutral": "⚪",
-        "in_progress": "🔄",
-        "queued": "🕐",
-        None: "❓",
-    }
-    return mapping.get(conclusion or "", "❓")
-
-
-def format_date(iso: str | None, relative: bool = True) -> str:
-    """Format ISO timestamp to relative or short date."""
-    if not iso:
-        return "—"
-    try:
-        dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
-        if relative:
-            now = datetime.now(timezone.utc)
-            delta = now - dt
-            days = delta.days
-            if days == 0:
-                hours = delta.seconds // 3600
-                return f"{hours}h ago" if hours > 0 else "just now"
-            if days < 30:
-                return f"{days}d ago"
-            if days < 365:
-                months = days // 30
-                return f"{months}mo ago"
-            years = days // 365
-            return f"{years}y ago"
-        return dt.strftime("%Y-%m-%d")
-    except (ValueError, AttributeError):
-        return "—"
 
 
 def get_provider_stats(repo: str, provider_type: str) -> dict:
@@ -253,139 +213,39 @@ def get_provider_stats(repo: str, provider_type: str) -> dict:
     return stats
 
 
-def render_dashboard(providers: list[dict], all_stats: dict[str, dict]) -> str:
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines = [
-        "# Provider Dashboard",
-        "",
-        f"*Last updated: {now}*",
-        "",
-        "---",
-        "",
-        "## PRs & Issues",
-        "",
-        "| Provider | Type | Open PRs | Draft | Merged 30d | 🐛 Bugs | 💡 Enhance | 🚨 CI Incidents | Issues | CI Status | Last Release |",
-        "|----------|------|:--------:|:-----:|:----------:|:-------:|:----------:|:---------------:|:------:|:---------:|:------------:|",
-    ]
-
-    totals = {
-        "pr_open": 0,
-        "pr_draft": 0,
-        "pr_merged_30d": 0,
-        "bugs": 0,
-        "enhancements": 0,
-        "incidents": 0,
-        "issues_open": 0,
-    }
-
+def build_json_output(providers: list[dict], all_stats: dict[str, dict]) -> dict:
+    """Build the JSON payload consumed by the React dashboard component."""
+    now = datetime.now(timezone.utc).isoformat()
+    provider_list = []
     for p in providers:
         repo = p["repo"]
         s = all_stats.get(repo, {})
-        name = p.get("display_name", p["domain"])
-        ptype = p.get("provider_type", "")
-        ptype_short = {
-            "music_provider": "🎵 Music",
-            "player_provider": "🔊 Player",
-            "server_fork": "🔧 Fork",
-        }.get(ptype, ptype)
-        repo_url = f"https://github.com/{repo}"
-
-        ci_raw = s.get("ci_status")
-        if ci_raw == "n/a":
-            ci_cell = "—"
-        else:
-            ci_cell = ci_emoji(ci_raw)
-            if s.get("ci_date"):
-                ci_cell += f" {format_date(s['ci_date'])}"
-
-        release = s.get("last_release") or "—"
-        if release != "—" and s.get("last_release_date"):
-            release = f"{release} ({format_date(s['last_release_date'])})"
-
-        row = (
-            f"| [{name}]({repo_url}) "
-            f"| {ptype_short} "
-            f"| {s.get('pr_open', '?')} "
-            f"| {s.get('pr_draft', '?')} "
-            f"| {s.get('pr_merged_30d', '?')} "
-            f"| {s.get('bugs', '?')} "
-            f"| {s.get('enhancements', '?')} "
-            f"| {s.get('incidents', '?')} "
-            f"| {s.get('issues_open', '?')} "
-            f"| {ci_cell} "
-            f"| {release} |"
+        provider_list.append(
+            {
+                "name": p.get("display_name", p["domain"]),
+                "repo": repo,
+                "type": p.get("provider_type", ""),
+                "pr_open": s.get("pr_open", 0),
+                "pr_draft": s.get("pr_draft", 0),
+                "pr_merged_30d": s.get("pr_merged_30d", 0),
+                "bugs": s.get("bugs", 0),
+                "enhancements": s.get("enhancements", 0),
+                "incidents": s.get("incidents", 0),
+                "issues_open": s.get("issues_open", 0),
+                "ci_status": s.get("ci_status"),
+                "ci_date": s.get("ci_date"),
+                "last_release": s.get("last_release"),
+                "last_release_date": s.get("last_release_date"),
+                "commits_30d": s.get("commits_30d", 0),
+                "last_commit": s.get("last_commit"),
+                "contributors": s.get("contributors", 0),
+                "py_files": s.get("py_files", 0),
+                "code_size_kb": s.get("code_size_kb", 0),
+                "additions_30d": s.get("additions_30d", 0),
+                "deletions_30d": s.get("deletions_30d", 0),
+            }
         )
-        lines.append(row)
-
-        for k in totals:
-            totals[k] += s.get(k, 0) if isinstance(s.get(k), int) else 0
-
-    totals_row = (
-        f"| **Total** | — "
-        f"| **{totals['pr_open']}** "
-        f"| **{totals['pr_draft']}** "
-        f"| **{totals['pr_merged_30d']}** "
-        f"| **{totals['bugs']}** "
-        f"| **{totals['enhancements']}** "
-        f"| **{totals['incidents']}** "
-        f"| **{totals['issues_open']}** "
-        f"| — | — |"
-    )
-    lines.extend(["", totals_row, ""])
-
-    # --- Codebase section ---
-    lines.extend(
-        [
-            "---",
-            "",
-            "## Codebase",
-            "",
-            "| Provider | 🐍 Python Files | 📦 Code Size | 👥 Contributors |",
-            "|----------|:--------------:|:------------:|:---------------:|",
-        ]
-    )
-
-    for p in providers:
-        repo = p["repo"]
-        s = all_stats.get(repo, {})
-        name = p.get("display_name", p["domain"])
-        repo_url = f"https://github.com/{repo}"
-        lines.append(
-            f"| [{name}]({repo_url}) "
-            f"| {s.get('py_files', '?')} "
-            f"| {s.get('code_size_kb', '?')} KB "
-            f"| {s.get('contributors', '?')} |"
-        )
-
-    # --- Development intensity section ---
-    lines.extend(
-        [
-            "",
-            "---",
-            "",
-            "## Development Intensity (last 30 days)",
-            "",
-            "| Provider | 📝 Commits | Last Commit | ➕ Additions | ➖ Deletions |",
-            "|----------|:----------:|:-----------:|:------------:|:------------:|",
-        ]
-    )
-
-    for p in providers:
-        repo = p["repo"]
-        s = all_stats.get(repo, {})
-        name = p.get("display_name", p["domain"])
-        repo_url = f"https://github.com/{repo}"
-        lines.append(
-            f"| [{name}]({repo_url}) "
-            f"| {s.get('commits_30d', '?')} "
-            f"| {format_date(s.get('last_commit'))} "
-            f"| +{s.get('additions_30d', 0):,} "
-            f"| -{s.get('deletions_30d', 0):,} |"
-        )
-
-    lines.extend(["", "---", ""])
-
-    return "\n".join(lines) + "\n"
+    return {"generated_at": now, "providers": provider_list}
 
 
 def main() -> None:
@@ -419,7 +279,8 @@ def main() -> None:
 
     print(f"\nWriting {OUTPUT_FILE}...")
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_FILE.write_text(render_dashboard(providers, all_stats))
+    payload = build_json_output(providers, all_stats)
+    OUTPUT_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
     print("Done.")
 
 

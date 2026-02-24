@@ -6,9 +6,13 @@ on:
       - main
     paths:
       - "docs/**"
-      - "mkdocs.yml"
+      - "docusaurus.config.ts"
+      - "sidebars.ts"
+      - "src/**"
+      - "static/**"
       - "providers.yml"
       - "scripts/generate_dashboard.py"
+      - "package.json"
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
@@ -32,20 +36,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: pip install mkdocs-material pymdown-extensions pyyaml
+      - name: Install Python dependencies
+        run: pip install pyyaml
 
-      - name: Generate dashboard
+      - name: Generate dashboard data
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
         run: python3 scripts/generate_dashboard.py
 
-      - name: Build docs
-        run: mkdocs build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build Docusaurus site
+        run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site/
+          path: build/
 
   deploy:
     needs: build

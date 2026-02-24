@@ -1,2 +1,5 @@
 .worktrees/
 site/
+node_modules
+.docusaurus
+build

@@ -1,3 +1,8 @@
+---
+id: adding-provider
+sidebar_position: 2
+---
+
 # Adding a New Provider
 
 ## 1. Create the provider repository

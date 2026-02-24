@@ -1,6 +1,11 @@
+---
+id: github-projects-setup
+sidebar_position: 3
+---
+
 # MA Ecosystem — GitHub Projects Setup
 
-Project URL: <https://github.com/users/trudenboy/projects/3>
+Project URL: [https://github.com/users/trudenboy/projects/3](https://github.com/users/trudenboy/projects/3)
 
 ## What Was Automated
 
@@ -59,7 +64,7 @@ Steps:
 
 ### 2. Create Views
 
-Navigate to <https://github.com/users/trudenboy/projects/3> and create the following views:
+Navigate to [https://github.com/users/trudenboy/projects/3](https://github.com/users/trudenboy/projects/3) and create the following views:
 
 #### Incident Board (Board layout)
 - Layout: **Board**
@@ -112,7 +117,7 @@ gh project item-add 3 --owner trudenboy --url <ISSUE_URL>
 When a provider release succeeds, the workflow:
 1. Creates a draft project item titled `"Release {repo-name} v{version}"`
 2. Sets **Status = Released**
-3. Sets **Version = v{version}**
+3. Sets **Version = v&#123;version&#125;**
 
 Requires `FORK_SYNC_PAT` with `project` scope passed to the reusable workflow:
 ```yaml
