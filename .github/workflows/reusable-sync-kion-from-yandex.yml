@@ -63,7 +63,7 @@ jobs:
           # Apply branding substitutions: Yandex → Kion (identifiers, class names, display strings)
           find kion-repo/${{ inputs.yandex_provider_path }} -type f -name "*.py" | while read -r f; do
             sed -i \
-              -e 's/yandex_music/kion_music/g' \
+              -e '/\(from\|import\) yandex_music/!s/yandex_music/kion_music/g' \
               -e 's/YandexMusic/KionMusic/g' \
               -e 's/Yandex Music/KION Music/g' \
               -e 's/Яндекс Музыка/KION Music/g' \
