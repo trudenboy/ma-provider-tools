@@ -76,6 +76,8 @@ jobs:
               -e 's/Featured Waves/Featured Mixes/g' \
               -e 's/Моя волна/Мой микс/g' \
               -e 's/Избранные волны/Избранные миксы/g' \
+              -e 's/ROTOR_STATION_MY_WAVE/ROTOR_STATION_MY_MIX/g' \
+              -e 's/QUALITY_SUPERB/QUALITY_LOSSLESS/g' \
               "$f"
           done
 
