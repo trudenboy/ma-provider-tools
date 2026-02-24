@@ -60,14 +60,8 @@ jobs:
             yandex-repo/${{ inputs.yandex_provider_path }} \
             kion-repo/${{ inputs.yandex_provider_path }}
 
-          if [ -d "yandex-repo/tests" ]; then
-            rsync -av --delete \
-              yandex-repo/tests/ \
-              kion-repo/tests/
-          fi
-
           # Apply branding substitutions: Yandex → Kion (identifiers, class names, display strings)
-          find kion-repo/${{ inputs.yandex_provider_path }} kion-repo/tests -type f -name "*.py" 2>/dev/null | while read -r f; do
+          find kion-repo/${{ inputs.yandex_provider_path }} -type f -name "*.py" | while read -r f; do
             sed -i \
               -e '/\(from\|import\) yandex_music/!s/yandex_music/kion_music/g' \
               -e 's/YandexMusic/KionMusic/g' \
