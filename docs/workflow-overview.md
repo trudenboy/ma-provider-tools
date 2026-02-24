@@ -91,6 +91,7 @@ delegating everything else to the reusable workflows.
 | `mkdocs.yml.j2` | `mkdocs.yml` | MkDocs Material config; `site_url` derived from `repo` field |
 | `docs/index.md.j2` | `docs/index.md` | Landing page (bilingual via `locale`) |
 | `docs/known-issues.md.j2` | `docs/known-issues.md` | Common issues for music providers; skipped for `player_provider` |
+| `docs/stylesheets/extra.css.j2` | `docs/stylesheets/extra.css` | Music Assistant brand colors + system fonts |
 
 ### 4. distribute.yml — Auto-Distribution
 

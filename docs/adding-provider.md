@@ -89,6 +89,7 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py --dry-run
 | `mkdocs.yml.j2` | `mkdocs.yml` |
 | `docs/index.md.j2` | `docs/index.md` |
 | `docs/known-issues.md.j2` | `docs/known-issues.md` _(music_provider only)_ |
+| `docs/stylesheets/extra.css.j2` | `docs/stylesheets/extra.css` |
 
 ## 4. Add `FORK_SYNC_PAT` secret
 

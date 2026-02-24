@@ -89,6 +89,7 @@ ALL_WRAPPER_FILES = [
     ("mkdocs.yml.j2", "mkdocs.yml"),
     ("docs/index.md.j2", "docs/index.md"),
     ("docs/known-issues.md.j2", "docs/known-issues.md"),
+    ("docs/stylesheets/extra.css.j2", "docs/stylesheets/extra.css"),
 ]
 
 

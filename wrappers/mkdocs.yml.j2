@@ -11,10 +11,29 @@ edit_uri: edit/{{ default_branch }}/docs/
 theme:
   name: material
   language: {% if locale == 'ru' %}ru{% else %}en{% endif %}
+  font: false
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: {% if locale == 'ru' %}Тёмная тема{% else %}Switch to dark mode{% endif %}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: {% if locale == 'ru' %}Светлая тема{% else %}Switch to light mode{% endif %}
   features:
     - navigation.tabs
     - navigation.sections
     - content.tabs.link
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -28,13 +47,32 @@ markdown_extensions:
   - toc:
       permalink: true
 
+{%- if locale == 'ru' %}
+
+nav:
+  - Главная: index.md
+  - Настройка: configuration.md
+{%- if provider_type == 'music_provider' %}
+  - Известные проблемы: known-issues.md
+{%- endif %}
+  - Разработка:
+      - Настройка окружения: development.md
+      - Docker: dev-docker.md
+      - Тестирование: testing.md
+      - Вклад в разработку: contributing.md
+      - Управление инцидентами: incident-management.md
+{%- else %}
+
 nav:
   - Home: index.md
   - Configuration: configuration.md
-{% if provider_type == 'music_provider' %}  - Known Issues: known-issues.md
-{% endif %}  - Development:
+{%- if provider_type == 'music_provider' %}
+  - Known Issues: known-issues.md
+{%- endif %}
+  - Development:
       - Setup: development.md
       - Docker: dev-docker.md
       - Testing: testing.md
       - Contributing: contributing.md
       - Incident Management: incident-management.md
+{%- endif %}
