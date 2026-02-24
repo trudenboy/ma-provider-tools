@@ -8,6 +8,7 @@ providers:
     provider_type: music_provider
     locale: ru
     skip_wrappers:
+      - README.md.j2
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
       - docs.yml.j2
@@ -24,6 +25,7 @@ providers:
     provider_type: music_provider
     locale: ru
     skip_wrappers:
+      - README.md.j2
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
 
@@ -36,6 +38,7 @@ providers:
     provider_type: music_provider
     locale: ru
     skip_wrappers:
+      - README.md.j2
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
 
@@ -50,11 +53,13 @@ providers:
     legacy_files:
       - .github/workflows/ci.yml
     skip_wrappers:
+      - README.md.j2
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
       - docs/known-issues.md.j2
 
   - domain: ma_server
+    display_name: Music Assistant Server (Fork)
     repo: trudenboy/ma-server
     default_branch: dev
     provider_type: server_fork
