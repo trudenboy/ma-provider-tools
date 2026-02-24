@@ -10,6 +10,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - sync-kion-from-yandex.yml.j2
       - mkdocs.yml.j2
       - docs/index.md.j2
 
@@ -24,6 +25,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - sync-kion-from-yandex.yml.j2
 
   - domain: zvuk_music
     display_name: Zvuk Music
@@ -36,6 +38,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - sync-kion-from-yandex.yml.j2
 
   - domain: msx_bridge
     display_name: MSX Bridge
@@ -51,6 +54,7 @@ providers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
       - docs/known-issues.md.j2
+      - sync-kion-from-yandex.yml.j2
 
   - domain: ma_server
     display_name: Music Assistant Server (Fork)
@@ -83,3 +87,4 @@ providers:
       - docs/known-issues.md.j2
       - SECURITY.md.j2
       - backport.yml.j2
+      - sync-kion-from-yandex.yml.j2
