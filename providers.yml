@@ -2,7 +2,7 @@ providers:
   - domain: yandex_music
     display_name: Yandex Music
     repo: trudenboy/ma-provider-yandex-music
-    default_branch: refactor/yandex-config-categories
+    default_branch: dev
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider
