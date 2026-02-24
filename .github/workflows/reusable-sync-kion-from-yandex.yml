@@ -70,6 +70,8 @@ jobs:
               -e 's/Яндекс\.Музыка/KION Music/g' \
               -e '/http/!s/\bYandex\b/Kion/g' \
               -e '/http/!s/\byandex\b/kion/g' \
+              -e 's/My Wave/My Mix/g' \
+              -e 's/my wave/my mix/g' \
               "$f"
           done
 
