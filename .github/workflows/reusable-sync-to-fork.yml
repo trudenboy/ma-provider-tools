@@ -23,6 +23,10 @@ on:
         description: "Target fork repository (owner/repo)"
         default: "trudenboy/ma-server"
         type: string
+      create_pr:
+        description: "Create a PR instead of pushing directly (used for stable backports)"
+        type: boolean
+        default: false
     secrets:
       FORK_SYNC_PAT:
         required: true
@@ -71,6 +75,7 @@ jobs:
           fi
 
       - name: Commit and push to integration/dev
+        if: ${{ !inputs.create_pr }}
         run: |
           cd ma-server
           git config user.name "github-actions[bot]"
@@ -82,6 +87,46 @@ jobs:
           fi
           git commit -m "feat(${{ env.DOMAIN }}): sync provider from ${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}"
           git push origin ${{ inputs.target_branch || 'integration/dev' }}
+
+      - name: Create backport PR in fork
+        if: ${{ inputs.create_pr }}
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+        run: |
+          VERSION="${{ steps.tag.outputs.version }}"
+          VERSION_CLEAN="${VERSION%-stable}"
+          BRANCH="backport/${{ env.DOMAIN }}-${VERSION_CLEAN}"
+          TARGET="${{ inputs.target_branch || 'stable' }}"
+          cd ma-server
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes — nothing to backport"
+            exit 0
+          fi
+          git commit -m "fix(${{ env.DOMAIN }}): backport provider from ${{ github.event.repository.name }} ${VERSION_CLEAN}"
+          git push origin "$BRANCH"
+          BODY=$(printf '## Backport to %s\n\n**Source**: [%s %s](https://github.com/%s/releases/tag/%s)\n\nBackport of provider code + tests.' \
+            "$TARGET" \
+            "${{ github.event.repository.name }}" "$VERSION" \
+            "${{ github.repository }}" "$VERSION")
+          gh pr create \
+            --repo "${{ inputs.fork_repo }}" \
+            --base "$TARGET" \
+            --head "$BRANCH" \
+            --title "fix(${{ env.DOMAIN }}): backport provider to ${VERSION_CLEAN}" \
+            --body "$BODY" \
+            --label "backport" \
+            --label "${{ env.DOMAIN }}" || \
+          gh pr create \
+            --repo "${{ inputs.fork_repo }}" \
+            --base "$TARGET" \
+            --head "$BRANCH" \
+            --title "fix(${{ env.DOMAIN }}): backport provider to ${VERSION_CLEAN}" \
+            --body "$BODY"
+          echo "PR_BRANCH=$BRANCH" >> $GITHUB_ENV
 
       - name: Track sync in MA Ecosystem project
         if: success()
@@ -100,7 +145,7 @@ jobs:
           ITEM_ID=$(gh api graphql \
             -f query='mutation($pid:ID!,$title:String!){addProjectV2DraftIssue(input:{projectId:$pid,title:$title}){projectItem{id}}}' \
             -f pid="$PROJECT_ID" \
-            -f title="Sync ${REPO_NAME} ${VERSION} → integration/dev" \
+            -f title="Sync ${REPO_NAME} ${VERSION} → ${{ inputs.create_pr && inputs.target_branch || 'integration/dev' }}" \
             --jq '.data.addProjectV2DraftIssue.projectItem.id')
 
           gh api graphql \

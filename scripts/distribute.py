@@ -83,6 +83,7 @@ ALL_WRAPPER_FILES = [
     ("sync-from-upstream.yml.j2", ".github/workflows/sync-from-upstream.yml"),
     # Upstream PR submission (server_fork only)
     ("upstream-pr.yml.j2", ".github/workflows/upstream-pr.yml"),
+    ("backport.yml.j2", ".github/workflows/backport.yml"),
     # GitHub Pages documentation
     ("docs.yml.j2", ".github/workflows/docs.yml"),
     ("mkdocs.yml.j2", "mkdocs.yml"),
