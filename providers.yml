@@ -10,6 +10,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
       - mkdocs.yml.j2
       - docs/index.md.j2
 
@@ -24,6 +25,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
 
   - domain: zvuk_music
@@ -37,6 +39,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
 
   - domain: msx_bridge
@@ -52,6 +55,7 @@ providers:
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
       - docs/known-issues.md.j2
       - sync-kion-from-yandex.yml.j2
 
