@@ -84,6 +84,8 @@ ALL_WRAPPER_FILES = [
     # Upstream PR submission (server_fork only)
     ("upstream-pr.yml.j2", ".github/workflows/upstream-pr.yml"),
     ("backport.yml.j2", ".github/workflows/backport.yml"),
+    # Kion Music sync from Yandex Music (yandex_music provider only)
+    ("sync-kion-from-yandex.yml.j2", ".github/workflows/sync-kion-from-yandex.yml"),
     # GitHub Pages documentation
     ("docs.yml.j2", ".github/workflows/docs.yml"),
     ("mkdocs.yml.j2", "mkdocs.yml"),
