@@ -1,0 +1,62 @@
+name: Sync from Upstream (music-assistant/server)
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-dev:
+    name: Sync dev branch from upstream
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Merge upstream dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/music-assistant/server.git
+          git fetch upstream dev
+          if git merge upstream/dev --no-edit; then
+            echo "✅ Merged upstream/dev cleanly"
+          else
+            echo "⚠️ Merge conflicts — resolving by preferring upstream for conflicted files"
+            git diff --name-only --diff-filter=U | xargs -r git checkout --theirs --
+            git add -A
+            git commit -m "chore: merge upstream/dev (conflicts resolved, upstream preferred)"
+          fi
+          git push origin dev
+
+  sync-stable:
+    name: Sync stable branch from upstream
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork stable
+        uses: actions/checkout@v4
+        with:
+          ref: stable
+          fetch-depth: 0
+
+      - name: Merge upstream stable
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/music-assistant/server.git
+          git fetch upstream stable
+          if git merge upstream/stable --no-edit; then
+            echo "✅ Merged upstream/stable cleanly"
+          else
+            echo "⚠️ Merge conflicts — resolving by preferring upstream for conflicted files"
+            git diff --name-only --diff-filter=U | xargs -r git checkout --theirs --
+            git add -A
+            git commit -m "chore: merge upstream/stable (conflicts resolved, upstream preferred)"
+          fi
+          git push origin stable

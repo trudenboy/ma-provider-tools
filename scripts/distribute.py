@@ -79,6 +79,8 @@ ALL_WRAPPER_FILES = [
     ("docs/incident-management.md.j2", "docs/incident-management.md"),
     # PR template
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
+    # Fork upstream sync (server_fork only)
+    ("sync-from-upstream.yml.j2", ".github/workflows/sync-from-upstream.yml"),
     # GitHub Pages documentation
     ("docs.yml.j2", ".github/workflows/docs.yml"),
     ("mkdocs.yml.j2", "mkdocs.yml"),

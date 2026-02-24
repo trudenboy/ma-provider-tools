@@ -8,6 +8,7 @@ providers:
     provider_type: music_provider
     locale: ru
     skip_wrappers:
+      - sync-from-upstream.yml.j2
       - docs.yml.j2
       - mkdocs.yml.j2
       - docs/index.md.j2
@@ -21,6 +22,8 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
 
   - domain: zvuk_music
     display_name: Zvuk Music
@@ -30,6 +33,8 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
 
   - domain: msx_bridge
     display_name: MSX Bridge
@@ -42,12 +47,19 @@ providers:
     legacy_files:
       - .github/workflows/ci.yml
     skip_wrappers:
+      - sync-from-upstream.yml.j2
       - docs/known-issues.md.j2
 
   - domain: ma_server
     repo: trudenboy/ma-server
     default_branch: dev
     provider_type: server_fork
+    legacy_files:
+      - .github/workflows/release.yml
+      - .github/workflows/auto-release.yml
+      - .github/workflows/build-base-image.yml
+      - .github/workflows/auto-merge-dependency-updates.yml
+      - .github/workflows/dependency-approval-command.yml
     skip_wrappers:
       - test.yml.j2
       - release.yml.j2
