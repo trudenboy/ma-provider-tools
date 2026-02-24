@@ -11,12 +11,12 @@ This repo manages shared CI/CD workflows and distributes standardized files to a
 
 ## Managed Providers
 
-| Provider | Repository | Type |
-|----------|-----------|------|
-| Yandex Music | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Music |
-| KION Music | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Music |
-| Zvuk Music | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Music |
-| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Player |
+| Provider | Repository | Type | Issues | Changelog |
+|----------|-----------|------|--------|-----------|
+| Yandex Music | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Music | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-music/blob/dev/CHANGELOG.md) |
+| KION Music | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Music | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
+| Zvuk Music | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Music | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
+| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Player | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
 
 ## How It Works
 
@@ -50,16 +50,7 @@ test.yml fails → reusable-report-incident → Issue (incident:ci + priority:hi
                         add label "copilot" → copilot-triage → @copilot PR
 ```
 
-## Where to File Incidents
-
-> **File issues in the affected provider's repository, not here.**
-
-| Provider | Issues |
-|----------|--------|
-| Yandex Music | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) |
-| KION Music | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) |
-| Zvuk Music | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) |
-| MSX Bridge | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) |
+> **File issues in the affected provider's repository, not here.** See the Issues column above.
 
 Issues in this repo are for infrastructure problems only (broken distribution pipeline, shared workflow bugs, etc.).
 
@@ -117,12 +108,12 @@ docs/
 
 ## Провайдеры
 
-| Провайдер | Репозиторий | Тип |
-|-----------|------------|-----|
-| Яндекс Музыка | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Музыкальный |
-| KION Музыка | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Музыкальный |
-| Звук | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Музыкальный |
-| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Плеер |
+| Провайдер | Репозиторий | Тип | Задачи | Changelog |
+|-----------|------------|-----|--------|-----------|
+| Яндекс Музыка | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Музыка | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-music/blob/dev/CHANGELOG.md) |
+| KION Музыка | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Музыка | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
+| Звук | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Музыка | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
+| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Плеер | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
 
 ## Как это работает
 
@@ -156,16 +147,7 @@ test.yml падает → reusable-report-incident → Issue (incident:ci + prio
                         добавь метку "copilot" → copilot-triage → @copilot PR
 ```
 
-## Где заводить инциденты
-
-> **Заводи задачи в репозитории конкретного провайдера, а не здесь.**
-
-| Провайдер | Задачи |
-|-----------|--------|
-| Яндекс Музыка | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) |
-| KION Музыка | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) |
-| Звук | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) |
-| MSX Bridge | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) |
+> **Заводи задачи в репозитории конкретного провайдера, а не здесь.** См. столбец Issues выше.
 
 Задачи в этом репозитории (ma-provider-tools) — только для проблем с инфраструктурой (сбои пайплайна дистрибуции, баги общих workflow и т.д.).
 
