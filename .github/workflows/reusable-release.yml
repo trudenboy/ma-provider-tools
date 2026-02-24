@@ -70,7 +70,10 @@ jobs:
             --repo "${{ github.repository }}" \
             --json body --jq '.body' > /tmp/release_notes.txt
 
-          python3 scripts/update_changelog.py \
+          gh api repos/trudenboy/ma-provider-tools/contents/scripts/update_changelog.py \
+            --jq '.content' | base64 -d > /tmp/update_changelog.py
+
+          python3 /tmp/update_changelog.py \
             "$VERSION" "$(date -u +%Y-%m-%d)" /tmp/release_notes.txt
 
           git config user.name "github-actions[bot]"
