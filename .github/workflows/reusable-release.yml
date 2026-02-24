@@ -89,10 +89,15 @@ jobs:
           REPO_NAME="${{ github.event.repository.name }}"
           VERSION="v${{ inputs.version }}"
 
+          CHANGELOG=$(gh release view "$VERSION" \
+            --repo "${{ github.repository }}" \
+            --json body --jq '.body' 2>/dev/null || echo "")
+
           ITEM_ID=$(gh api graphql \
-            -f query='mutation($pid:ID!,$title:String!){addProjectV2DraftIssue(input:{projectId:$pid,title:$title}){projectItem{id}}}' \
+            -f query='mutation($pid:ID!,$title:String!,$body:String!){addProjectV2DraftIssue(input:{projectId:$pid,title:$title,body:$body}){projectItem{id}}}' \
             -f pid="$PROJECT_ID" \
             -f title="Release ${REPO_NAME} ${VERSION}" \
+            -f body="$CHANGELOG" \
             --jq '.data.addProjectV2DraftIssue.projectItem.id')
 
           gh api graphql \
