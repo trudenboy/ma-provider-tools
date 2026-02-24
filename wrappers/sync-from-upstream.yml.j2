@@ -1,5 +1,10 @@
 name: Sync from Upstream (music-assistant/server)
 
+# Syncs dev and stable branches from music-assistant/server upstream.
+# After merging upstream, fork-managed provider directories are always restored
+# from the pre-merge fork HEAD — they are maintained via sync-to-fork.yml and
+# must not be replaced by upstream's possibly-diverged versions.
+
 on:
   schedule:
     - cron: "0 4 * * *"
@@ -13,50 +18,85 @@ jobs:
     name: Sync dev branch from upstream
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout fork dev
+      - name: Checkout fork
         uses: actions/checkout@v4
         with:
-          ref: dev
           fetch-depth: 0
 
-      - name: Merge upstream dev
+      - name: Merge upstream dev, restore fork providers
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout dev
+          FORK_HEAD=$(git rev-parse HEAD)
+
           git remote add upstream https://github.com/music-assistant/server.git
           git fetch upstream dev
-          if git merge upstream/dev --no-edit; then
-            echo "✅ Merged upstream/dev cleanly"
-          else
-            echo "⚠️ Merge conflicts — resolving by preferring upstream for conflicted files"
-            git diff --name-only --diff-filter=U | xargs -r git checkout --theirs --
+
+          # Merge upstream; on conflict prefer fork version (ours) to avoid
+          # clobbering providers that are actively maintained in separate repos.
+          git merge upstream/dev --no-edit -X ours || {
+            git diff --name-only --diff-filter=U | xargs -r git checkout --ours --
             git add -A
-            git commit -m "chore: merge upstream/dev (conflicts resolved, upstream preferred)"
+            git commit -m "chore: merge upstream/dev (conflicts: kept fork version)"
+          }
+
+          # Restore fork-managed provider directories from pre-merge state.
+          # These domains are synced into this fork via sync-to-fork.yml and
+          # take precedence over upstream's version (which may be older or diverged).
+          DOMAINS="{{ all_providers | map(attribute='domain') | join(' ') }}"
+          for domain in $DOMAINS; do
+            git checkout "$FORK_HEAD" -- "music_assistant/providers/$domain/" 2>/dev/null || true
+            git checkout "$FORK_HEAD" -- "tests/providers/$domain/" 2>/dev/null || true
+          done
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: restore fork providers after upstream/dev sync"
           fi
+
           git push origin dev
 
   sync-stable:
     name: Sync stable branch from upstream
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout fork stable
+      - name: Checkout fork
         uses: actions/checkout@v4
         with:
-          ref: stable
           fetch-depth: 0
 
-      - name: Merge upstream stable
+      - name: Merge upstream stable, restore fork providers
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git remote add upstream https://github.com/music-assistant/server.git
           git fetch upstream stable
-          if git merge upstream/stable --no-edit; then
-            echo "✅ Merged upstream/stable cleanly"
-          else
-            echo "⚠️ Merge conflicts — resolving by preferring upstream for conflicted files"
-            git diff --name-only --diff-filter=U | xargs -r git checkout --theirs --
-            git add -A
-            git commit -m "chore: merge upstream/stable (conflicts resolved, upstream preferred)"
+
+          # Skip if fork has no stable branch
+          if ! git ls-remote --heads origin stable | grep -q stable; then
+            echo "No stable branch in fork, skipping"
+            exit 0
           fi
+
+          git checkout stable
+          FORK_HEAD=$(git rev-parse HEAD)
+
+          git merge upstream/stable --no-edit -X ours || {
+            git diff --name-only --diff-filter=U | xargs -r git checkout --ours --
+            git add -A
+            git commit -m "chore: merge upstream/stable (conflicts: kept fork version)"
+          }
+
+          DOMAINS="{{ all_providers | map(attribute='domain') | join(' ') }}"
+          for domain in $DOMAINS; do
+            git checkout "$FORK_HEAD" -- "music_assistant/providers/$domain/" 2>/dev/null || true
+            git checkout "$FORK_HEAD" -- "tests/providers/$domain/" 2>/dev/null || true
+          done
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: restore fork providers after upstream/stable sync"
+          fi
+
           git push origin stable
