@@ -92,6 +92,9 @@ jobs:
           m = json.loads(p.read_text())
           m["domain"] = "kion_music"
           m["name"] = "KION Music"
+          m["description"] = m.get("description", "").replace("Yandex Music", "KION Music")
+          if "documentation" in m:
+              m["documentation"] = m["documentation"].replace("yandex-music", "kion-music")
           p.write_text(json.dumps(m, indent=2, ensure_ascii=False) + "\n")
           EOF
           fi
