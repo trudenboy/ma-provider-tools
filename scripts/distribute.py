@@ -89,6 +89,8 @@ ALL_WRAPPER_FILES = [
     ("mkdocs.yml.j2", "mkdocs.yml"),
     ("docs/index.md.j2", "docs/index.md"),
     ("docs/known-issues.md.j2", "docs/known-issues.md"),
+    # Repository README (server_fork only)
+    ("README.md.j2", "README.md"),
 ]
 
 
