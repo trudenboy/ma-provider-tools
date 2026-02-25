@@ -146,6 +146,7 @@ providers:
       - mkdocs.yml.j2
       - docs/index.md.j2
       - docs/known-issues.md.j2
+      - docs-site/package-lock.json.j2
       - docs-site/package.json.j2
       - docs-site/tsconfig.json.j2
       - docs-site/astro.config.mjs.j2

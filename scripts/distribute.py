@@ -92,6 +92,7 @@ ALL_WRAPPER_FILES = [
     ("sync-kion-from-yandex.yml.j2", ".github/workflows/sync-kion-from-yandex.yml"),
     # GitHub Pages documentation (Astro Starlight)
     ("docs.yml.j2", ".github/workflows/docs.yml"),
+    ("docs-site/package-lock.json.j2", "docs-site/package-lock.json"),
     ("docs-site/package.json.j2", "docs-site/package.json"),
     ("docs-site/tsconfig.json.j2", "docs-site/tsconfig.json"),
     ("docs-site/astro.config.mjs.j2", "docs-site/astro.config.mjs"),
