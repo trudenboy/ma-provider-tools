@@ -80,6 +80,7 @@ ALL_WRAPPER_FILES = [
         "docs/incident-management.md.j2",
         "docs-site/src/content/docs/incident-management.md",
     ),
+    ("docs/development.md.j2", "docs-site/src/content/docs/development.md"),
     # PR template
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
     # Fork upstream sync (server_fork only)
