@@ -3,6 +3,8 @@ title: {% if locale == 'ru' %}Провайдер {{ display_name }}{% else %}{{ 
 description: {% if locale == 'ru' %}Документация провайдера {{ display_name }} для Music Assistant{% else %}Documentation for the {{ display_name }} provider for Music Assistant{% endif %}
 ---
 
+<img src="https://raw.githubusercontent.com/{{ repo }}/{{ default_branch }}/provider/icon.svg" alt="{{ display_name }}" style="width: 72px; float: right; margin: 0 0 1rem 1.5rem;" />
+
 {% if locale == 'ru' %}
 Music Assistant поддерживает [{{ display_name }}]({{ service_url }}) — {% if provider_type == 'music_provider' %}музыкальный стриминговый сервис{% else %}плеер{% endif %}.
 Провайдер создан и поддерживается [TrudenBoy](https://github.com/TrudenBoy).
