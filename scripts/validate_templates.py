@@ -44,6 +44,10 @@ def main() -> int:
         "locale": base.get("locale", "en"),
         "repo": base["repo"],
         "default_branch": base["default_branch"],
+        "service_url": base.get("service_url", ""),
+        "auth_method": base.get("auth_method", ""),
+        "max_quality": base.get("max_quality", ""),
+        "features": base.get("features", []),
         "all_providers": [
             p for p in providers if p.get("provider_type") != "server_fork"
         ],

@@ -1,25 +1,50 @@
-{%- if locale == 'ru' -%}
-# Провайдер {{ display_name }} для Music Assistant
+---
+title: {% if locale == 'ru' %}Провайдер {{ display_name }}{% else %}{{ display_name }} Provider{% endif %}
+description: {% if locale == 'ru' %}Документация провайдера {{ display_name }} для Music Assistant{% else %}Documentation for the {{ display_name }} provider for Music Assistant{% endif %}
+---
 
-Документация провайдера {{ display_name }} для [Music Assistant](https://music-assistant.io).
+{% if locale == 'ru' %}
+Music Assistant поддерживает [{{ display_name }}]({{ service_url }}) — {% if provider_type == 'music_provider' %}музыкальный стриминговый сервис{% else %}плеер{% endif %}.
+Провайдер создан и поддерживается [TrudenBoy](https://github.com/TrudenBoy).
+{% else %}
+Music Assistant supports [{{ display_name }}]({{ service_url }}) {% if provider_type == 'music_provider' %}music streaming service{% else %}player{% endif %}.
+Provider created and maintained by [TrudenBoy](https://github.com/TrudenBoy).
+{% endif %}
 
-## Быстрые ссылки
+{% if provider_type == 'music_provider' %}
+## {% if locale == 'ru' %}Возможности{% else %}Features{% endif %}
 
-- [Настройка](configuration.md) — токен и параметры провайдера
-- [Разработка](development.md) — окружение, тесты, ветки
-{%- if provider_type == 'music_provider' %}
-- [Известные проблемы](known-issues.md) — типичные ошибки и решения
-{%- endif %}
-{%- else -%}
-# {{ display_name }} Provider for Music Assistant
+{% if locale == 'ru' %}
+| Функция | Поддержка |
+|:--------|:---------:|
+{% for f in features | default([]) %}{% if f.slug is defined %}| [{{ f.label }}]({{ f.slug }}/) | ✅ |
+{% else %}| {{ f.label }} | ✅ |
+{% endif %}{% endfor %}| {% if locale == 'ru' %}Максимальное качество{% else %}Max quality{% endif %} | {{ max_quality | default('—') }} |
+| {% if locale == 'ru' %}Способ входа{% else %}Authentication{% endif %} | {{ auth_method | default('—') }} |
+{% else %}
+| Feature | Support |
+|:--------|:-------:|
+{% for f in features | default([]) %}{% if f.slug is defined %}| [{{ f.label }}]({{ f.slug }}/) | ✅ |
+{% else %}| {{ f.label }} | ✅ |
+{% endif %}{% endfor %}| Max quality | {{ max_quality | default('—') }} |
+| Authentication | {{ auth_method | default('—') }} |
+{% endif %}
+{% endif %}
 
-Documentation for the {{ display_name }} provider for [Music Assistant](https://music-assistant.io).
+## {% if locale == 'ru' %}Настройка{% else %}Setup{% endif %}
 
-## Quick Links
+{% if locale == 'ru' %}
+Инструкция по подключению — на странице [Настройка](configuration/).
+{% else %}
+Setup instructions are on the [Configuration](configuration/) page.
+{% endif %}
 
-- [Configuration](configuration.md) — token and provider settings
-- [Development](development.md) — dev setup, tests, branches
-{%- if provider_type == 'music_provider' %}
-- [Known Issues](known-issues.md) — common issues and solutions
-{%- endif %}
-{%- endif %}
+{% if provider_type == 'music_provider' %}
+## {% if locale == 'ru' %}Известные проблемы{% else %}Known Issues{% endif %}
+
+{% if locale == 'ru' %}
+Полный список — на странице [Известные проблемы](known-issues/).
+{% else %}
+Full list on the [Known Issues](known-issues/) page.
+{% endif %}
+{% endif %}

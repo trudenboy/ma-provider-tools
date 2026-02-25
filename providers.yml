@@ -7,6 +7,26 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    service_url: https://music.yandex.ru
+    auth_method: "Токен (X-Auth-Token)"
+    max_quality: "Lossless FLAC (с подпиской Plus)"
+    features:
+      - label: "Исполнители, Альбомы, Треки, Плейлисты"
+      - label: "Поиск по каталогу"
+      - label: "Синхронизация библиотеки"
+      - label: "Рекомендации / Моя волна"
+        slug: features/my-wave
+      - label: "Тексты песен"
+        slug: features/lyrics
+      - label: "Подборки и миксы"
+        slug: features/picks-and-mixes
+      - label: "Просмотр каталога (Browse)"
+        slug: features/browse
+      - label: "Lossless FLAC"
+        slug: features/audio-quality
+    legacy_files:
+      - mkdocs.yml
+      - docs/stylesheets/extra.css
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -22,6 +42,16 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    service_url: https://kion.ru
+    auth_method: "Токен (X-Auth-Token)"
+    max_quality: "Lossless FLAC (с подпиской)"
+    features:
+      - label: "Исполнители, Альбомы, Треки, Плейлисты"
+      - label: "Поиск по каталогу"
+      - label: "Синхронизация библиотеки"
+      - label: "Рекомендации"
+      - label: "Тексты песен"
+      - label: "Просмотр каталога (Browse)"
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -36,11 +66,29 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    service_url: https://zvuk.com
+    auth_method: "Токен (X-Auth-Token)"
+    max_quality: "Lossless FLAC (с подпиской)"
+    features:
+      - label: "Исполнители, Альбомы, Треки, Плейлисты"
+      - label: "Поиск по каталогу"
+      - label: "Синхронизация библиотеки"
+      - label: "Рекомендации"
+        slug: features/recommendations
+      - label: "Тексты песен"
+        slug: features/lyrics
+      - label: "Похожие треки / Радио-режим"
+        slug: features/similar-tracks
+      - label: "Просмотр каталога (Browse)"
+        slug: features/browse
+      - label: "Управление плейлистами"
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
       - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
+      - docs/index.md.j2
+      - astro.config.mjs.j2
 
   - domain: msx_bridge
     display_name: MSX Bridge
@@ -50,7 +98,17 @@ providers:
     provider_path: provider/
     provider_type: player_provider
     locale: en
+    service_url: https://getmsx.net
+    auth_method: "IP address (no credentials)"
+    max_quality: "Source quality (passthrough)"
+    features:
+      - label: "Smart TV playback via MSX"
+      - label: "Multi-instance (one per TV)"
+      - label: "Volume control"
+      - label: "Playback state sync"
     legacy_files:
+      - mkdocs.yml
+      - docs/stylesheets/extra.css
       - .github/workflows/ci.yml
     skip_wrappers:
       - sync-from-upstream.yml.j2
@@ -88,6 +146,10 @@ providers:
       - mkdocs.yml.j2
       - docs/index.md.j2
       - docs/known-issues.md.j2
+      - docs-site/package.json.j2
+      - docs-site/tsconfig.json.j2
+      - docs-site/astro.config.mjs.j2
+      - docs-site/src/content.config.ts.j2
       - SECURITY.md.j2
       - backport.yml.j2
       - sync-kion-from-yandex.yml.j2

@@ -65,7 +65,7 @@ ALL_WRAPPER_FILES = [
     ("issue-proposal.yml.j2", ".github/ISSUE_TEMPLATE/improvement_proposal.yml"),
     ("issue-config.yml.j2", ".github/ISSUE_TEMPLATE/config.yml"),
     # Documentation
-    ("contributing.md.j2", "docs/contributing.md"),
+    ("contributing.md.j2", "docs-site/src/content/docs/contributing.md"),
     # Project automation
     ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
     # Ruff configuration
@@ -73,10 +73,13 @@ ALL_WRAPPER_FILES = [
     # Docker dev environment
     ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
     ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
-    ("docs/dev-docker.md.j2", "docs/dev-docker.md"),
+    ("docs/dev-docker.md.j2", "docs-site/src/content/docs/dev-docker.md"),
     # Testing and incident management docs
-    ("docs/testing.md.j2", "docs/testing.md"),
-    ("docs/incident-management.md.j2", "docs/incident-management.md"),
+    ("docs/testing.md.j2", "docs-site/src/content/docs/testing.md"),
+    (
+        "docs/incident-management.md.j2",
+        "docs-site/src/content/docs/incident-management.md",
+    ),
     # PR template
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
     # Fork upstream sync (server_fork only)
@@ -87,12 +90,14 @@ ALL_WRAPPER_FILES = [
     ("backport.yml.j2", ".github/workflows/backport.yml"),
     # Kion Music sync from Yandex Music (yandex_music provider only)
     ("sync-kion-from-yandex.yml.j2", ".github/workflows/sync-kion-from-yandex.yml"),
-    # GitHub Pages documentation
+    # GitHub Pages documentation (Astro Starlight)
     ("docs.yml.j2", ".github/workflows/docs.yml"),
-    ("mkdocs.yml.j2", "mkdocs.yml"),
-    ("docs/index.md.j2", "docs/index.md"),
-    ("docs/known-issues.md.j2", "docs/known-issues.md"),
-    ("docs/stylesheets/extra.css.j2", "docs/stylesheets/extra.css"),
+    ("docs-site/package.json.j2", "docs-site/package.json"),
+    ("docs-site/tsconfig.json.j2", "docs-site/tsconfig.json"),
+    ("docs-site/astro.config.mjs.j2", "docs-site/astro.config.mjs"),
+    ("docs-site/src/content.config.ts.j2", "docs-site/src/content.config.ts"),
+    ("docs/index.md.j2", "docs-site/src/content/docs/index.md"),
+    ("docs/known-issues.md.j2", "docs-site/src/content/docs/known-issues.md"),
 ]
 
 
@@ -120,6 +125,10 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "locale": provider.get("locale", "en"),
         "repo": provider["repo"],
         "default_branch": provider["default_branch"],
+        "service_url": provider.get("service_url", ""),
+        "auth_method": provider.get("auth_method", ""),
+        "max_quality": provider.get("max_quality", ""),
+        "features": provider.get("features", []),
         "all_providers": [
             p for p in all_providers if p.get("provider_type") != "server_fork"
         ],
