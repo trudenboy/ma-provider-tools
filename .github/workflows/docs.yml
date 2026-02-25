@@ -5,11 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/**"
-      - "docusaurus.config.ts"
-      - "sidebars.ts"
       - "src/**"
-      - "static/**"
+      - "public/**"
+      - "astro.config.mjs"
       - "providers.yml"
       - "scripts/generate_dashboard.py"
       - "package.json"
@@ -52,12 +50,12 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      - name: Build Docusaurus site
+      - name: Build Astro site
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: build/
+          path: dist/
 
   deploy:
     needs: build

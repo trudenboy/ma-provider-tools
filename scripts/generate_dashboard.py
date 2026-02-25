@@ -26,7 +26,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
 PROVIDERS_FILE = REPO_ROOT / "providers.yml"
-OUTPUT_FILE = REPO_ROOT / "static" / "dashboard-data.json"
+OUTPUT_FILE = REPO_ROOT / "public" / "dashboard-data.json"
 
 # Providers skipped in CI status check (no test.yml)
 CI_SKIP_WORKFLOW = {"server_fork"}

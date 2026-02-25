@@ -1,26 +1,25 @@
+/* Map Docusaurus CSS vars to Starlight equivalents for the dashboard component */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-color-primary: var(--sl-color-accent);
 }
 
-[data-theme="dark"] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-darkest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+:root[data-theme='light'] {
+  --ifm-color-emphasis-100: #f6f7f8;
+  --ifm-color-emphasis-200: #ebedf0;
+  --ifm-color-emphasis-300: #dadde1;
+  --ifm-color-emphasis-400: #ccd0d5;
+  --ifm-color-emphasis-600: #606770;
 }
 
+:root[data-theme='dark'] {
+  --ifm-color-emphasis-100: #1a2030;
+  --ifm-color-emphasis-200: #222840;
+  --ifm-color-emphasis-300: #2e3650;
+  --ifm-color-emphasis-400: #3d4a60;
+  --ifm-color-emphasis-600: #8a9ab0;
+}
+
+/* Dashboard table */
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
@@ -84,17 +83,17 @@
   color: #854d0e;
 }
 
-[data-theme="dark"] .badge-music {
+:root[data-theme='dark'] .badge-music {
   background: #1e3a5f;
   color: #93c5fd;
 }
 
-[data-theme="dark"] .badge-player {
+:root[data-theme='dark'] .badge-player {
   background: #14532d;
   color: #86efac;
 }
 
-[data-theme="dark"] .badge-fork {
+:root[data-theme='dark'] .badge-fork {
   background: #713f12;
   color: #fde68a;
 }

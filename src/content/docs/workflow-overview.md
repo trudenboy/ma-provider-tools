@@ -1,9 +1,7 @@
 ---
-id: workflow-overview
-sidebar_position: 1
+title: Workflow System Overview
+description: Architecture of the shared CI/CD system — reusable workflows, wrapper templates, and automated distribution.
 ---
-
-# Workflow System Overview
 
 ## Architecture
 
@@ -87,11 +85,9 @@ delegating everything else to the reusable workflows.
 | `docs/testing.md.j2` | `docs/testing.md` | Testing guide |
 | `docs/incident-management.md.j2` | `docs/incident-management.md` | Incident management guide |
 | `.github/PULL_REQUEST_TEMPLATE.md.j2` | `.github/PULL_REQUEST_TEMPLATE.md` | PR checklist |
-| `docs.yml.j2` | `.github/workflows/docs.yml` | GitHub Pages deploy (MkDocs build → Pages) |
-| `mkdocs.yml.j2` | `mkdocs.yml` | MkDocs Material config; `site_url` derived from `repo` field |
-| `docs/index.md.j2` | `docs/index.md` | Landing page (bilingual via `locale`) |
-| `docs/known-issues.md.j2` | `docs/known-issues.md` | Common issues for music providers; skipped for `player_provider` |
-| `docs/stylesheets/extra.css.j2` | `docs/stylesheets/extra.css` | Music Assistant brand colors + system fonts |
+| `docs.yml.j2` | `.github/workflows/docs.yml` | GitHub Pages deploy (Astro Starlight → Pages) |
+| `docs/index.md.j2` | `docs-site/src/content/docs/index.md` | Landing page |
+| `docs/known-issues.md.j2` | `docs-site/src/content/docs/known-issues.md` | Common issues (music providers only) |
 
 ### 4. distribute.yml — Auto-Distribution
 
@@ -143,17 +139,16 @@ failure), `incident:release` (release pipeline failure).
 
 ### 7. GitHub Pages Documentation
 
-Each provider repo receives a full MkDocs Material documentation site, deployed automatically to GitHub Pages on push to `default_branch`.
+Each provider repo receives a full Astro Starlight documentation site, deployed automatically to GitHub Pages on push to `default_branch`.
 
-The site is **bilingual** — language is controlled by the `locale` field in `providers.yml` (`ru` or `en`). The `site_url`, `repo_url`, and `edit_uri` are derived from the `repo` and `default_branch` fields.
+The site is **bilingual** — language is controlled by the `locale` field in `providers.yml` (`ru` or `en`). The `site_url` and `edit_uri` are derived from the `repo` and `default_branch` fields.
 
 Nav includes a **Known Issues** page only for `music_provider` repos (skipped for `player_provider` via `skip_wrappers`).
 
 **One-time setup** per provider repo (not automated):
+
 ```bash
-# Enable GitHub Pages via GitHub Actions source:
-gh api repos/<owner>/<repo> --method PATCH --field has_pages=true
-# Then set source in Settings → Pages → Source: GitHub Actions
+# Enable GitHub Pages via GitHub Actions source in Settings → Pages → Source: GitHub Actions
 ```
 
 After enabling, the site is live at `https://trudenboy.github.io/<repo-name>/`.

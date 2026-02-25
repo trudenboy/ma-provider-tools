@@ -1,9 +1,7 @@
 ---
-id: adding-provider
-sidebar_position: 2
+title: Adding a New Provider
+description: Step-by-step guide to adding a new provider to the ma-provider-tools ecosystem.
 ---
-
-# Adding a New Provider
 
 ## 1. Create the provider repository
 
@@ -61,7 +59,7 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py
 GH_TOKEN=<your-pat> python3 scripts/distribute.py --dry-run
 ```
 
-### Default distributed files (24 templates)
+### Default distributed files
 
 | Template | Destination |
 |----------|-------------|
@@ -78,18 +76,16 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py --dry-run
 | `issue-upstream.yml.j2` | `.github/ISSUE_TEMPLATE/upstream_api_change.yml` |
 | `issue-proposal.yml.j2` | `.github/ISSUE_TEMPLATE/improvement_proposal.yml` |
 | `issue-config.yml.j2` | `.github/ISSUE_TEMPLATE/config.yml` |
-| `contributing.md.j2` | `docs/contributing.md` |
+| `contributing.md.j2` | `docs-site/src/content/docs/contributing.md` |
 | `docker-compose.dev.yml.j2` | `docker-compose.dev.yml` |
 | `scripts/docker-init.sh.j2` | `scripts/docker-init.sh` |
-| `docs/dev-docker.md.j2` | `docs/dev-docker.md` |
-| `docs/testing.md.j2` | `docs/testing.md` |
-| `docs/incident-management.md.j2` | `docs/incident-management.md` |
+| `docs/dev-docker.md.j2` | `docs-site/src/content/docs/dev-docker.md` |
+| `docs/testing.md.j2` | `docs-site/src/content/docs/testing.md` |
+| `docs/incident-management.md.j2` | `docs-site/src/content/docs/incident-management.md` |
 | `.github/PULL_REQUEST_TEMPLATE.md.j2` | `.github/PULL_REQUEST_TEMPLATE.md` |
 | `docs.yml.j2` | `.github/workflows/docs.yml` |
-| `mkdocs.yml.j2` | `mkdocs.yml` |
-| `docs/index.md.j2` | `docs/index.md` |
-| `docs/known-issues.md.j2` | `docs/known-issues.md` _(music_provider only)_ |
-| `docs/stylesheets/extra.css.j2` | `docs/stylesheets/extra.css` |
+| `docs/index.md.j2` | `docs-site/src/content/docs/index.md` |
+| `docs/known-issues.md.j2` | `docs-site/src/content/docs/known-issues.md` _(music_provider only)_ |
 
 ## 4. Add `FORK_SYNC_PAT` secret
 
@@ -101,19 +97,15 @@ gh secret set FORK_SYNC_PAT --body "$PAT" --repo trudenboy/ma-provider-my-provid
 
 ## 5. Enable GitHub Pages
 
-The `docs.yml` workflow builds and deploys MkDocs documentation, but GitHub Pages must be enabled once per repo:
+The `docs.yml` workflow builds and deploys the Astro Starlight documentation site, but GitHub Pages must be enabled once per repo:
 
 1. Go to **Settings → Pages → Source** → set to **GitHub Actions**
-2. Or via CLI:
-   ```bash
-   # After the first docs.yml run, enable Pages:
-   gh api repos/trudenboy/ma-provider-my-provider/pages --method POST \
-     --field build_type=workflow
-   ```
 
 The docs site will be live at `https://trudenboy.github.io/ma-provider-my-provider/` after the first successful `docs.yml` run.
 
-> **Note:** For `player_provider`, `docs/known-issues.md.j2` is automatically skipped (add it to `skip_wrappers` is not needed — the template type check handles it). The `mkdocs.yml` and `docs/index.md` conditional nav/links are also adapted automatically via `provider_type`.
+:::note
+For `player_provider`, `docs/known-issues.md.j2` is automatically skipped via the `skip_wrappers` mechanism. The `docs/index.md` conditional nav/links are also adapted automatically via `provider_type`.
+:::
 
 ## 6. Update `ma-server` references
 

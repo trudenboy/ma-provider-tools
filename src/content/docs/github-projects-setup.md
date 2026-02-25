@@ -1,9 +1,7 @@
 ---
-id: github-projects-setup
-sidebar_position: 3
+title: GitHub Projects Setup
+description: Configuration of the MA Ecosystem GitHub Project board for tracking incidents, releases, and provider activity.
 ---
-
-# MA Ecosystem — GitHub Projects Setup
 
 Project URL: [https://github.com/users/trudenboy/projects/3](https://github.com/users/trudenboy/projects/3)
 
@@ -100,8 +98,10 @@ In the project → **Workflows** tab, enable:
 ### 4. Add Existing Open Incidents
 
 Manually add any existing open issues from provider repos:
-```
-gh issue list --repo trudenboy/ma-provider-yandex-music --label "incident:ci,incident:bug,incident:upstream,incident:security,incident:proposal" --state open
+```bash
+gh issue list --repo trudenboy/ma-provider-yandex-music \
+  --label "incident:ci,incident:bug,incident:upstream,incident:security,incident:proposal" \
+  --state open
 ```
 Then add each to the project via the UI or:
 ```bash
@@ -117,7 +117,7 @@ gh project item-add 3 --owner trudenboy --url <ISSUE_URL>
 When a provider release succeeds, the workflow:
 1. Creates a draft project item titled `"Release {repo-name} v{version}"`
 2. Sets **Status = Released**
-3. Sets **Version = v&#123;version&#125;**
+3. Sets **Version = v{version}**
 
 Requires `FORK_SYNC_PAT` with `project` scope passed to the reusable workflow:
 ```yaml
