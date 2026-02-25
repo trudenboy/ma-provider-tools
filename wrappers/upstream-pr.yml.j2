@@ -13,6 +13,11 @@ on:
         description: "Provider release version (e.g. 1.2.0)"
         required: true
         type: string
+      reset_branch:
+        description: "Reset branch to upstream/dev (discards manual commits on the branch)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -56,7 +61,17 @@ jobs:
           # Branch name has no version — one branch/PR per domain, updated on each run
           BRANCH="upstream/${DOMAIN}"
 
-          git checkout -B "$BRANCH" upstream/dev
+          BRANCH_EXISTS=$(git ls-remote --heads origin "$BRANCH" | grep -q . && echo "yes" || echo "no")
+
+          if [[ "{% raw %}${{ inputs.reset_branch }}{% endraw %}" == "true" || "$BRANCH_EXISTS" == "no" ]]; then
+            echo "Creating/resetting branch from upstream/dev"
+            git checkout -B "$BRANCH" upstream/dev
+            FORCE_PUSH="--force"
+          else
+            echo "Branch exists — updating provider files on top of existing commits"
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            FORCE_PUSH=""
+          fi
 
           DEST="music_assistant/providers/${DOMAIN}"
           mkdir -p "$DEST"
@@ -74,7 +89,7 @@ jobs:
           fi
 
           git commit -m "feat(${DOMAIN}): add ${DOMAIN} provider ${VERSION}"
-          git push origin "$BRANCH" --force
+          git push origin "$BRANCH" $FORCE_PUSH
 
           PR_BODY=$(printf '## Add %s provider %s\n\n**Source**: [%s %s](https://github.com/%s/releases/tag/%s)\n\nProvider code taken from the release tag. This is a draft PR — please review before requesting merge into upstream.' \
             "$DOMAIN" "$VERSION" "$PROVIDER_REPO" "$VERSION" "$PROVIDER_REPO" "$VERSION")
