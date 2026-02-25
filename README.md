@@ -11,12 +11,12 @@ This repo manages shared CI/CD workflows and distributes standardized files to a
 
 ## Managed Providers
 
-| Provider | Repository | Type | Issues | Changelog |
-|----------|-----------|------|--------|-----------|
-| Yandex Music | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Music | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-music/blob/dev/CHANGELOG.md) |
-| KION Music | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Music | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
-| Zvuk Music | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Music | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
-| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Player | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
+| Provider | Repository | Type | Docs | Issues | Changelog |
+|----------|-----------|------|------|--------|-----------|
+| Yandex Music | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Music | [Docs →](https://trudenboy.github.io/ma-provider-yandex-music/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-music/blob/dev/CHANGELOG.md) |
+| KION Music | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Music | [Docs →](https://trudenboy.github.io/ma-provider-kion-music/) | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
+| Zvuk Music | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Music | [Docs →](https://trudenboy.github.io/ma-provider-zvuk-music/) | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
+| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Player | [Docs →](https://trudenboy.github.io/ma-provider-msx-bridge/) | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
 
 ## How It Works
 
@@ -108,12 +108,12 @@ docs/
 
 ## Провайдеры
 
-| Провайдер | Репозиторий | Тип | Задачи | Changelog |
-|-----------|------------|-----|--------|-----------|
-| Яндекс Музыка | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Музыка | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-music/blob/dev/CHANGELOG.md) |
-| KION Музыка | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Музыка | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
-| Звук | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Музыка | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
-| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Плеер | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
+| Провайдер | Репозиторий | Тип | Документация | Задачи | Changelog |
+|-----------|------------|-----|--------------|--------|-----------|
+| Яндекс Музыка | [ma-provider-yandex-music](https://github.com/trudenboy/ma-provider-yandex-music) | Музыка | [Docs →](https://trudenboy.github.io/ma-provider-yandex-music/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-music/blob/dev/CHANGELOG.md) |
+| KION Музыка | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Музыка | [Docs →](https://trudenboy.github.io/ma-provider-kion-music/) | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
+| Звук | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Музыка | [Docs →](https://trudenboy.github.io/ma-provider-zvuk-music/) | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
+| MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Плеер | [Docs →](https://trudenboy.github.io/ma-provider-msx-bridge/) | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
 
 ## Как это работает
 
