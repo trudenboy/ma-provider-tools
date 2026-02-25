@@ -85,17 +85,19 @@ wrappers/
 scripts/
   distribute.py       ← renders templates, creates PRs in provider repos
 providers.yml         ← registry: all providers, their repos and config
-docs/
+src/content/docs/
   workflow-overview.md
   adding-provider.md
   github-projects-setup.md
+  dashboard.mdx       ← interactive provider dashboard
 ```
 
 ## Further Reading
 
-- [Workflow Overview](docs/workflow-overview.md) — full architecture, all workflows, incident pipeline
-- [Adding a Provider](docs/adding-provider.md) — step-by-step guide, all `providers.yml` fields
-- [GitHub Projects Setup](docs/github-projects-setup.md) — project board configuration
+- **[Provider Dashboard →](https://trudenboy.github.io/ma-provider-tools/dashboard)** — live PRs, CI status, dev activity for all providers
+- [Workflow Overview](https://trudenboy.github.io/ma-provider-tools/workflow-overview) — full architecture, all workflows, incident pipeline
+- [Adding a Provider](https://trudenboy.github.io/ma-provider-tools/adding-provider) — step-by-step guide, all `providers.yml` fields
+- [GitHub Projects Setup](https://trudenboy.github.io/ma-provider-tools/github-projects-setup) — project board configuration
 
 ---
 
@@ -182,14 +184,16 @@ wrappers/
 scripts/
   distribute.py       ← рендерит шаблоны, создаёт PR в репозиториях провайдеров
 providers.yml         ← реестр: все провайдеры, их репозитории и конфигурация
-docs/
+src/content/docs/
   workflow-overview.md
   adding-provider.md
   github-projects-setup.md
+  dashboard.mdx       ← интерактивный дашборд провайдеров
 ```
 
 ## Дополнительно
 
-- [Обзор архитектуры](docs/workflow-overview.md) — полная архитектура, все workflow, пайплайн инцидентов
-- [Добавление провайдера](docs/adding-provider.md) — пошаговое руководство, все поля `providers.yml`
-- [Настройка проекта GitHub](docs/github-projects-setup.md) — конфигурация доски проекта
+- **[Дашборд провайдеров →](https://trudenboy.github.io/ma-provider-tools/dashboard)** — live PRs, CI-статус, активность разработки по всем провайдерам
+- [Обзор архитектуры](https://trudenboy.github.io/ma-provider-tools/workflow-overview) — полная архитектура, все workflow, пайплайн инцидентов
+- [Добавление провайдера](https://trudenboy.github.io/ma-provider-tools/adding-provider) — пошаговое руководство, все поля `providers.yml`
+- [Настройка проекта GitHub](https://trudenboy.github.io/ma-provider-tools/github-projects-setup) — конфигурация доски проекта
