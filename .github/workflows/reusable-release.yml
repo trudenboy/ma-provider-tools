@@ -66,9 +66,24 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ inputs.version }}
         run: |
-          gh release view "v${VERSION}" \
-            --repo "${{ github.repository }}" \
-            --json body --jq '.body' > /tmp/release_notes.txt
+          PREV_TAG=$(git tag --sort=-version:refname \
+            | grep -E '^v[0-9]' \
+            | grep -v "^v${VERSION}$" \
+            | head -1)
+
+          if [ -n "$PREV_TAG" ]; then
+            git log "${PREV_TAG}..v${VERSION}" \
+              --pretty=format:"- %s (\`%h\`)" \
+              --no-merges > /tmp/release_notes.txt
+          else
+            git log "v${VERSION}" \
+              --pretty=format:"- %s (\`%h\`)" \
+              --no-merges > /tmp/release_notes.txt
+          fi
+
+          if [ ! -s /tmp/release_notes.txt ]; then
+            echo "No changes." > /tmp/release_notes.txt
+          fi
 
           gh api repos/trudenboy/ma-provider-tools/contents/scripts/update_changelog.py \
             --jq '.content' | base64 -d > /tmp/update_changelog.py
