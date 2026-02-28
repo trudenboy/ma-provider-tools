@@ -47,6 +47,8 @@ so updating them here keeps provider repos in sync with the central workflow reg
 """
 
 ALL_WRAPPER_FILES = [
+    # License
+    ("LICENSE.j2", "LICENSE"),
     # CI workflows
     ("sync-to-fork.yml.j2", ".github/workflows/sync-to-fork.yml"),
     ("release.yml.j2", ".github/workflows/release.yml"),
