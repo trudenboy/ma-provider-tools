@@ -118,6 +118,29 @@ providers:
       - docs/known-issues.md.j2
       - sync-kion-from-yandex.yml.j2
 
+  - domain: yandex_station
+    display_name: Yandex Station
+    repo: trudenboy/ma-provider-yandex-station
+    default_branch: dev
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: player_provider
+    locale: ru
+    service_url: https://yandex.ru/alice/station
+    auth_method: "Yandex X-Token"
+    max_quality: "FLAC (lossless)"
+    features:
+      - label: "Воспроизведение через Glagol (локальный протокол)"
+      - label: "Управление громкостью"
+      - label: "Play / Pause / Stop / Seek"
+      - label: "Автообнаружение по mDNS"
+      - label: "Real-time статус воспроизведения"
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
+      - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
+      - sync-kion-from-yandex.yml.j2
+
   - domain: ma_server
     display_name: Music Assistant Server (Fork)
     repo: trudenboy/ma-server
