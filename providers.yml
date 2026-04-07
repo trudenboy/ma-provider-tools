@@ -149,7 +149,7 @@ providers:
     provider_path: provider/
     provider_type: plugin_provider
     locale: en
-    service_url: ""
+    service_url: https://github.com/trudenboy/ma-provider-dlna-receiver
     auth_method: "None"
     max_quality: "Source quality (passthrough)"
     features:
