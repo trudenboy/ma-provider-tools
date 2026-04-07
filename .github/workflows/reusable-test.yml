@@ -138,10 +138,16 @@ jobs:
             codespell \
             mypy
           SKIP=no-commit-to-branch,mypy pre-commit run --all-files
-      - name: Install project type check dependencies
-        run: uv sync --extra test
+      - name: Install mypy
+        working-directory: ma-server
+        run: |
+          source .venv/bin/activate
+          uv pip install mypy
       - name: Type check
-        run: uv run mypy ${{ inputs.provider_path }}
+        working-directory: ma-server
+        run: |
+          source .venv/bin/activate
+          mypy music_assistant/providers/${{ inputs.provider_domain }}
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
