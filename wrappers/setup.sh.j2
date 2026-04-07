@@ -16,7 +16,7 @@ env_name="${1:-.venv}"
 uv venv "$REPO_ROOT/$env_name"
 source "$REPO_ROOT/$env_name/bin/activate"
 
-{% if provider_type == 'music_provider' %}
+{% if provider_type == 'music_provider' or provider_type == 'plugin_provider' %}
 # Install upstream MA server + provider in editable mode
 uv pip install \
   "git+https://github.com/music-assistant/server.git@dev" \
