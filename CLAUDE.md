@@ -42,7 +42,7 @@ providers:
     default_branch: dev          # branch distribute.py targets for PRs
     manifest_path: provider/manifest.json
     provider_path: provider/
-    provider_type: music_provider  # or player_provider
+    provider_type: music_provider  # or player_provider or plugin_provider
     legacy_files:                # optional: files to delete during distribution
       - .github/workflows/old.yml
 ```
@@ -50,6 +50,7 @@ providers:
 `provider_type` controls CI behavior in `reusable-test.yml`:
 - `music_provider` — uses upstream `music-assistant/server` (lighter CI)
 - `player_provider` — uses `trudenboy/ma-server` fork with ruff + mypy (heavier CI)
+- `plugin_provider` — uses upstream `music-assistant/server` (same CI as music_provider, for PluginProvider-based providers)
 
 ## Jinja2 Template Conventions
 

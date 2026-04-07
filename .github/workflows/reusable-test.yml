@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       provider_type:
-        description: "Provider type: music_provider or player_provider"
+        description: "Provider type: music_provider, player_provider, or plugin_provider"
         required: true
         type: string
       provider_domain:
@@ -21,9 +21,9 @@ on:
         type: string
 
 jobs:
-  # ─── Music provider: clone upstream ma-server, symlink, run pytest + codecov ───
+  # ─── Music / Plugin provider: clone upstream ma-server, symlink, run pytest + codecov ───
   test-music-provider:
-    if: ${{ inputs.provider_type == 'music_provider' }}
+    if: ${{ inputs.provider_type == 'music_provider' || inputs.provider_type == 'plugin_provider' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
           files: ./coverage.xml
 
   lint-music-provider:
-    if: ${{ inputs.provider_type == 'music_provider' }}
+    if: ${{ inputs.provider_type == 'music_provider' || inputs.provider_type == 'plugin_provider' }}
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
@@ -274,7 +274,7 @@ jobs:
     needs: [test-music-provider, lint-music-provider]
     if: >-
       ${{ always() &&
-          inputs.provider_type == 'music_provider' &&
+          (inputs.provider_type == 'music_provider' || inputs.provider_type == 'plugin_provider') &&
           (needs.test-music-provider.result == 'failure' ||
            needs.lint-music-provider.result == 'failure') }}
     runs-on: ubuntu-latest
