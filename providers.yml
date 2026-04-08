@@ -141,6 +141,28 @@ providers:
       - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
 
+  - domain: yandex_smarthome
+    display_name: Yandex Smart Home
+    repo: trudenboy/ma-provider-yandex-smarthome
+    default_branch: dev
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: plugin_provider
+    locale: ru
+    service_url: https://yandex.ru/dev/dialogs/smart-home/
+    auth_method: "Yandex OAuth Token"
+    max_quality: "N/A (plugin — не предоставляет аудио)"
+    features:
+      - label: "Голосовое управление MA-плеерами через Алису"
+      - label: "Регистрация плееров как устройств в Яндекс УД"
+      - label: "on_off / volume / mute / pause через Smart Home API"
+      - label: "Автоматическая синхронизация состояния плееров"
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
+      - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
+      - sync-kion-from-yandex.yml.j2
+
   - domain: dlna_receiver
     display_name: DLNA Receiver
     repo: trudenboy/ma-provider-dlna-receiver
