@@ -17,6 +17,10 @@ This repo manages shared CI/CD workflows and distributes standardized files to a
 | KION Music | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Music | [Docs →](https://trudenboy.github.io/ma-provider-kion-music/) | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
 | Zvuk Music | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Music | [Docs →](https://trudenboy.github.io/ma-provider-zvuk-music/) | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
 | MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Player | [Docs →](https://trudenboy.github.io/ma-provider-msx-bridge/) | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
+| Yandex Station | [ma-provider-yandex-station](https://github.com/trudenboy/ma-provider-yandex-station) | Player | [Docs →](https://trudenboy.github.io/ma-provider-yandex-station/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-station/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-station/blob/dev/CHANGELOG.md) |
+| Yandex Smart Home | [ma-provider-yandex-smarthome](https://github.com/trudenboy/ma-provider-yandex-smarthome) | Plugin | [Docs →](https://trudenboy.github.io/ma-provider-yandex-smarthome/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-smarthome/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-smarthome/blob/dev/CHANGELOG.md) |
+| Yandex Music Connect (Ynison) | [ma-provider-yandex-ynison](https://github.com/trudenboy/ma-provider-yandex-ynison) | Plugin | [Docs →](https://trudenboy.github.io/ma-provider-yandex-ynison/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-ynison/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-ynison/blob/dev/CHANGELOG.md) |
+| DLNA Receiver | [ma-provider-dlna-receiver](https://github.com/trudenboy/ma-provider-dlna-receiver) | Plugin | [Docs →](https://trudenboy.github.io/ma-provider-dlna-receiver/) | [Issues →](https://github.com/trudenboy/ma-provider-dlna-receiver/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-dlna-receiver/blob/dev/CHANGELOG.md) |
 
 ## How It Works
 
@@ -30,6 +34,10 @@ Files in `.github/workflows/reusable-*.yml` contain all CI logic. Provider repos
 | `reusable-release.yml` | Creates git tags and GitHub releases |
 | `reusable-sync-to-fork.yml` | Syncs provider code into `trudenboy/ma-server` |
 | `reusable-report-incident.yml` | Opens a GitHub Issue when CI fails (deduplicated) |
+| `reusable-copilot-triage.yml` | Assigns Copilot to triage incident issues |
+| `reusable-sync-labels.yml` | Syncs issue labels across provider repos |
+| `reusable-security.yml` | Security scanning (CodeQL, dependency audit) |
+| `reusable-sync-kion-from-yandex.yml` | Syncs KION provider from Yandex Music codebase |
 
 ### Wrapper File Distribution
 
@@ -77,27 +85,25 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py             # create PRs
 
 ```
 .github/workflows/
-  reusable-*.yml      ← shared CI logic (changes affect all providers instantly)
-  distribute.yml      ← triggers distribute.py on push to main
+  reusable-*.yml        ← shared CI logic (changes affect all providers instantly)
+  distribute.yml        ← triggers distribute.py on push to main
 wrappers/
-  *.j2                ← Jinja2 templates rendered per provider
+  *.j2                  ← Jinja2 templates rendered per provider
   docs/*.j2
 scripts/
-  distribute.py       ← renders templates, creates PRs in provider repos
-providers.yml         ← registry: all providers, their repos and config
-src/content/docs/
-  workflow-overview.md
-  adding-provider.md
-  github-projects-setup.md
-  dashboard.mdx       ← interactive provider dashboard
+  distribute.py         ← renders templates, creates PRs in provider repos
+  validate_templates.py ← checks Jinja2 syntax, whitespace, variables
+  generate_dashboard.py ← generates provider dashboard data
+  update_changelog.py   ← automates changelog entries for releases
+  check_package_safety.py ← dependency safety checks
+  parse_manifest_deps.py  ← parses provider manifest dependencies
+providers.yml           ← registry: all providers, their repos and config
+docs-site/              ← Astro-based documentation site
 ```
 
 ## Further Reading
 
 - **[Provider Dashboard →](https://trudenboy.github.io/ma-provider-tools/dashboard)** — live PRs, CI status, dev activity for all providers
-- [Workflow Overview](https://trudenboy.github.io/ma-provider-tools/workflow-overview) — full architecture, all workflows, incident pipeline
-- [Adding a Provider](https://trudenboy.github.io/ma-provider-tools/adding-provider) — step-by-step guide, all `providers.yml` fields
-- [GitHub Projects Setup](https://trudenboy.github.io/ma-provider-tools/github-projects-setup) — project board configuration
 
 ---
 
@@ -116,6 +122,10 @@ src/content/docs/
 | KION Музыка | [ma-provider-kion-music](https://github.com/trudenboy/ma-provider-kion-music) | Музыка | [Docs →](https://trudenboy.github.io/ma-provider-kion-music/) | [Issues →](https://github.com/trudenboy/ma-provider-kion-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-kion-music/blob/dev/CHANGELOG.md) |
 | Звук | [ma-provider-zvuk-music](https://github.com/trudenboy/ma-provider-zvuk-music) | Музыка | [Docs →](https://trudenboy.github.io/ma-provider-zvuk-music/) | [Issues →](https://github.com/trudenboy/ma-provider-zvuk-music/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-zvuk-music/blob/dev/CHANGELOG.md) |
 | MSX Bridge | [ma-provider-msx-bridge](https://github.com/trudenboy/ma-provider-msx-bridge) | Плеер | [Docs →](https://trudenboy.github.io/ma-provider-msx-bridge/) | [Issues →](https://github.com/trudenboy/ma-provider-msx-bridge/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-msx-bridge/blob/feat/msx-bridge-player-provider/CHANGELOG.md) |
+| Яндекс Станция | [ma-provider-yandex-station](https://github.com/trudenboy/ma-provider-yandex-station) | Плеер | [Docs →](https://trudenboy.github.io/ma-provider-yandex-station/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-station/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-station/blob/dev/CHANGELOG.md) |
+| Яндекс Умный Дом | [ma-provider-yandex-smarthome](https://github.com/trudenboy/ma-provider-yandex-smarthome) | Плагин | [Docs →](https://trudenboy.github.io/ma-provider-yandex-smarthome/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-smarthome/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-smarthome/blob/dev/CHANGELOG.md) |
+| Yandex Music Connect (Ynison) | [ma-provider-yandex-ynison](https://github.com/trudenboy/ma-provider-yandex-ynison) | Плагин | [Docs →](https://trudenboy.github.io/ma-provider-yandex-ynison/) | [Issues →](https://github.com/trudenboy/ma-provider-yandex-ynison/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-yandex-ynison/blob/dev/CHANGELOG.md) |
+| DLNA Receiver | [ma-provider-dlna-receiver](https://github.com/trudenboy/ma-provider-dlna-receiver) | Плагин | [Docs →](https://trudenboy.github.io/ma-provider-dlna-receiver/) | [Issues →](https://github.com/trudenboy/ma-provider-dlna-receiver/issues) | [Changelog →](https://github.com/trudenboy/ma-provider-dlna-receiver/blob/dev/CHANGELOG.md) |
 
 ## Как это работает
 
@@ -129,6 +139,10 @@ src/content/docs/
 | `reusable-release.yml` | Создаёт git-теги и GitHub-релизы |
 | `reusable-sync-to-fork.yml` | Синхронизирует код провайдера в `trudenboy/ma-server` |
 | `reusable-report-incident.yml` | Открывает GitHub Issue при падении CI (с дедупликацией) |
+| `reusable-copilot-triage.yml` | Назначает Copilot для триажа инцидентов |
+| `reusable-sync-labels.yml` | Синхронизирует метки issues по репозиториям провайдеров |
+| `reusable-security.yml` | Сканирование безопасности (CodeQL, аудит зависимостей) |
+| `reusable-sync-kion-from-yandex.yml` | Синхронизирует KION-провайдер из кодовой базы Яндекс Музыки |
 
 ### Распределение файлов-обёрток
 
@@ -176,24 +190,22 @@ GH_TOKEN=<your-pat> python3 scripts/distribute.py             # создать P
 
 ```
 .github/workflows/
-  reusable-*.yml      ← общая CI-логика (изменения применяются ко всем провайдерам мгновенно)
-  distribute.yml      ← запускает distribute.py при push в main
+  reusable-*.yml        ← общая CI-логика (изменения применяются ко всем провайдерам мгновенно)
+  distribute.yml        ← запускает distribute.py при push в main
 wrappers/
-  *.j2                ← Jinja2-шаблоны, рендерятся для каждого провайдера
+  *.j2                  ← Jinja2-шаблоны, рендерятся для каждого провайдера
   docs/*.j2
 scripts/
-  distribute.py       ← рендерит шаблоны, создаёт PR в репозиториях провайдеров
-providers.yml         ← реестр: все провайдеры, их репозитории и конфигурация
-src/content/docs/
-  workflow-overview.md
-  adding-provider.md
-  github-projects-setup.md
-  dashboard.mdx       ← интерактивный дашборд провайдеров
+  distribute.py         ← рендерит шаблоны, создаёт PR в репозиториях провайдеров
+  validate_templates.py ← проверяет синтаксис Jinja2, пробелы, переменные
+  generate_dashboard.py ← генерирует данные для дашборда провайдеров
+  update_changelog.py   ← автоматизирует записи changelog при релизах
+  check_package_safety.py ← проверка безопасности зависимостей
+  parse_manifest_deps.py  ← парсинг зависимостей из манифеста провайдера
+providers.yml           ← реестр: все провайдеры, их репозитории и конфигурация
+docs-site/              ← сайт документации на Astro
 ```
 
 ## Дополнительно
 
 - **[Дашборд провайдеров →](https://trudenboy.github.io/ma-provider-tools/dashboard)** — live PRs, CI-статус, активность разработки по всем провайдерам
-- [Обзор архитектуры](https://trudenboy.github.io/ma-provider-tools/workflow-overview) — полная архитектура, все workflow, пайплайн инцидентов
-- [Добавление провайдера](https://trudenboy.github.io/ma-provider-tools/adding-provider) — пошаговое руководство, все поля `providers.yml`
-- [Настройка проекта GitHub](https://trudenboy.github.io/ma-provider-tools/github-projects-setup) — конфигурация доски проекта
