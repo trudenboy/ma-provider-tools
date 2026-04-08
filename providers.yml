@@ -208,6 +208,32 @@ providers:
       - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
 
+  - domain: ncloud_music
+    display_name: NetEase Cloud Music
+    repo: trudenboy/ma-provider-ncloud-music
+    default_branch: main
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: music_provider
+    locale: en
+    service_url: https://music.163.com
+    auth_method: "QR Code / Cookie Token"
+    max_quality: "Lossless FLAC (with VIP)"
+    features:
+      - label: "Artists, Albums, Tracks, Playlists"
+      - label: "Search catalog"
+      - label: "Library sync"
+      - label: "Recommendations / Daily picks"
+      - label: "Lyrics (synchronized)"
+      - label: "Similar tracks"
+      - label: "Browse catalog"
+      - label: "Playlist management"
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
+      - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
+      - sync-kion-from-yandex.yml.j2
+
   - domain: ma_server
     display_name: Music Assistant Server (Fork)
     repo: trudenboy/ma-server
