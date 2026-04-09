@@ -271,5 +271,6 @@ providers:
       - docs-site/src/content.config.ts.j2
       - SECURITY.md.j2
       - backport.yml.j2
+      - pipeline.yml.j2
       - sync-kion-from-yandex.yml.j2
       - LICENSE.j2

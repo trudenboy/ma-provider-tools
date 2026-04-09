@@ -52,12 +52,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout fork
+        id: checkout-fork
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.fork_repo }}
           path: ma-server
           token: ${{ secrets.FORK_SYNC_PAT }}
           ref: ${{ inputs.target_branch || 'dev' }}
+        continue-on-error: true
+
+      - name: Create target branch if missing
+        if: steps.checkout-fork.outcome == 'failure'
+        run: |
+          git clone --depth 1 --branch dev \
+            "https://x-access-token:${{ secrets.FORK_SYNC_PAT }}@github.com/${{ inputs.fork_repo }}.git" ma-server
+          cd ma-server
+          git checkout -b "${{ inputs.target_branch }}"
 
       - name: Sync provider files into integration/dev
         run: |
@@ -77,7 +87,7 @@ jobs:
             echo "No tests/ directory found in provider-repo, skipping test sync."
           fi
 
-      - name: Commit and push to integration/dev
+      - name: Commit and push
         if: ${{ !inputs.create_pr }}
         run: |
           cd ma-server
@@ -88,8 +98,10 @@ jobs:
             echo "No changes to push"
             exit 0
           fi
+          TARGET="${{ inputs.target_branch || 'integration/dev' }}"
           git commit -m "feat(${{ env.DOMAIN }}): sync provider from ${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}"
-          git push origin ${{ inputs.target_branch || 'integration/dev' }}
+          # Use -u for new branches that don't exist on remote yet
+          git push -u origin "HEAD:${TARGET}"
 
       - name: Create backport PR in fork
         if: ${{ inputs.create_pr }}

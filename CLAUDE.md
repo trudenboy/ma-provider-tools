@@ -49,8 +49,28 @@ providers:
 
 `provider_type` controls CI behavior in `reusable-test.yml`:
 - `music_provider` — uses upstream `music-assistant/server` (lighter CI)
-- `player_provider` — uses `trudenboy/ma-server` fork with ruff + mypy (heavier CI)
+- `player_provider` — uses `trudenboy/ma-server` fork for tests; lint always uses upstream `music-assistant/server`
 - `plugin_provider` — uses upstream `music-assistant/server` (same CI as music_provider, for PluginProvider-based providers)
+
+## Pipeline Workflow
+
+`pipeline.yml.j2` implements a multi-stage CI/CD pipeline triggered on push to the provider's dev branch:
+
+```
+push dev → prepare → lint+test (gate) → release (if version changed) → sync to fork
+```
+
+**Stages:**
+1. **prepare** — reads version from `manifest.json`, determines channel (PEP 440: `1.2.0` = stable, `1.2.0b1` = beta), checks if version changed vs latest tag
+2. **gate** — calls `reusable-test.yml` (lint + test); blocks pipeline on failure
+3. **release** — conditional: only runs if version in manifest differs from latest tag. Creates tag, GitHub Release (prerelease for beta), updates CHANGELOG (stable only)
+4. **sync** — routes based on channel:
+   - **beta** → `integration/dev` in `trudenboy/ma-server`
+   - **stable** → `integration/dev` + parallel `upstream/[domain]` (e.g. `upstream/yandex_music`)
+
+**Coexistence with other workflows:**
+- `test.yml.j2` — remains for PR checks (push to main only)
+- `release.yml.j2` — remains as a manual fallback (workflow_dispatch)
 
 ## Jinja2 Template Conventions
 

@@ -1,0 +1,174 @@
+name: Pipeline
+on:
+  push:
+    branches: [{{ default_branch }}]
+    paths:
+      - '{{ provider_path }}**'
+      - '{{ manifest_path }}'
+      - 'tests/**'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+concurrency:
+  group: {% raw %}pipeline-${{ github.ref }}{% endraw %}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+jobs:
+  # ── 1. Prepare: read manifest, resolve version & channel ─────────────────
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      version: {% raw %}${{ steps.resolve.outputs.version }}{% endraw %}
+      channel: {% raw %}${{ steps.resolve.outputs.channel }}{% endraw %}
+      is_beta: {% raw %}${{ steps.resolve.outputs.is_beta }}{% endraw %}
+      version_changed: {% raw %}${{ steps.resolve.outputs.version_changed }}{% endraw %}
+      domain: {% raw %}${{ steps.resolve.outputs.domain }}{% endraw %}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version from manifest
+        id: resolve
+        run: |
+          set -euo pipefail
+          MANIFEST="{{ manifest_path }}"
+          VERSION=$(python3 -c "import json; print(json.load(open('${MANIFEST}'))['version'])")
+          DOMAIN=$(python3 -c "import json; print(json.load(open('${MANIFEST}'))['domain'])")
+
+          # Determine channel (PEP 440: X.Y.Z = stable, X.Y.ZbN = beta)
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            CHANNEL="stable"
+            IS_BETA="false"
+          elif [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+b[0-9]+$ ]]; then
+            CHANNEL="beta"
+            IS_BETA="true"
+          else
+            echo "::error::Invalid version in manifest: '${VERSION}'. Expected PEP 440: X.Y.Z or X.Y.ZbN"
+            exit 1
+          fi
+
+          # Check if version changed compared to latest tag
+          TAG="v${VERSION}"
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            VERSION_CHANGED="false"
+          else
+            VERSION_CHANGED="true"
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
+          echo "is_beta=${IS_BETA}" >> "$GITHUB_OUTPUT"
+          echo "version_changed=${VERSION_CHANGED}" >> "$GITHUB_OUTPUT"
+          echo "domain=${DOMAIN}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Pipeline prepare"
+            echo "- Version: \`${VERSION}\`"
+            echo "- Channel: \`${CHANNEL}\`"
+            echo "- Version changed: \`${VERSION_CHANGED}\`"
+            echo "- Domain: \`${DOMAIN}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ── 2. Gate: lint + test (reusable) ──────────────────────────────────────
+  gate:
+    needs: [prepare]
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-test.yml@main
+    with:
+      provider_type: {{ provider_type }}
+      provider_domain: {{ domain }}
+      provider_path: {{ provider_path }}
+      manifest_path: {{ manifest_path }}
+
+  # ── 3. Release (conditional: only when version changed) ──────────────────
+  release:
+    needs: [prepare, gate]
+    if: {% raw %}${{ needs.prepare.outputs.version_changed == 'true' }}{% endraw %}
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-release.yml@main
+    with:
+      manifest_path: {{ manifest_path }}
+      provider_path: {{ provider_path }}
+      skip_sync: true
+{% raw %}
+      version: ${{ needs.prepare.outputs.version }}
+      channel: ${{ needs.prepare.outputs.channel }}
+      prerelease: ${{ needs.prepare.outputs.is_beta == 'true' }}
+{%- endraw %}
+    secrets: inherit
+
+  # ── 4a. Sync to integration/dev (always after gate passes) ──────────────
+  sync-integration:
+    needs: [prepare, gate, release]
+    if: {% raw %}${{ always() && needs.gate.result == 'success' }}{% endraw %}
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-sync-to-fork.yml@main
+    with:
+      manifest_path: {{ manifest_path }}
+      provider_path: {{ provider_path }}
+      target_branch: integration/dev
+{% raw %}
+      version: ${{ needs.prepare.outputs.version_changed == 'true' && format('v{0}', needs.prepare.outputs.version) || '' }}
+{%- endraw %}
+    secrets: inherit
+
+  # ── 4b. Sync to upstream/[domain] (stable release only, parallel) ───────
+  sync-upstream:
+    needs: [prepare, gate, release]
+    if: >-
+      {% raw %}${{ always() &&
+          needs.gate.result == 'success' &&
+          needs.prepare.outputs.version_changed == 'true' &&
+          needs.prepare.outputs.channel == 'stable' }}{% endraw %}
+    uses: trudenboy/ma-provider-tools/.github/workflows/reusable-sync-to-fork.yml@main
+    with:
+      manifest_path: {{ manifest_path }}
+      provider_path: {{ provider_path }}
+{% raw %}
+      target_branch: upstream/${{ needs.prepare.outputs.domain }}
+      version: ${{ format('v{0}', needs.prepare.outputs.version) }}
+{%- endraw %}
+    secrets: inherit
+
+  # ── 5. Report pipeline failure ──────────────────────────────────────────
+  report-failure:
+    needs: [prepare, gate]
+    if: {% raw %}${{ always() && needs.gate.result == 'failure' }}{% endraw %}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update pipeline incident issue
+        env:
+          GH_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+          TITLE: "Pipeline failure — {% raw %}${{ github.ref_name }}{% endraw %}"
+          RUN_URL: "{% raw %}${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}{% endraw %}"
+        run: |
+          LABEL="incident:ci"
+          EXISTING=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "$LABEL" \
+            --state open \
+            --json number,title \
+            --jq ".[] | select(.title == \"$TITLE\") | .number" \
+            | head -1)
+
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "New failure on \`{% raw %}${{ github.ref_name }}{% endraw %}\`: $RUN_URL"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Pipeline failed on branch \`%s\`.\n\n**Run:** %s' "{% raw %}${{ github.ref_name }}{% endraw %}" "$RUN_URL")" \
+              --label "$LABEL" --label "priority:high" || \
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$(printf 'Pipeline failed on branch \`%s\`.\n\n**Run:** %s' "{% raw %}${{ github.ref_name }}{% endraw %}" "$RUN_URL")"
+          fi
