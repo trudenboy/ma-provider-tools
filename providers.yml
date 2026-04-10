@@ -7,6 +7,7 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    codespell_ignore_words: "provid,hass,followings,childs,explict,additionals,commitish,nam,"
     service_url: https://music.yandex.ru
     auth_method: "Токен (X-Auth-Token)"
     max_quality: "Lossless FLAC (с подпиской Plus)"
@@ -66,6 +67,7 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    codespell_ignore_words: "provid,hass,followings,childs,explict,additionals,commitish,nam,"
     service_url: https://zvuk.com
     auth_method: "Токен (X-Auth-Token)"
     max_quality: "Lossless FLAC (с подпиской)"
@@ -272,5 +274,8 @@ providers:
       - SECURITY.md.j2
       - backport.yml.j2
       - pipeline.yml.j2
+      - setup.sh.j2
+      - pyproject.toml.j2
+      - .pre-commit-config.yaml.j2
       - sync-kion-from-yandex.yml.j2
       - LICENSE.j2

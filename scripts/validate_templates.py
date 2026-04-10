@@ -48,6 +48,7 @@ def main() -> int:
         "auth_method": base.get("auth_method", ""),
         "max_quality": base.get("max_quality", ""),
         "features": base.get("features", []),
+        "codespell_ignore_words": base.get("codespell_ignore_words", ""),
         "all_providers": [
             p for p in providers if p.get("provider_type") != "server_fork"
         ],

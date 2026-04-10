@@ -54,6 +54,7 @@ ALL_WRAPPER_FILES = [
     ("release.yml.j2", ".github/workflows/release.yml"),
     ("test.yml.j2", ".github/workflows/test.yml"),
     ("security.yml.j2", ".github/workflows/security.yml"),
+    ("pipeline.yml.j2", ".github/workflows/pipeline.yml"),
     # Label management
     ("sync-labels.yml.j2", ".github/workflows/sync-labels.yml"),
     ("labels.yml.j2", ".github/labels.yml"),
@@ -72,6 +73,10 @@ ALL_WRAPPER_FILES = [
     ("issue-project.yml.j2", ".github/workflows/issue-project.yml"),
     # Ruff configuration
     ("ruff.toml.j2", "ruff.toml"),
+    # Dev environment
+    ("setup.sh.j2", "scripts/setup.sh"),
+    ("pyproject.toml.j2", "pyproject.toml"),
+    (".pre-commit-config.yaml.j2", ".pre-commit-config.yaml"),
     # Docker dev environment
     ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
     ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),
@@ -133,6 +138,7 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "auth_method": provider.get("auth_method", ""),
         "max_quality": provider.get("max_quality", ""),
         "features": provider.get("features", []),
+        "codespell_ignore_words": provider.get("codespell_ignore_words", ""),
         "all_providers": [
             p for p in all_providers if p.get("provider_type") != "server_fork"
         ],

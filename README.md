@@ -93,12 +93,28 @@ wrappers/
 scripts/
   distribute.py         ← renders templates, creates PRs in provider repos
   validate_templates.py ← checks Jinja2 syntax, whitespace, variables
+  dev-workspace.py      ← shared dev workspace (multi-provider)
   generate_dashboard.py ← generates provider dashboard data
   update_changelog.py   ← automates changelog entries for releases
   check_package_safety.py ← dependency safety checks
   parse_manifest_deps.py  ← parses provider manifest dependencies
 providers.yml           ← registry: all providers, their repos and config
 docs-site/              ← Astro-based documentation site
+```
+
+## Dev Workspace
+
+Create a shared development workspace with one MA server and all providers:
+
+```bash
+# Create workspace with all providers
+python3 scripts/dev-workspace.py init --dir ~/ma-workspace --all
+
+# Start MA server with all providers loaded
+python3 scripts/dev-workspace.py run --dir ~/ma-workspace
+
+# Update all repos to latest
+python3 scripts/dev-workspace.py update --dir ~/ma-workspace
 ```
 
 ## Further Reading
@@ -198,12 +214,28 @@ wrappers/
 scripts/
   distribute.py         ← рендерит шаблоны, создаёт PR в репозиториях провайдеров
   validate_templates.py ← проверяет синтаксис Jinja2, пробелы, переменные
+  dev-workspace.py      ← общее dev-окружение (мульти-провайдер)
   generate_dashboard.py ← генерирует данные для дашборда провайдеров
   update_changelog.py   ← автоматизирует записи changelog при релизах
   check_package_safety.py ← проверка безопасности зависимостей
   parse_manifest_deps.py  ← парсинг зависимостей из манифеста провайдера
 providers.yml           ← реестр: все провайдеры, их репозитории и конфигурация
 docs-site/              ← сайт документации на Astro
+```
+
+## Dev Workspace
+
+Создайте общее dev-окружение с одним MA-сервером и всеми провайдерами:
+
+```bash
+# Создать workspace со всеми провайдерами
+python3 scripts/dev-workspace.py init --dir ~/ma-workspace --all
+
+# Запустить MA-сервер со всеми провайдерами
+python3 scripts/dev-workspace.py run --dir ~/ma-workspace
+
+# Обновить все репозитории до последних версий
+python3 scripts/dev-workspace.py update --dir ~/ma-workspace
 ```
 
 ## Дополнительно

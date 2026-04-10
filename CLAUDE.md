@@ -74,7 +74,7 @@ push dev → prepare → lint+test (gate) → release (if version changed) → s
 
 ## Jinja2 Template Conventions
 
-Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`, `repo`, `default_branch`.
+Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`, `repo`, `default_branch`, `codespell_ignore_words`.
 
 GitHub Actions expressions (`${{ }}`) must be wrapped in `{% raw %}...{% endraw %}` blocks to prevent Jinja2 from interpreting them.
 
@@ -108,7 +108,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 env = Environment(loader=FileSystemLoader('wrappers'), undefined=StrictUndefined, keep_trailing_newline=True)
 registry = yaml.safe_load(Path('providers.yml').read_text())
 provider = next(p for p in registry['providers'] if p['domain'] == 'kion_music')
-ctx = {k: provider.get(k, '') for k in ['domain','display_name','manifest_path','provider_path','provider_type','locale']}
+ctx = {k: provider.get(k, '') for k in ['domain','display_name','manifest_path','provider_path','provider_type','locale','codespell_ignore_words']}
 ctx.update(repo=provider['repo'], default_branch=provider['default_branch'], all_providers=registry['providers'])
 print(env.get_template('docs/index.md.j2').render(**ctx))
 EOF
@@ -125,3 +125,26 @@ EOF
 1. Add entry to `providers.yml`
 2. Push to `main` — `distribute.yml` auto-creates PRs with wrapper files in the new repo
 3. Set `FORK_SYNC_PAT` secret in the new provider repo
+
+## Dev Workspace
+
+`scripts/dev-workspace.py` creates a shared development workspace with one `trudenboy/ma-server` fork and a common `.venv` (Python 3.12, uv). Each provider is symlinked into the server's providers directory.
+
+```bash
+# Create workspace with all providers
+python3 scripts/dev-workspace.py init --dir ~/ma-workspace --all
+
+# Add a single provider
+python3 scripts/dev-workspace.py add yandex_music --dir ~/ma-workspace
+
+# Update all repos + deps
+python3 scripts/dev-workspace.py update --dir ~/ma-workspace
+
+# Start MA server
+python3 scripts/dev-workspace.py run --dir ~/ma-workspace
+
+# Show status
+python3 scripts/dev-workspace.py status --dir ~/ma-workspace
+```
+
+Provider repos can also use `./scripts/setup.sh --workspace ~/ma-workspace` to link into an existing workspace instead of creating a standalone venv.
