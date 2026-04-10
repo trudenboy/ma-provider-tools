@@ -1,0 +1,49 @@
+---
+{% if locale == 'ru' -%}
+title: Настройка
+{%- else -%}
+title: Configuration
+{%- endif %}
+---
+
+{% if locale == 'ru' -%}
+## Добавление {{ display_name }} в Music Assistant
+
+1. Откройте **Music Assistant → Настройки →{% if provider_type == 'music_provider' %} Источники музыки{% elif provider_type == 'player_provider' %} Плееры{% else %} Плагины{% endif %}**.
+2. Нажмите **«+ Добавить»** и выберите **{{ display_name }}**.
+3. Следуйте инструкциям на экране для настройки провайдера.
+{%- if auth_method %}
+
+## Параметры подключения
+
+| Параметр | Значение |
+|:---------|:---------|
+| **Сервис** | [{{ service_url }}]({{ service_url }}) |
+| **Метод аутентификации** | {{ auth_method }} |
+{%- if max_quality %}
+| **Макс. качество звука** | {{ max_quality }} |
+{%- endif %}
+{%- endif %}
+
+Подробное описание всех параметров смотрите в диалоге настройки провайдера в Music Assistant.
+{%- else -%}
+## Adding {{ display_name }} to Music Assistant
+
+1. Open **Music Assistant → Settings →{% if provider_type == 'music_provider' %} Music Providers{% elif provider_type == 'player_provider' %} Players{% else %} Plugins{% endif %}**.
+2. Click **Add Provider** and select **{{ display_name }}**.
+3. Follow the on-screen instructions to configure the provider.
+{%- if auth_method %}
+
+## Connection Parameters
+
+| Parameter | Value |
+|:----------|:------|
+| **Service** | [{{ service_url }}]({{ service_url }}) |
+| **Authentication** | {{ auth_method }} |
+{%- if max_quality %}
+| **Max Audio Quality** | {{ max_quality }} |
+{%- endif %}
+{%- endif %}
+
+See the provider configuration dialog in Music Assistant for details on all available parameters.
+{%- endif %}

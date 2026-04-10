@@ -106,10 +106,12 @@ jobs:
           enable-cache: true
           python-version: "3.12"
       - name: Auto-fix lint issues
-        if: ${{ inputs.autofix }}
         run: |
           uvx ruff check --fix .
           uvx ruff format .
+      - name: Commit auto-fixes
+        if: ${{ inputs.autofix }}
+        run: |
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

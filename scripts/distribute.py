@@ -107,6 +107,7 @@ ALL_WRAPPER_FILES = [
     ("docs-site/src/content.config.ts.j2", "docs-site/src/content.config.ts"),
     ("docs/index.md.j2", "docs-site/src/content/docs/index.md"),
     ("docs/known-issues.md.j2", "docs-site/src/content/docs/known-issues.md"),
+    ("docs/configuration.md.j2", "docs-site/src/content/docs/configuration.md"),
 ]
 
 

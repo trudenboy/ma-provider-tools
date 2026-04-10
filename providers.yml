@@ -34,6 +34,7 @@ providers:
       - rebuild-integration.yml.j2
       - mkdocs.yml.j2
       - docs/index.md.j2
+      - docs/configuration.md.j2
 
   - domain: kion_music
     display_name: KION Music
@@ -58,6 +59,7 @@ providers:
       - upstream-pr.yml.j2
       - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
+      - docs/configuration.md.j2
 
   - domain: zvuk_music
     display_name: Zvuk Music
@@ -92,6 +94,7 @@ providers:
       - docs/index.md.j2
       - astro.config.mjs.j2
       - docs/development.md.j2
+      - docs/configuration.md.j2
 
   - domain: msx_bridge
     display_name: MSX Bridge
@@ -119,6 +122,7 @@ providers:
       - rebuild-integration.yml.j2
       - docs/known-issues.md.j2
       - sync-kion-from-yandex.yml.j2
+      - docs/configuration.md.j2
 
   - domain: yandex_station
     display_name: Yandex Station
@@ -280,3 +284,4 @@ providers:
       - .pre-commit-config.yaml.j2
       - sync-kion-from-yandex.yml.j2
       - LICENSE.j2
+      - docs/configuration.md.j2
