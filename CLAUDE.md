@@ -61,9 +61,9 @@ push dev → prepare → lint+test (gate) → release (if version changed) → s
 ```
 
 **Stages:**
-1. **prepare** — reads version from `manifest.json`, determines channel (PEP 440: `1.2.0` = stable, `1.2.0b1` = beta), checks if version changed vs latest tag
+1. **prepare** — reads version from `VERSION` file, determines channel (PEP 440: `1.2.0` = stable, `1.2.0b1` = beta), checks if version changed vs latest tag
 2. **gate** — calls `reusable-test.yml` (lint + test); blocks pipeline on failure
-3. **release** — conditional: only runs if version in manifest differs from latest tag. Creates tag, GitHub Release (prerelease for beta), updates CHANGELOG (stable only)
+3. **release** — conditional: only runs if version in `VERSION` file differs from latest tag. Creates tag, GitHub Release (prerelease for beta), updates CHANGELOG (stable only)
 4. **sync** — routes based on channel:
    - **beta** → `integration/dev` in `trudenboy/ma-server`
    - **stable** → `integration/dev` + parallel `upstream/[domain]` (e.g. `upstream/yandex_music`)

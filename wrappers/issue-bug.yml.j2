@@ -12,7 +12,7 @@ body:
     attributes:
       label: {% if locale == 'ru' %}Версия провайдера{% else %}Provider version{% endif %}
       description: |
-        {% if locale == 'ru' %}Найдите в `manifest.json` → поле `version`, или в теге последнего GitHub Release.{% else %}Find this in `manifest.json` → `version` field, or in the latest GitHub Release tag.{% endif %}
+        {% if locale == 'ru' %}Найдите в файле `VERSION` в корне репозитория, или в теге последнего GitHub Release.{% else %}Find this in the `VERSION` file at the repo root, or in the latest GitHub Release tag.{% endif %}
       placeholder: "e.g. 2.1.0"
     validations:
       required: true
