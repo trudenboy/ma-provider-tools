@@ -37,16 +37,16 @@ Provider created and maintained by [TrudenBoy](https://github.com/TrudenBoy).
 
 {% if locale == 'ru' %}
 Инструкция по подключению — на странице [Настройка](configuration/).
-{% else %}
+{%- else %}
 Setup instructions are on the [Configuration](configuration/) page.
-{% endif %}
+{%- endif %}
+{%- if provider_type == 'music_provider' %}
 
-{% if provider_type == 'music_provider' %}
 ## {% if locale == 'ru' %}Известные проблемы{% else %}Known Issues{% endif %}
 
 {% if locale == 'ru' %}
 Полный список — на странице [Известные проблемы](known-issues/).
-{% else %}
+{%- else %}
 Full list on the [Known Issues](known-issues/) page.
-{% endif %}
-{% endif %}
+{%- endif %}
+{%- endif %}

@@ -151,6 +151,7 @@ providers:
     provider_path: provider/
     provider_type: plugin_provider
     locale: ru
+    codespell_ignore_words: "hass,"
     service_url: https://yandex.ru/dev/dialogs/smart-home/
     auth_method: "Yandex OAuth Token"
     max_quality: "N/A (plugin — не предоставляет аудио)"
