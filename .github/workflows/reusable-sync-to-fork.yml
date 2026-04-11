@@ -83,6 +83,9 @@ jobs:
             # Rewrite test imports: from provider.X → from music_assistant.providers.DOMAIN.X
             find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
               sed -i "s/from provider\./from music_assistant.providers.${DOMAIN}./g" {} +
+            # Rewrite mock.patch string literals: "provider.X" → "music_assistant.providers.DOMAIN.X"
+            find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
+              sed -i "s/\"provider\./\"music_assistant.providers.${DOMAIN}./g" {} +
           else
             echo "No tests/ directory found in provider-repo, skipping test sync."
           fi
