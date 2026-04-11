@@ -90,6 +90,14 @@ jobs:
             echo "No tests/ directory found in provider-repo, skipping test sync."
           fi
 
+      - name: Format synced files with ruff
+        run: |
+          pip install --quiet ruff
+          cd ma-server
+          ruff format \
+            music_assistant/providers/${DOMAIN}/ \
+            tests/providers/${DOMAIN}/ 2>/dev/null || true
+
       - name: Commit and push
         if: ${{ !inputs.create_pr }}
         run: |
