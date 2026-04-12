@@ -98,6 +98,13 @@ jobs:
             music_assistant/providers/${DOMAIN}/ \
             tests/providers/${DOMAIN}/ 2>/dev/null || true
 
+      - name: Regenerate requirements_all.txt
+        run: |
+          cd ma-server
+          if [ -f scripts/gen_requirements_all.py ]; then
+            python3 scripts/gen_requirements_all.py
+          fi
+
       - name: Commit and push
         if: ${{ !inputs.create_pr }}
         run: |
