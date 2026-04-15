@@ -147,7 +147,7 @@ jobs:
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
       - name: Lint (pre-commit)
         run: |
-          uv venv .lint-venv --python 3.12
+          uv venv .lint-venv --python 3.14
           source .lint-venv/bin/activate
           uv pip install \
             pre-commit \
