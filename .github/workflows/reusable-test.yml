@@ -44,7 +44,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install dependencies
         working-directory: ma-server
         run: |
@@ -104,7 +104,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Auto-fix lint issues
         run: |
           uvx ruff check --fix .
@@ -186,7 +186,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install dependencies
         working-directory: ma-server
         run: |

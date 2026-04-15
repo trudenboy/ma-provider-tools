@@ -32,7 +32,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install deps
         run: uv pip install -e "." pip-audit
       - name: Run pip-audit
@@ -55,7 +55,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install pip-audit
         run: uv pip install pip-audit
       - name: Run pip-audit against requirements_all.txt
