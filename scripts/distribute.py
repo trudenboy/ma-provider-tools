@@ -140,6 +140,9 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "max_quality": provider.get("max_quality", ""),
         "features": provider.get("features", []),
         "codespell_ignore_words": provider.get("codespell_ignore_words", ""),
+        "python_version": provider.get("python_version", "3.12"),
+        "runtime_dependencies": provider.get("runtime_dependencies", []),
+        "extra_test_dependencies": provider.get("extra_test_dependencies", []),
         "all_providers": [
             p for p in all_providers if p.get("provider_type") != "server_fork"
         ],

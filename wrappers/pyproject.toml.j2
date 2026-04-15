@@ -2,9 +2,13 @@
 [project]
 name = "ma-provider-{{ domain | replace('_', '-') }}"
 description = "{{ display_name }} provider for Music Assistant"
-requires-python = ">=3.12"
+requires-python = ">={{ python_version | default('3.12') }}"
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+{%- for dep in runtime_dependencies | default([]) %}
+  "{{ dep }}",
+{%- endfor %}
+]
 
 [project.optional-dependencies]
 test = [
@@ -15,6 +19,9 @@ test = [
   "syrupy>=5.0",
   "codespell>=2.4",
   "music-assistant @ git+https://github.com/music-assistant/server.git@dev",
+{%- for dep in extra_test_dependencies | default([]) %}
+  "{{ dep }}",
+{%- endfor %}
   "ruff>=0.14",
   "mypy>=1.19",
   "pre-commit>=4.5",
@@ -49,7 +56,7 @@ ignore-words-list = "{{ codespell_ignore_words }}"
 {%- endif %}
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "{{ python_version | default('3.12') }}"
 platform = "linux"
 follow_imports = "silent"
 ignore_missing_imports = true

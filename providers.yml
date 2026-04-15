@@ -178,6 +178,11 @@ providers:
     provider_path: provider/
     provider_type: plugin_provider
     locale: ru
+    python_version: "3.14"
+    runtime_dependencies:
+      - "ya-passport-auth>=1.0.0"
+    extra_test_dependencies:
+      - "aiohttp>=3.9.0"
     service_url: https://music.yandex.ru
     auth_method: "Yandex OAuth / QR"
     max_quality: "Source quality (passthrough из Yandex Music)"
