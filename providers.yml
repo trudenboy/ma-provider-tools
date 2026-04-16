@@ -132,6 +132,8 @@ providers:
     provider_path: provider/
     provider_type: player_provider
     locale: ru
+    runtime_dependencies:
+      - "ya-passport-auth>=1.2.3"
     service_url: https://yandex.ru/alice/station
     auth_method: "Yandex X-Token"
     max_quality: "FLAC (lossless)"
