@@ -66,6 +66,23 @@ jobs:
           if deps:
               subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
           PYEOF
+      - name: Install provider runtime dependencies from manifest
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          python3 << 'PYEOF'
+          import json, subprocess, sys
+          from pathlib import Path
+          manifest = Path("${{ inputs.manifest_path }}")
+          if not manifest.is_file():
+              sys.exit(0)
+          reqs = json.loads(manifest.read_text()).get("requirements", [])
+          if reqs:
+              subprocess.run(
+                  ["uv", "pip", "install", "--index-strategy", "unsafe-best-match", "--"] + reqs,
+                  check=True,
+              )
+          PYEOF
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -140,6 +157,23 @@ jobs:
           if deps:
               subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
           PYEOF
+      - name: Install provider runtime dependencies from manifest
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          python3 << 'PYEOF'
+          import json, subprocess, sys
+          from pathlib import Path
+          manifest = Path("${{ inputs.manifest_path }}")
+          if not manifest.is_file():
+              sys.exit(0)
+          reqs = json.loads(manifest.read_text()).get("requirements", [])
+          if reqs:
+              subprocess.run(
+                  ["uv", "pip", "install", "--index-strategy", "unsafe-best-match", "--"] + reqs,
+                  check=True,
+              )
+          PYEOF
       - name: Symlink provider
         run: |
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
@@ -207,6 +241,23 @@ jobs:
           deps = d.get("project", {}).get("dependencies", [])
           if deps:
               subprocess.run(["uv", "pip", "install", "--"] + deps, check=True)
+          PYEOF
+      - name: Install provider runtime dependencies from manifest
+        working-directory: ${{ github.workspace }}
+        run: |
+          source ma-server/.venv/bin/activate
+          python3 << 'PYEOF'
+          import json, subprocess, sys
+          from pathlib import Path
+          manifest = Path("${{ inputs.manifest_path }}")
+          if not manifest.is_file():
+              sys.exit(0)
+          reqs = json.loads(manifest.read_text()).get("requirements", [])
+          if reqs:
+              subprocess.run(
+                  ["uv", "pip", "install", "--index-strategy", "unsafe-best-match", "--"] + reqs,
+                  check=True,
+              )
           PYEOF
       - name: Symlink provider
         run: |
