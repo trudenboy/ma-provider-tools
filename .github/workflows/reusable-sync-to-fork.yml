@@ -83,6 +83,9 @@ jobs:
             # Rewrite test imports: from provider.X → from music_assistant.providers.DOMAIN.X
             find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
               sed -i "s/from provider\./from music_assistant.providers.${DOMAIN}./g" {} +
+            # Rewrite package-root imports: from provider import X → from music_assistant.providers.DOMAIN import X
+            find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
+              sed -i "s/from provider import/from music_assistant.providers.${DOMAIN} import/g" {} +
             # Rewrite mock.patch string literals: "provider.X" → "music_assistant.providers.DOMAIN.X"
             find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
               sed -i "s/\"provider\./\"music_assistant.providers.${DOMAIN}./g" {} +
