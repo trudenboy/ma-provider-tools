@@ -162,15 +162,44 @@ providers:
     locale: ru
     runtime_dependencies:
       - "ya-passport-auth>=1.2.3"
+      - "ya-dialogs-api>=1.0.0"
     codespell_ignore_words: "hass,"
     service_url: https://yandex.ru/dev/dialogs/smart-home/
     auth_method: "Yandex OAuth Token"
     max_quality: "N/A (plugin — не предоставляет аудио)"
     features:
-      - label: "Голосовое управление MA-плеерами через Алису"
-      - label: "Регистрация плееров как устройств в Яндекс УД"
+      - label: "Регистрация MA-плееров как устройств в Яндекс УД"
       - label: "on_off / volume / mute / pause через Smart Home API"
       - label: "Автоматическая синхронизация состояния плееров"
+      - label: "Cloud-relay через yaha-cloud.ru (без публичного URL)"
+      - label: "Direct mode (через MA webserver на публичном URL)"
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
+      - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
+      - sync-kion-from-yandex.yml.j2
+
+  - domain: yandex_alice
+    display_name: Yandex Alice
+    repo: trudenboy/ma-provider-yandex-alice
+    default_branch: dev
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: plugin_provider
+    locale: ru
+    runtime_dependencies:
+      - "ya-passport-auth>=1.3.0"
+      - "ya-dialogs-api>=1.0.0"
+    codespell_ignore_words: "hass,"
+    service_url: https://dialogs.yandex.ru/developer
+    auth_method: "Yandex Passport (Device Flow)"
+    max_quality: "N/A (plugin — не предоставляет аудио)"
+    features:
+      - label: "Голосовое управление MA через кастомный скилл Алисы"
+      - label: "Полная NLU на русском (включи / поставь на паузу / перемешай / повтор / перемотай / переведи / добавь)"
+      - label: "Озвучивание сейчас играющего трека"
+      - label: "Дисамбигуация колонок голосом (первая / вторая / третья)"
+      - label: "Автосоздание Dialog-скилла через Yandex Passport"
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
