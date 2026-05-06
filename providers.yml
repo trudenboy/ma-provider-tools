@@ -162,7 +162,6 @@ providers:
     locale: ru
     runtime_dependencies:
       - "ya-passport-auth>=1.2.3"
-      - "ya-dialogs-api>=1.0.0"
     codespell_ignore_words: "hass,"
     service_url: https://yandex.ru/dev/dialogs/smart-home/
     auth_method: "Yandex OAuth Token"
@@ -189,7 +188,6 @@ providers:
     locale: ru
     runtime_dependencies:
       - "ya-passport-auth>=1.3.0"
-      - "ya-dialogs-api>=1.0.0"
     codespell_ignore_words: "hass,"
     service_url: https://dialogs.yandex.ru/developer
     auth_method: "Yandex Passport (Device Flow)"
