@@ -1,0 +1,73 @@
+name: Sync upstream lint/mypy config
+
+on:
+  schedule:
+    # Mondays 04:00 UTC — picks up changes shortly after the upstream working week.
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run sync
+        run: python3 scripts/sync_upstream_config.py
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="chore/sync-upstream-config-$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add wrappers/ruff.toml.j2 wrappers/pyproject.toml.j2
+          git commit -m "chore(wrappers): sync ruff/mypy/codespell from upstream music-assistant/server"
+          git push --set-upstream origin "$BRANCH"
+
+          # If a PR for this branch already exists (re-run on the same day), skip create.
+          if gh pr list --head "$BRANCH" --state open --json number -q '.[0].number' | grep -q .; then
+            echo "PR for $BRANCH already exists — pushed updates"
+            exit 0
+          fi
+
+          PR_BODY=$(cat <<'BODY'
+          Automated weekly sync from `music-assistant/server/pyproject.toml`
+          (`[tool.ruff]`, `[tool.mypy]`, and `[tool.codespell].skip`).
+
+          Provider-specific values are preserved:
+          - `python_version`
+          - `packages = ["tests", "provider"]`
+          - `[[tool.mypy.overrides]]` block
+          - `codespell.ignore-words-list`
+          - provider-only `codespell.skip` patterns
+
+          Run locally with `python3 scripts/sync_upstream_config.py` to reproduce.
+          BODY
+          )
+          gh pr create \
+            --title "chore(wrappers): sync ruff/mypy/codespell from upstream MA" \
+            --body "$PR_BODY" \
+            --base main \
+            --head "$BRANCH" \
+            --label "chore"

@@ -302,3 +302,4 @@ providers:
       - LICENSE.j2
       - docs/configuration.md.j2
       - CLAUDE.md.j2
+      - check-config-sync.yml.j2

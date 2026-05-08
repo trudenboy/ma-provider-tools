@@ -1,0 +1,46 @@
+name: Reusable — Check config sync
+
+on:
+  workflow_call:
+    inputs:
+      domain:
+        description: "Provider domain (must match providers.yml)"
+        required: true
+        type: string
+      ma_provider_tools_ref:
+        description: "ma-provider-tools ref to compare against"
+        default: "main"
+        type: string
+
+jobs:
+  check:
+    name: Lint/typing config in sync with upstream MA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-provider-tools
+          ref: ${{ inputs.ma_provider_tools_ref }}
+          path: .ma-provider-tools
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install render dependencies
+        run: pip install jinja2 pyyaml
+
+      - name: Render expected configs for ${{ inputs.domain }}
+        run: |
+          python3 .ma-provider-tools/scripts/render_for_provider.py \
+            --domain "${{ inputs.domain }}" \
+            --out-dir _expected \
+            ruff.toml.j2 pyproject.toml.j2
+
+      - name: Compare against templates
+        run: python3 .ma-provider-tools/scripts/check_config_sync.py
