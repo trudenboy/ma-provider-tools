@@ -77,18 +77,21 @@ All non-trivial changes go through a pull request — never push directly to
    `CHANGELOG.md` entry — in the same PR. The release pipeline tags and
    publishes automatically when the new `VERSION` lands on `{{ default_branch }}`.
 4. **Ask before merging.** Always request explicit maintainer approval to
-   merge. Do not self-merge or enable auto-merge without it.
+   merge. Do not self-merge or enable auto-merge without it. (Auto-merge is
+   reserved for `distribute.yml`-generated wrapper-sync PRs from
+   `ma-provider-tools`.)
 
 Follow-up commits driven by review (your own pass or Copilot's) land directly
 on the PR branch — no separate PR needed.
 
 ## Upstream is Read-Only
 
-Never push to or open PRs against the upstream Music Assistant repos
-(`music-assistant/server`, `trudenboy/ma-server`) without an explicit
-maintainer instruction. The provider repo is the source of truth; upstream
-sync runs automatically through `ma-provider-tools` workflows
-(`sync-to-fork.yml`, `upstream-pr.yml`).
+Never push to or open PRs against the upstream Music Assistant repo
+(`music-assistant/server` — the true upstream) or the integration fork
+(`trudenboy/ma-server`) without an explicit maintainer instruction. The
+provider repo is the source of truth; sync to the integration fork and
+upstream PR submission run automatically through `ma-provider-tools`
+workflows (`sync-to-fork.yml`, `upstream-pr.yml`).
 
 ## Debugging
 
