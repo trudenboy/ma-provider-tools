@@ -301,3 +301,4 @@ providers:
       - sync-kion-from-yandex.yml.j2
       - LICENSE.j2
       - docs/configuration.md.j2
+      - CLAUDE.md.j2
