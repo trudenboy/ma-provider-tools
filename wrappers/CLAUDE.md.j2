@@ -1,0 +1,73 @@
+<!-- ma-provider-tools: rendered from wrappers/CLAUDE.md.j2 -->
+# CLAUDE.md
+
+This file aligns development of the **{{ display_name }}** provider with the
+upstream [`music-assistant/server`](https://github.com/music-assistant/server)
+standards. It is rendered from `wrappers/CLAUDE.md.j2` in
+[`trudenboy/ma-provider-tools`](https://github.com/trudenboy/ma-provider-tools)
+and is kept in sync across every provider repo — **do not edit it here**.
+
+Provider-specific architecture, key flows, and gotchas live in
+[`CLAUDE.local.md`](./CLAUDE.local.md). Claude Code automatically picks up both
+files when working in this repository.
+
+## Development Commands
+
+- `./scripts/setup.sh` — initial setup (venv via `uv`, dependencies, pre-commit hooks). Re-run after pulling latest code.
+- `uv run pytest` — run all tests
+- `uv run pytest {{ provider_path }}tests/<file>.py` — run a specific test file
+- `uv run ruff check {{ provider_path }}` — lint
+- `uv run ruff format {{ provider_path }}` — auto-format
+- `uv run mypy {{ provider_path }}` — type check
+- `pre-commit run --all-files` — full pre-commit gate
+
+Always run `pre-commit run --all-files` after a code change to ensure the new
+code adheres to the project standards.
+
+## Code Style
+
+### Comments
+
+Only use comments to explain complex, multi-line blocks of code. Do not comment
+obvious operations.
+
+### Docstring Format
+
+Use Sphinx-style docstrings with `:param:` syntax. For simple functions, a
+single-line docstring is fine.
+
+Don't explain inner workings of the code in the docstrings (you can use inline
+comments for that if/when needed). The docstring should provide clarity to the
+**caller** of the function/method, not explain how it works
+technically/internally.
+
+```python
+def my_function(param1: str, param2: int, param3: bool = False) -> str:
+    """
+    Brief one-line description of the function.
+
+    :param param1: Description of what param1 is used for.
+    :param param2: Description of what param2 is used for.
+    :param param3: Description of what param3 is used for.
+    """
+```
+
+Do **not** use Google-style (`Args:`) or bullet-style (`- param:`) docstrings.
+AI assistants tend to generate Google-style by default — explicitly steer them
+to Sphinx, and rewrite anything that slips through.
+
+## Branching and PRs
+
+- All work-in-progress PRs target `{{ default_branch }}` (primary development branch).
+- Versioned releases happen automatically: bump the `VERSION` file (PEP 440 — `1.2.0` stable, `1.2.0b1` beta) and the pipeline tags, releases, and syncs to the upstream fork.
+- Before opening a PR: run lint + tests + `pre-commit run --all-files`. CI runs `ruff format --check`, so pushing without `ruff format` is the most common red build.
+
+## Debugging
+
+Music Assistant stores its data in `$HOME/.musicassistant/`. When debugging
+locally:
+
+- **Logs:** `$HOME/.musicassistant/musicassistant.log` (current),
+  `musicassistant.log.1`, `.log.2`, etc. for older rotated logs.
+- **Database:** `$HOME/.musicassistant/library.db` — query via `sqlite3`.
+  **Only execute SELECT queries** — never write to a live database.
