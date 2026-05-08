@@ -98,6 +98,8 @@ ALL_WRAPPER_FILES = [
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
     # Claude Code shared development guide (universal block; provider-specific notes live in CLAUDE.local.md)
     ("CLAUDE.md.j2", "CLAUDE.md"),
+    # Config-sync guard: fails CI if ruff.toml or [tool.mypy] / [tool.codespell].skip drift from the templated version
+    ("check-config-sync.yml.j2", ".github/workflows/check-config-sync.yml"),
     # Fork upstream sync (server_fork only)
     ("sync-from-upstream.yml.j2", ".github/workflows/sync-from-upstream.yml"),
     # Upstream PR submission (server_fork only)
