@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       provider_type:
-        description: "Provider type: music_provider or player_provider"
+        description: "Provider type: music_provider, player_provider, or plugin_provider"
         required: true
         type: string
       provider_domain:
@@ -21,9 +21,9 @@ on:
         type: string
 
 jobs:
-  # ─── Music provider: install from upstream ma-server, run pip-audit ──────────
+  # ─── Music / plugin provider: install from provider's pyproject, run pip-audit ───
   audit-music-provider:
-    if: ${{ inputs.provider_type == 'music_provider' }}
+    if: ${{ inputs.provider_type == 'music_provider' || inputs.provider_type == 'plugin_provider' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,12 +63,12 @@ jobs:
 
   # ─── Guard: reject unknown provider_type ─────────────────────────────────────
   guard-unknown-type:
-    if: ${{ inputs.provider_type != 'music_provider' && inputs.provider_type != 'player_provider' }}
+    if: ${{ inputs.provider_type != 'music_provider' && inputs.provider_type != 'player_provider' && inputs.provider_type != 'plugin_provider' }}
     runs-on: ubuntu-latest
     steps:
       - name: Fail on unknown provider_type
         run: |
-          echo "ERROR: Unknown provider_type '${{ inputs.provider_type }}'. Must be 'music_provider' or 'player_provider'."
+          echo "ERROR: Unknown provider_type '${{ inputs.provider_type }}'. Must be 'music_provider', 'player_provider', or 'plugin_provider'."
           exit 1
 
   # ─── Report security audit failure as a GitHub issue (with dedup) ────────────
