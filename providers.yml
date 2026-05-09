@@ -258,8 +258,8 @@ providers:
       - sync-kion-from-yandex.yml.j2
 
 
-  - domain: mcp_server
-    display_name: MCP Server
+  - domain: fastmcp_server
+    display_name: FastMCP Server
     repo: trudenboy/ma-provider-mcp
     default_branch: dev
     manifest_path: provider/manifest.json
