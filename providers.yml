@@ -258,6 +258,36 @@ providers:
       - sync-kion-from-yandex.yml.j2
 
 
+  - domain: mcp_server
+    display_name: MCP Server
+    repo: trudenboy/ma-provider-mcp
+    default_branch: dev
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: plugin_provider
+    locale: en
+    python_version: "3.14"
+    runtime_dependencies:
+      - "fastmcp>=3.2,<4.0"
+    extra_test_dependencies:
+      - "pytest-asyncio>=0.24"
+    service_url: https://github.com/trudenboy/ma-provider-mcp
+    auth_method: "MA token (Bearer)"
+    max_quality: "n/a (control plane)"
+    features:
+      - label: "MCP server for Claude Code, Codex, and other LLM clients"
+      - label: "Library search and browse via library:// resources"
+      - label: "Playback / queue / player control"
+      - label: "16-permission tag-based access control"
+      - label: "Canned prompts: find_and_play, party_playlist, now_playing"
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
+      - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
+      - sync-kion-from-yandex.yml.j2
+      - docs/configuration.md.j2
+
+
   - domain: ma_server
     display_name: Music Assistant Server (Fork)
     repo: trudenboy/ma-server
