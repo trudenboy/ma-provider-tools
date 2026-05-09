@@ -179,6 +179,17 @@ jobs:
           rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
           ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
                 "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+      - name: Symlink tests into ma-server (mirrors sync-to-fork rsync layout)
+        run: |
+          # Mirror the layout sync-to-fork rsync uses so mypy / pytest see
+          # tests under tests/providers/<domain>/, matching how upstream
+          # music-assistant/server organises its repo.
+          mkdir -p "$GITHUB_WORKSPACE/ma-server/tests/providers"
+          rm -rf "$GITHUB_WORKSPACE/ma-server/tests/providers/${{ inputs.provider_domain }}"
+          if [ -d "$GITHUB_WORKSPACE/tests" ]; then
+            ln -s "$GITHUB_WORKSPACE/tests" \
+                  "$GITHUB_WORKSPACE/ma-server/tests/providers/${{ inputs.provider_domain }}"
+          fi
       - name: Lint (pre-commit)
         run: |
           uv venv .lint-venv --python 3.14
@@ -199,7 +210,17 @@ jobs:
         working-directory: ma-server
         run: |
           source .venv/bin/activate
-          mypy music_assistant/providers/${{ inputs.provider_domain }}
+          # Cover both the provider package and its tests so divergence with
+          # the strict upstream mypy config (run on tests/ in
+          # music-assistant/server) cannot accrue silently. The shared
+          # ``[[tool.mypy.overrides]] module = "tests.*"`` entry in the
+          # provider's pyproject.toml relaxes ``warn_unused_ignores`` for
+          # tests, keeping the noise floor low.
+          paths=(music_assistant/providers/${{ inputs.provider_domain }})
+          if [ -e tests/providers/${{ inputs.provider_domain }} ]; then
+            paths+=(tests/providers/${{ inputs.provider_domain }})
+          fi
+          mypy "${paths[@]}"
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
