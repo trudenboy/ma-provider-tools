@@ -100,6 +100,13 @@ ALL_WRAPPER_FILES = [
     ("CLAUDE.md.j2", "CLAUDE.md"),
     # Config-sync guard: fails CI if ruff.toml or [tool.mypy] / [tool.codespell].skip drift from the templated version
     ("check-config-sync.yml.j2", ".github/workflows/check-config-sync.yml"),
+    # Feature-consistency guard: cross-validates providers.yml::features[].feature_id with SUPPORTED_FEATURES
+    (
+        "check-feature-consistency.yml.j2",
+        ".github/workflows/check-feature-consistency.yml",
+    ),
+    # Spec template — top-level source path so validate_templates.py picks it up; distributed into specs/ subdir.
+    ("feature-spec.md.j2", "specs/feature-spec.md"),
     # Fork upstream sync (server_fork only)
     ("sync-from-upstream.yml.j2", ".github/workflows/sync-from-upstream.yml"),
     # Upstream PR submission (server_fork only)

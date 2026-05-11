@@ -29,3 +29,10 @@ repos:
         additional_dependencies: [jinja2, pyyaml]
         files: ^(wrappers/.*\.j2|providers\.yml)$
         pass_filenames: false
+      - id: validate-providers-yml
+        name: Validate providers.yml against JSON Schema
+        entry: python scripts/validate_providers_yml.py
+        language: python
+        additional_dependencies: [pyyaml, jsonschema]
+        files: ^(providers\.yml|schemas/providers\.schema\.json)$
+        pass_filenames: false
