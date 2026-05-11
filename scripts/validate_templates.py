@@ -60,24 +60,25 @@ def main() -> int:
         keep_trailing_newline=True,
     )
 
-    templates = sorted(WRAPPERS_DIR.glob("*.j2"))
+    templates = sorted(WRAPPERS_DIR.rglob("*.j2"))
     errors: list[str] = []
 
     for tpl_path in templates:
+        rel = tpl_path.relative_to(WRAPPERS_DIR).as_posix()
         try:
-            out = env.get_template(tpl_path.name).render(**context)
+            out = env.get_template(rel).render(**context)
         except TemplateSyntaxError as e:
-            errors.append(f"{tpl_path.name}: Jinja2 syntax error — {e}")
+            errors.append(f"{rel}: Jinja2 syntax error — {e}")
             continue
         except Exception as e:
-            errors.append(f"{tpl_path.name}: render error — {e}")
+            errors.append(f"{rel}: render error — {e}")
             continue
 
         if not out.endswith("\n"):
-            errors.append(f"{tpl_path.name}: missing trailing newline")
+            errors.append(f"{rel}: missing trailing newline")
         elif out.endswith("\n\n"):
             errors.append(
-                f"{tpl_path.name}: trailing blank line (ends with \\n\\n) — use {{%- endraw %}} to strip it"
+                f"{rel}: trailing blank line (ends with \\n\\n) — use {{%- endraw %}} to strip it"
             )
 
     if errors:

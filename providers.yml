@@ -20,12 +20,15 @@ providers:
       - label: "Синхронизация библиотеки"
       - label: "Рекомендации / Моя волна"
         slug: features/my-wave
+        feature_id: RECOMMENDATIONS
       - label: "Тексты песен"
         slug: features/lyrics
+        feature_id: LYRICS
       - label: "Подборки и миксы"
         slug: features/picks-and-mixes
       - label: "Просмотр каталога (Browse)"
         slug: features/browse
+        feature_id: BROWSE
       - label: "Lossless FLAC"
         slug: features/audio-quality
     legacy_files:
@@ -82,12 +85,16 @@ providers:
       - label: "Синхронизация библиотеки"
       - label: "Рекомендации"
         slug: features/recommendations
+        feature_id: RECOMMENDATIONS
       - label: "Тексты песен"
         slug: features/lyrics
+        feature_id: LYRICS
       - label: "Похожие треки / Радио-режим"
         slug: features/similar-tracks
+        feature_id: SIMILAR_TRACKS
       - label: "Просмотр каталога (Browse)"
         slug: features/browse
+        feature_id: BROWSE
       - label: "Управление плейлистами"
     skip_wrappers:
       - sync-from-upstream.yml.j2
@@ -334,3 +341,5 @@ providers:
       - docs/configuration.md.j2
       - CLAUDE.md.j2
       - check-config-sync.yml.j2
+      - check-feature-consistency.yml.j2
+      - feature-spec.md.j2

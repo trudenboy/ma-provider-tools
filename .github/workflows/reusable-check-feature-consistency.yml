@@ -1,0 +1,43 @@
+name: Reusable — Check feature consistency
+
+on:
+  workflow_call:
+    inputs:
+      domain:
+        description: "Provider domain (must match providers.yml)"
+        required: true
+        type: string
+      ma_provider_tools_ref:
+        description: "ma-provider-tools ref to compare against"
+        default: "main"
+        type: string
+
+jobs:
+  check:
+    name: features[].feature_id ↔ SUPPORTED_FEATURES
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-provider-tools
+          ref: ${{ inputs.ma_provider_tools_ref }}
+          path: .ma-provider-tools
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Cross-validate features for ${{ inputs.domain }}
+        run: |
+          python3 .ma-provider-tools/scripts/check_feature_consistency.py \
+            --providers-yml .ma-provider-tools/providers.yml \
+            --domain "${{ inputs.domain }}" \
+            --repo-path .
