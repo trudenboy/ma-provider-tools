@@ -5,12 +5,32 @@ description: {% if locale == 'ru' %}Документация провайдер�
 
 <img src="https://raw.githubusercontent.com/{{ repo }}/{{ default_branch }}/provider/icon.svg" alt="{{ display_name }}" style="width: 72px; float: right; margin: 0 0 1rem 1.5rem;" />
 
+{% if github_description %}
+> {{ github_description }}
+{% endif %}
+
+[![CI](https://github.com/{{ repo }}/actions/workflows/test.yml/badge.svg)](https://github.com/{{ repo }}/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/{{ repo }}?display_name=tag)](https://github.com/{{ repo }}/releases/latest)
+[![License](https://img.shields.io/github/license/{{ repo }})](https://github.com/{{ repo }}/blob/{{ default_branch }}/LICENSE)
+[![Music Assistant](https://img.shields.io/badge/Music%20Assistant-provider-9070B8?logo=python&logoColor=white)](https://www.music-assistant.io/)
+[![Stars](https://img.shields.io/github/stars/{{ repo }}?style=flat&logo=github)](https://github.com/{{ repo }}/stargazers)
+
+{% if github_topics %}
+<div class="topic-pills">
+{%- for t in github_topics %} <code>{{ t }}</code>{% endfor %}
+</div>
+{% endif %}
+
 {% if locale == 'ru' %}
 Music Assistant поддерживает [{{ display_name }}]({{ service_url }}) — {% if provider_type == 'music_provider' %}музыкальный стриминговый сервис{% else %}плеер{% endif %}.
 Провайдер создан и поддерживается [TrudenBoy](https://github.com/TrudenBoy).
 {% else %}
 Music Assistant supports [{{ display_name }}]({{ service_url }}) {% if provider_type == 'music_provider' %}music streaming service{% else %}player{% endif %}.
 Provider created and maintained by [TrudenBoy](https://github.com/TrudenBoy).
+{% endif %}
+
+{% if related_providers %}
+{% if locale == 'ru' %}**Связанные провайдеры:**{% else %}**Related providers:**{% endif %} {% for d in related_providers %}{% set p = (all_providers | selectattr('domain', 'equalto', d) | first) %}[{{ p.display_name }}](https://github.com/{{ p.repo }}){% if not loop.last %} · {% endif %}{% endfor %}
 {% endif %}
 
 {% if provider_type == 'music_provider' %}

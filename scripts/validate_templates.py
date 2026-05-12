@@ -35,6 +35,7 @@ def main() -> int:
 
     # Use the first fully-specified provider as render context
     base = next((p for p in providers if p.get("manifest_path")), providers[0])
+    repo_name = base["repo"].split("/", 1)[1] if "/" in base["repo"] else base["repo"]
     context = {
         "domain": base["domain"],
         "display_name": base.get("display_name", ""),
@@ -49,6 +50,12 @@ def main() -> int:
         "max_quality": base.get("max_quality", ""),
         "features": base.get("features", []),
         "codespell_ignore_words": base.get("codespell_ignore_words", ""),
+        "github_description": base.get("github_description", ""),
+        "github_topics": base.get("github_topics", []),
+        "github_homepage": base.get(
+            "github_homepage", f"https://trudenboy.github.io/{repo_name}/"
+        ),
+        "related_providers": base.get("related_providers", []),
         "all_providers": [
             p for p in providers if p.get("provider_type") != "server_fork"
         ],

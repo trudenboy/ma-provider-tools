@@ -105,6 +105,38 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9._/-]+\\.(j2|md|yml|yaml)$"
           }
+        },
+        "github_description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 120,
+          "pattern": "^[^\\n]+$",
+          "description": "Single-line repo About text rendered on the GitHub page and consumed by sync_repo_settings.py."
+        },
+        "github_topics": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,49}$"
+          },
+          "description": "GitHub topic list (lowercase, hyphens, English-only). RU-first repos add transliterated brand keywords + 'russia' / 'russian-music'."
+        },
+        "github_homepage": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional override for the repo Homepage URL. Defaults to https://trudenboy.github.io/<basename(repo)>/ when absent."
+        },
+        "related_providers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "description": "Cross-link map: each entry MUST be another provider's domain. Rendered as the 'Related providers' line in README header and docs-site homepage."
         }
       },
       "allOf": [

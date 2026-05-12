@@ -1,0 +1,16 @@
+<!-- >>> ma-provider-tools sync (readme header) — DO NOT EDIT >>> -->
+[![CI](https://github.com/{{ repo }}/actions/workflows/test.yml/badge.svg)](https://github.com/{{ repo }}/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/{{ repo }}?display_name=tag)](https://github.com/{{ repo }}/releases/latest)
+[![License](https://img.shields.io/github/license/{{ repo }})](LICENSE)
+[![Music Assistant](https://img.shields.io/badge/Music%20Assistant-provider-9070B8?logo=python&logoColor=white)](https://www.music-assistant.io/)
+[![Stars](https://img.shields.io/github/stars/{{ repo }}?style=flat&logo=github)](https://github.com/{{ repo }}/stargazers)
+{% if locale == "ru" %}
+**📖 [Documentation / Документация]({{ github_homepage }})** · **🔄 [Changelog / Журнал](CHANGELOG.md)** · **🐛 [Issues / Проблемы](https://github.com/{{ repo }}/issues)** · **💬 [Discussions / Обсуждения](https://github.com/{{ repo }}/discussions)**
+{%- else %}
+**📖 [Documentation]({{ github_homepage }})** · **🔄 [Changelog](CHANGELOG.md)** · **🐛 [Issues](https://github.com/{{ repo }}/issues)** · **💬 [Discussions](https://github.com/{{ repo }}/discussions)**
+{%- endif %}
+{%- if related_providers %}
+
+**Related providers:** {% for d in related_providers %}{% set p = (all_providers | selectattr('domain', 'equalto', d) | first) %}[{{ p.display_name }}](https://github.com/{{ p.repo }}){% if not loop.last %} · {% endif %}{% endfor %}
+{%- endif %}
+<!-- <<< ma-provider-tools sync (readme header) <<< -->
