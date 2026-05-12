@@ -1,0 +1,52 @@
+---
+{% if locale == 'ru' %}title: Продвижение и SEO
+description: Как настроить визуальную презентацию и SEO для репозитория {{ display_name }}
+{% else %}title: Promotion & SEO
+description: Visual presentation and SEO settings for the {{ display_name }} repository
+{% endif %}---
+
+{% if locale == 'ru' -%}
+Этот документ описывает, как поддерживается визуальное представление репозитория **{{ display_name }}** на GitHub и в поиске.
+
+## Что синхронизируется автоматически
+
+Через `ma-provider-tools` распространяются и поддерживаются:
+
+- **`About`-блок** (`description`, `homepage`, `topics`) — задаются в `providers.yml` (поля `github_description`, `github_topics`, `github_homepage`) и применяются скриптом `scripts/sync_repo_settings.py` + workflow `sync-repo-settings.yml`.
+- **README-шапка** — блок между маркерами `<!-- >>> ma-provider-tools sync (readme header) >>> -->` и `<!-- <<< ma-provider-tools sync (readme header) <<< -->`. Содержит badges (CI / Release / License / Music Assistant / Stars), быстрые ссылки и cross-link на родственные провайдеры.
+- **Стартовая страница docs-site** (этот сайт) — hero-блок берёт `github_description`, под ним ряд тегов из `github_topics` и тот же ряд badges, что в README.
+
+Локальные правки этих блоков **не сохраняются**: следующий запуск `distribute.yml` перезапишет их. Чтобы изменить описание или topics — открывайте PR в `ma-provider-tools`.
+
+## Social preview (превью при шаринге ссылки)
+
+GitHub API **не поддерживает** загрузку изображения превью — это делается только вручную через UI. Рекомендуется:
+
+1. PNG 1280×640 пикселей.
+2. Visual: иконка/логотип провайдера + название + 1-2 ключевые фразы.
+3. Загрузить через: **Repo Settings → Social preview → Edit**.
+
+Это P1-задача — автогенерация через GitHub Action рассматривается отдельно.
+{%- else -%}
+This document describes how the **{{ display_name }}** repository's visual presentation and search-engine surface are maintained.
+
+## What is auto-synced
+
+Through `ma-provider-tools`:
+
+- **`About` block** (`description`, `homepage`, `topics`) — driven by `providers.yml` (fields `github_description`, `github_topics`, `github_homepage`) and applied by `scripts/sync_repo_settings.py` + the `sync-repo-settings.yml` workflow.
+- **README header block** — between markers `<!-- >>> ma-provider-tools sync (readme header) >>> -->` and `<!-- <<< ma-provider-tools sync (readme header) <<< -->`. Contains badges (CI / Release / License / Music Assistant / Stars), quick-links, and a cross-link row for related providers.
+- **Docs-site landing page** (this site) — hero block reads `github_description`, followed by a topic-pill row from `github_topics` and the same badge row as the README.
+
+Hand-edits to these blocks are **not preserved**: the next `distribute.yml` run overwrites them. To change a description or topic — open a PR in `ma-provider-tools`.
+
+## Social preview image
+
+GitHub does **not** expose social-preview upload via its API — this is a UI-only operation. Recommended:
+
+1. PNG, 1280×640 px.
+2. Visual content: provider icon/logo + project name + 1–2 key keywords.
+3. Upload at: **Repo Settings → Social preview → Edit**.
+
+Auto-generation via a GitHub Action is a P1 follow-up; until then, manual upload is the only path.
+{%- endif %}

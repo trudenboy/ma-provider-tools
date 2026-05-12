@@ -1,0 +1,41 @@
+name: Sync GitHub repo settings
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        type: boolean
+        default: false
+        description: "Apply changes (default: false → dry-run)"
+      domain:
+        type: string
+        description: "Optional: limit to one provider domain"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Run sync_repo_settings
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.apply }}" = "true" ]; then
+            ARGS="$ARGS --apply"
+          fi
+          if [ -n "${{ inputs.domain }}" ]; then
+            ARGS="$ARGS --domain ${{ inputs.domain }}"
+          fi
+          python3 scripts/sync_repo_settings.py $ARGS

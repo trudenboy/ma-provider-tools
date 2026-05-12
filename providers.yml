@@ -31,6 +31,21 @@ providers:
         feature_id: BROWSE
       - label: "Lossless FLAC"
         slug: features/audio-quality
+    github_description: "Яндекс Музыка / Yandex Music provider for Music Assistant — Lossless FLAC, Моя волна, lyrics, recommendations"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - music-provider
+      - yandex-music
+      - russia
+      - russian-music
+      - russian-streaming
+      - lossless-flac
+      - lyrics
+      - recommendations
+    related_providers:
+      - yandex_ynison
     legacy_files:
       - mkdocs.yml
       - docs/stylesheets/extra.css
@@ -60,6 +75,19 @@ providers:
       - label: "Рекомендации"
       - label: "Тексты песен"
       - label: "Просмотр каталога (Browse)"
+    github_description: "KION Music (КИОН) provider for Music Assistant — российский музыкальный стриминг с HMAC signed playback"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - music-provider
+      - kion
+      - russia
+      - russian-music
+      - russian-streaming
+      - lossless-flac
+    related_providers:
+      - yandex_music
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -96,6 +124,22 @@ providers:
         slug: features/browse
         feature_id: BROWSE
       - label: "Управление плейлистами"
+    github_description: "Звук / Zvuk provider for Music Assistant — Lossless FLAC, рекомендации, lyrics, similar tracks"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - music-provider
+      - zvuk
+      - russia
+      - russian-music
+      - russian-streaming
+      - lossless-flac
+      - lyrics
+      - recommendations
+    related_providers:
+      - yandex_music
+      - kion_music
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -122,6 +166,16 @@ providers:
       - label: "Multi-instance (one per TV)"
       - label: "Volume control"
       - label: "Playback state sync"
+    github_description: "MSX Bridge for Music Assistant — stream MA audio to Smart TVs via the Media Station X protocol"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - player-provider
+      - media-station-x
+      - smart-tv
+      - tv-streaming
+      - playback-bridge
     legacy_files:
       - mkdocs.yml
       - docs/stylesheets/extra.css
@@ -153,6 +207,21 @@ providers:
       - label: "Play / Pause / Stop / Seek"
       - label: "Автообнаружение по mDNS"
       - label: "Real-time статус воспроизведения"
+    github_description: "Яндекс Станция / Yandex Station player for Music Assistant — управление колонками через Glagol API"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - player-provider
+      - yandex-station
+      - glagol
+      - russia
+      - russian-music
+      - alice
+      - smart-speaker
+    related_providers:
+      - yandex_smarthome
+      - yandex_alice
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -180,6 +249,21 @@ providers:
       - label: "Автоматическая синхронизация состояния плееров"
       - label: "Cloud-relay через yaha-cloud.ru (без публичного URL)"
       - label: "Direct mode (через MA webserver на публичном URL)"
+    github_description: "Яндекс Умный Дом plugin for Music Assistant — управление MA-плеерами через Smart Home API и Алису"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - plugin-provider
+      - yandex-smarthome
+      - alice
+      - voice-control
+      - russia
+      - russian-music
+      - smart-home
+    related_providers:
+      - yandex_alice
+      - yandex_station
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -208,6 +292,21 @@ providers:
       - label: "Озвучивание сейчас играющего трека"
       - label: "Дисамбигуация колонок голосом (первая / вторая / третья)"
       - label: "Автосоздание Dialog-скилла через Yandex Passport"
+    github_description: "Яндекс Алиса voice-skill plugin for Music Assistant — голосовое управление через Dialogs API"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - plugin-provider
+      - yandex-alice
+      - voice-control
+      - voice-assistant
+      - russia
+      - russian-nlu
+      - dialogs-api
+    related_providers:
+      - yandex_smarthome
+      - yandex_station
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -236,6 +335,20 @@ providers:
       - label: "Двунаправленное управление воспроизведением"
       - label: "Синхронизация громкости"
       - label: "Мульти-инстанс (один на MA-плеер)"
+    github_description: "Yandex Ynison / Music Connect plugin for Music Assistant — приложение Яндекс Музыка как пульт ДУ"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - plugin-provider
+      - yandex-ynison
+      - yandex-music
+      - music-connect
+      - russia
+      - russian-music
+      - spotify-connect-alt
+    related_providers:
+      - yandex_music
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -258,6 +371,17 @@ providers:
       - label: "SSDP discovery by external apps"
       - label: "Route received audio to any MA player"
       - label: "Volume and transport control"
+    github_description: "DLNA/UPnP MediaRenderer plugin for Music Assistant — turn MA into a network audio receiver"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - plugin-provider
+      - dlna
+      - upnp
+      - mediarenderer
+      - ssdp
+      - network-audio
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -287,6 +411,19 @@ providers:
       - label: "Playback / queue / player control"
       - label: "16-permission tag-based access control"
       - label: "Canned prompts: find_and_play, party_playlist, now_playing"
+    github_description: "FastMCP server for Music Assistant — control MA from Claude Code, Codex, Cursor, and other AI agents"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - plugin-provider
+      - mcp
+      - mcp-server
+      - claude-code
+      - codex
+      - cursor
+      - ai-agents
+      - llm-tools
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -343,3 +480,4 @@ providers:
       - check-config-sync.yml.j2
       - check-feature-consistency.yml.j2
       - feature-spec.md.j2
+      - docs/promotion.md.j2

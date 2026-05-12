@@ -16,6 +16,7 @@ Requires:
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -51,6 +52,14 @@ so updating them here keeps provider repos in sync with the central workflow reg
 CLAUDE_RENDERED_MARKER = (
     "<!-- ma-provider-tools: rendered from wrappers/CLAUDE.md.j2 -->"
 )
+
+# Marker pair wrapping the auto-synced README header (badges + quick-links +
+# related providers). The injection handler regex-replaces the block between
+# these two markers; everything outside is preserved verbatim.
+README_HEADER_BEGIN = (
+    "<!-- >>> ma-provider-tools sync (readme header) — DO NOT EDIT >>> -->"
+)
+README_HEADER_END = "<!-- <<< ma-provider-tools sync (readme header) <<< -->"
 
 ALL_WRAPPER_FILES = [
     # License
@@ -125,6 +134,8 @@ ALL_WRAPPER_FILES = [
     ("docs/index.md.j2", "docs-site/src/content/docs/index.md"),
     ("docs/known-issues.md.j2", "docs-site/src/content/docs/known-issues.md"),
     ("docs/configuration.md.j2", "docs-site/src/content/docs/configuration.md"),
+    # Promotion / SEO guidance (auto-synced from ma-provider-tools)
+    ("docs/promotion.md.j2", "docs-site/src/content/docs/promotion.md"),
 ]
 
 
@@ -135,6 +146,100 @@ def run(
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
 
 
+def _render_readme_header(provider: dict, all_providers: list[dict]) -> str:
+    """Render `wrappers/readme-header.md.j2` for a single provider."""
+    import re as _re  # local import; rendered separately from main wrappers loop
+
+    env = Environment(
+        loader=FileSystemLoader(str(WRAPPERS_DIR)),
+        undefined=StrictUndefined,
+        keep_trailing_newline=False,  # block embedded in README; trim trailing newline
+    )
+    repo_name = (
+        provider["repo"].split("/", 1)[1]
+        if "/" in provider["repo"]
+        else provider["repo"]
+    )
+    ctx = {
+        "repo": provider["repo"],
+        "locale": provider.get("locale", "en"),
+        "github_homepage": provider.get(
+            "github_homepage", f"https://trudenboy.github.io/{repo_name}/"
+        ),
+        "related_providers": provider.get("related_providers", []),
+        "all_providers": [
+            p for p in all_providers if p.get("provider_type") != "server_fork"
+        ],
+    }
+    rendered = env.get_template("readme-header.md.j2").render(**ctx)
+    # Trim final newline (the marker END line should not be followed by a blank
+    # line when embedded into README.md).
+    return _re.sub(r"\n+\Z", "", rendered)
+
+
+def _apply_readme_header(
+    provider: dict, all_providers: list[dict], tmpdir: str
+) -> bool:
+    """Inject (or replace) the auto-synced README header block in README.md.
+
+    Returns True if README.md was modified and staged.
+    """
+    if provider.get("provider_type") == "server_fork":
+        return False
+    readme = Path(tmpdir) / "README.md"
+    if not readme.is_file():
+        print(
+            f"  Warning: README.md missing in {provider['domain']}; skipping header injection"
+        )
+        return False
+    block = _render_readme_header(provider, all_providers)
+    original = readme.read_text()
+    pattern = re.compile(
+        re.escape(README_HEADER_BEGIN) + r".*?" + re.escape(README_HEADER_END),
+        flags=re.DOTALL,
+    )
+    if pattern.search(original):
+        new_content = pattern.sub(block, original, count=1)
+    else:
+        # Insert immediately after the first H1 line (search in first 10 lines).
+        lines = original.splitlines(keepends=True)
+        h1_idx = next(
+            (
+                i
+                for i, line in enumerate(lines[:10])
+                if re.match(r"^# [^\n]+$", line.rstrip("\r\n"))
+            ),
+            None,
+        )
+        if h1_idx is None:
+            print(
+                f"  Warning: no H1 in first 10 lines of {provider['domain']}/README.md;"
+                " prepending header at file start"
+            )
+            new_content = block + "\n\n" + original
+        else:
+            insert_at = h1_idx + 1
+            # Consume the (typical) blank line directly after H1 to keep the
+            # diff visually clean — the rendered block already starts the next
+            # paragraph.
+            if insert_at < len(lines) and lines[insert_at].strip() == "":
+                insert_at += 1
+            new_content = (
+                "".join(lines[:insert_at])
+                + "\n"
+                + block
+                + "\n\n"
+                + "".join(lines[insert_at:])
+            )
+
+    if new_content == original:
+        return False
+    readme.write_text(new_content)
+    run(["git", "add", "README.md"], cwd=tmpdir)
+    print(f"  Injected README header in {provider['domain']}/README.md")
+    return True
+
+
 def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]:
     """Render all wrapper templates for a provider and return {dest_path: content}."""
     env = Environment(
@@ -143,6 +248,11 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         keep_trailing_newline=True,
     )
 
+    repo_name = (
+        provider["repo"].split("/", 1)[1]
+        if "/" in provider["repo"]
+        else provider["repo"]
+    )
     context = {
         "domain": provider["domain"],
         "display_name": provider.get("display_name", ""),
@@ -160,6 +270,12 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "python_version": provider.get("python_version", "3.12"),
         "runtime_dependencies": provider.get("runtime_dependencies", []),
         "extra_test_dependencies": provider.get("extra_test_dependencies", []),
+        "github_description": provider.get("github_description", ""),
+        "github_topics": provider.get("github_topics", []),
+        "github_homepage": provider.get(
+            "github_homepage", f"https://trudenboy.github.io/{repo_name}/"
+        ),
+        "related_providers": provider.get("related_providers", []),
         "all_providers": [
             p for p in all_providers if p.get("provider_type") != "server_fork"
         ],
@@ -250,6 +366,11 @@ def create_pr_for_provider(
                     run(["git", "add", "CLAUDE.local.md"], cwd=tmpdir)
                     changed = True
                     print("  Migrated existing CLAUDE.md to CLAUDE.local.md")
+
+        # Idempotent README header injection (badges + quick-links + related providers).
+        # Marker-replace pattern; inserts after first H1 on first run; skips server_fork.
+        if _apply_readme_header(provider, all_providers, tmpdir):
+            changed = True
 
         # Write rendered wrapper files
         for dest_path, content in rendered.items():
