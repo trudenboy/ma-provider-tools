@@ -2,23 +2,33 @@
 """Refresh shields.io endpoint badges for the Music Assistant fleet.
 
 For each provider in `providers.yml` (skipping `server_fork`), determine
-which Music Assistant channel currently ships the provider and at what
-version. Three channels:
+which Music Assistant release channel currently ships the provider and at
+what version. Two channels are tracked, both from the upstream
+``music-assistant/server`` repo:
 
-- **stable** = `music-assistant/server@main`
-- **nightly** = `music-assistant/server@dev`
-- **beta**   = `trudenboy/ma-server@integration/dev`
+- **stable** = latest non-prerelease release (e.g. ``2.8.7``) — green badge.
+- **beta**   = latest prerelease release (e.g. ``2.9.0b10``)   — yellow badge.
+
+The provider manifest / VERSION file is fetched at the **release tag ref**
+(so the badge always reflects the exact state shipped in that release,
+not the moving HEAD of a branch).
 
 For each channel:
 - Probe `music_assistant/providers/<domain>/manifest.json` (presence).
 - If present, fetch the sibling `VERSION` file (provider version pin —
   written by the sync pipeline; absent on first bootstrap or for legacy
   syncs).
-- Fetch the channel's MA server version from `pyproject.toml::project.version`.
+- Fetch the channel's MA server version from the latest release tag.
 
-Build a shields.io endpoint badge JSON with a composite message and write
-it to `public/badges/<domain>.json`. Idempotent: skips rewrite when content
-unchanged.
+Two endpoint-badge JSONs per provider:
+
+    public/badges/<domain>-stable.json  → label "stable" / green
+    public/badges/<domain>-beta.json    → label "beta"   / yellow
+
+Message format per channel:
+  - provider present AND VERSION file present:  "v<MAver> – v<provVer>"
+  - provider present, VERSION absent:           "v<MAver>"
+  - provider absent in that channel:            "not included"  (color: lightgrey)
 
 Authenticated requests use `GH_TOKEN` if present (recommended in CI).
 
@@ -32,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -45,27 +56,34 @@ PROVIDERS_FILE = REPO_ROOT / "providers.yml"
 BADGES_DIR = REPO_ROOT / "public" / "badges"
 
 UPSTREAM_REPO = "music-assistant/server"
-INTEGRATION_REPO = "trudenboy/ma-server"
 
-BADGE_COLOR = "9070B8"
-BADGE_LABEL = "Music Assistant"
-BADGE_LABEL_COLOR = "555"
+COLOR_STABLE = "brightgreen"
+COLOR_BETA = "yellow"
+COLOR_ABSENT = "lightgrey"
 CACHE_SECONDS = 14400  # 4 hours; matches cron cadence
 
 
 @dataclass(frozen=True)
 class Channel:
-    """One of the three MA channels we sample."""
+    """One of the two MA release channels we sample.
 
-    name: str  # "stable" / "beta" / "dev"
+    `prerelease=True` resolves the channel ref to the latest prerelease
+    tag (e.g. ``2.9.0b10``); `prerelease=False` to the latest stable
+    release (``2.8.7``). The resolved tag is used both as the displayed
+    MA-server version AND as the raw-content ref for fetching
+    ``music_assistant/providers/<domain>/manifest.json`` and ``VERSION``.
+    """
+
+    name: str  # "stable" / "beta"
+    label: str  # text shown on the badge (left side)
+    color: str  # shields.io color (right side) when provider present
     repo: str  # GitHub owner/name
-    ref: str  # branch / tag
+    prerelease: bool  # False → stable release; True → latest prerelease
 
 
 CHANNELS: tuple[Channel, ...] = (
-    Channel("stable", UPSTREAM_REPO, "main"),
-    Channel("beta", INTEGRATION_REPO, "integration/dev"),
-    Channel("dev", UPSTREAM_REPO, "dev"),
+    Channel("stable", "stable", COLOR_STABLE, UPSTREAM_REPO, prerelease=False),
+    Channel("beta", "beta", COLOR_BETA, UPSTREAM_REPO, prerelease=True),
 )
 
 
@@ -86,20 +104,18 @@ def _raw_url(repo: str, ref: str, path: str) -> str:
     return f"https://raw.githubusercontent.com/{repo}/{ref}/{path}"
 
 
-def _provider_present(channel: Channel, domain: str, token: str | None) -> bool:
-    """Check whether `music_assistant/providers/<domain>/manifest.json` exists."""
-    url = _raw_url(
-        channel.repo, channel.ref, f"music_assistant/providers/{domain}/manifest.json"
-    )
+def _provider_present(repo: str, ref: str, domain: str, token: str | None) -> bool:
+    """Check whether `music_assistant/providers/<domain>/manifest.json` exists at ref."""
+    url = _raw_url(repo, ref, f"music_assistant/providers/{domain}/manifest.json")
     code, _ = _http_get(url, token=token)
     return code == 200
 
 
-def _provider_version(channel: Channel, domain: str, token: str | None) -> str | None:
-    """Return the inlined provider VERSION pin in that channel, or None."""
-    url = _raw_url(
-        channel.repo, channel.ref, f"music_assistant/providers/{domain}/VERSION"
-    )
+def _provider_version(
+    repo: str, ref: str, domain: str, token: str | None
+) -> str | None:
+    """Return the inlined provider VERSION pin at the given ref, or None."""
+    url = _raw_url(repo, ref, f"music_assistant/providers/{domain}/VERSION")
     code, body = _http_get(url, token=token)
     if code != 200:
         return None
@@ -123,74 +139,69 @@ def _gh_api_json(path: str, token: str | None) -> object | None:
         return None
 
 
-def _ma_server_version(channel: Channel, token: str | None) -> str | None:
-    """Return a human-readable channel version label.
+# PEP 440 beta tag: e.g. "2.9.0b10". Distinguishes beta from dev tags
+# (e.g. "2.9.0.dev2026051207"), both of which are GitHub prereleases.
+_BETA_TAG_RE = re.compile(r"^v?\d+\.\d+\.\d+b\d+$")
 
-    - stable: latest non-prerelease tag from `releases/latest`.
-    - beta / dev: latest pre-release tag if any, else short SHA of the branch HEAD.
 
-    pyproject.toml is unreliable (placeholder `0.0.0` overwritten by CI at release time).
+def _resolve_release_tag(channel: Channel, token: str | None) -> str | None:
+    """Return the GitHub tag for the latest release matching the channel.
+
+    - stable channel: latest non-prerelease release via ``releases/latest``.
+    - beta channel: first prerelease whose tag matches the PEP 440 beta
+      pattern (``X.Y.ZbN``). Dev tags (``X.Y.Z.devYYYYMMDDHH``) are
+      explicitly skipped — beta means a stamped beta release a user might
+      install, not the moving dev nightly.
     """
-    if channel.name == "stable":
+    if not channel.prerelease:
         data = _gh_api_json(f"repos/{channel.repo}/releases/latest", token)
         if isinstance(data, dict):
             tag = data.get("tag_name")
-            if isinstance(tag, str):
-                return tag.lstrip("v") or None
+            if isinstance(tag, str) and tag:
+                return tag
         return None
 
-    # For beta and dev we look at the latest release (prereleases included) first;
-    # otherwise we fall back to the short SHA of the branch HEAD.
-    releases = _gh_api_json(f"repos/{channel.repo}/releases?per_page=5", token)
+    releases = _gh_api_json(f"repos/{channel.repo}/releases?per_page=50", token)
     if isinstance(releases, list):
         for r in releases:
-            if not isinstance(r, dict):
+            if not (isinstance(r, dict) and r.get("prerelease")):
                 continue
-            target = r.get("target_commitish")
             tag = r.get("tag_name")
-            if isinstance(tag, str) and target in (
-                channel.ref,
-                channel.ref.split("/")[-1],
-            ):
-                return tag.lstrip("v")
-    commit = _gh_api_json(f"repos/{channel.repo}/commits/{channel.ref}", token)
-    if isinstance(commit, dict):
-        sha = commit.get("sha")
-        if isinstance(sha, str) and len(sha) >= 7:
-            return sha[:7]
+            if isinstance(tag, str) and _BETA_TAG_RE.match(tag):
+                return tag
     return None
 
 
-def _build_message(domain: str, token: str | None) -> str:
-    """Compose the badge `message` line.
-
-    Format per channel segment:
-        "<channel> v<MAver>[ (v<provVer>)]"
-    Channels where the provider is absent are omitted entirely.
-    Separator: ` · ` (middle dot).
-    """
-    segments: list[str] = []
-    for ch in CHANNELS:
-        if not _provider_present(ch, domain, token):
-            continue
-        ma_ver = _ma_server_version(ch, token) or "?"
-        prov_ver = _provider_version(ch, domain, token)
-        if prov_ver:
-            segments.append(f"{ch.name} v{ma_ver} (v{prov_ver})")
-        else:
-            segments.append(f"{ch.name} v{ma_ver}")
-    if not segments:
-        return "not included"
-    return " · ".join(segments)
-
-
-def _badge_json(domain: str, token: str | None) -> dict:
+def _channel_badge_json(channel: Channel, domain: str, token: str | None) -> dict:
+    """Build the shields.io endpoint payload for one (channel, provider) pair."""
+    tag = _resolve_release_tag(channel, token)
+    if tag is None:
+        return {
+            "schemaVersion": 1,
+            "label": channel.label,
+            "message": "unknown",
+            "color": COLOR_ABSENT,
+            "cacheSeconds": CACHE_SECONDS,
+        }
+    ma_ver = tag.lstrip("v")
+    if not _provider_present(channel.repo, tag, domain, token):
+        return {
+            "schemaVersion": 1,
+            "label": channel.label,
+            "message": f"v{ma_ver} – not included",
+            "color": COLOR_ABSENT,
+            "cacheSeconds": CACHE_SECONDS,
+        }
+    prov_ver = _provider_version(channel.repo, tag, domain, token)
+    if prov_ver:
+        message = f"v{ma_ver} – v{prov_ver}"
+    else:
+        message = f"v{ma_ver}"
     return {
         "schemaVersion": 1,
-        "label": BADGE_LABEL,
-        "message": _build_message(domain, token),
-        "color": BADGE_COLOR,
-        "labelColor": BADGE_LABEL_COLOR,
+        "label": channel.label,
+        "message": message,
+        "color": channel.color,
         "cacheSeconds": CACHE_SECONDS,
     }
 
@@ -244,17 +255,21 @@ def main() -> int:
     unchanged = 0
     for provider in providers:
         domain = provider["domain"]
-        payload = _badge_json(domain, token)
-        if args.dry_run:
-            print(f"--- {domain} ---")
-            print(json.dumps(payload, indent=2, ensure_ascii=False))
-            continue
-        path = BADGES_DIR / f"{domain}.json"
-        if _write_if_changed(path, payload):
-            print(f"  wrote {path.relative_to(REPO_ROOT)}: {payload['message']}")
-            written += 1
-        else:
-            unchanged += 1
+        for channel in CHANNELS:
+            payload = _channel_badge_json(channel, domain, token)
+            if args.dry_run:
+                print(f"--- {domain} / {channel.name} ---")
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+                continue
+            path = BADGES_DIR / f"{domain}-{channel.name}.json"
+            if _write_if_changed(path, payload):
+                print(
+                    f"  wrote {path.relative_to(REPO_ROOT)}: "
+                    f"{payload['label']} → {payload['message']}"
+                )
+                written += 1
+            else:
+                unchanged += 1
 
     if not args.dry_run:
         print(f"\nSummary: {written} written, {unchanged} unchanged")
