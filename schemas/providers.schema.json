@@ -120,9 +120,11 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "pattern": "^[a-z][a-z0-9-]{1,49}$"
+            "minLength": 2,
+            "maxLength": 50,
+            "pattern": "^[A-Za-z\\u0410-\\u044F\\u0401\\u0451][A-Za-z\\u0410-\\u044F\\u0401\\u0451\\u0030-\\u0039_-]{1,49}$"
           },
-          "description": "GitHub topic list (lowercase, hyphens, English-only). RU-first repos add transliterated brand keywords + 'russia' / 'russian-music'."
+          "description": "GitHub topic list. Accepts Latin (preferred — what GitHub actually persists), snake_case, and Cyrillic entries; `gh repo edit --add-topic` silently filters invalid topics, so non-Latin entries are stored in providers.yml as authoring intent but do not appear on the live GitHub repo. Recommended: lowercase-hyphen Latin only (`russia`, `russian-music`, transliterated brands)."
         },
         "github_homepage": {
           "type": "string",
