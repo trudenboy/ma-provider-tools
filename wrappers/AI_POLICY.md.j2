@@ -1,0 +1,44 @@
+<!-- ma-provider-tools: rendered from wrappers/AI_POLICY.md.j2 -->
+# AI Policy
+
+This provider's AI usage rules track two layers:
+
+1. The Open Home Foundation **upstream policy** that governs
+   `music-assistant/server` — the repository this provider (`{{ domain }}`)
+   is eventually inlined into. Canonical text:
+   [`music-assistant/.github/AI_POLICY.md`](https://github.com/music-assistant/.github/blob/main/AI_POLICY.md).
+2. The **ecosystem policy** for `trudenboy/ma-provider-*` and
+   `trudenboy/ma-provider-tools`, including how the upstream-boundary works.
+   Canonical text:
+   [`trudenboy/ma-provider-tools/AI_POLICY.md`](https://github.com/trudenboy/ma-provider-tools/blob/main/AI_POLICY.md).
+
+Both documents are binding. When they disagree, **upstream wins** — because
+this provider's code will land in `music-assistant/server`, where upstream
+policy is the only one that applies.
+
+## Local highlights
+
+- AI assistants may write code, draft commit messages, and draft PR
+  descriptions for work in this repo. A human contributor owns each PR and
+  must be able to explain every change in their own words.
+- Replies to human reviewers must be in the contributor's own words. Grammar
+  and clarity help from AI is fine; substance is not.
+- Replies to AI review comments (GitHub Copilot, code-scanning bots, etc.)
+  may be AI-drafted, but the contributor must read and apply judgement
+  before posting. Once a human joins the same thread, the previous rule
+  applies to every reply after that point.
+- No AI assistant may open, comment on, push to, or close anything in
+  `music-assistant/*` directly. The only path is the
+  `upstream-pr.yml.j2`-rendered workflow in `ma-provider-tools`, which
+  opens the upstream PR as a draft with a human-attestation checklist that
+  the contributor must check before requesting review.
+- AI co-author trailers (`Co-Authored-By: Claude ...`) are welcome in this
+  repo's commits as honest disclosure. They are stripped at the upstream
+  boundary so they don't appear in `music-assistant/server` history.
+
+## Where this file lives
+
+This file is rendered from `wrappers/AI_POLICY.md.j2` in
+`trudenboy/ma-provider-tools` and synced into every provider repo by
+`distribute.py`. **Do not edit it here** — open a PR in
+`ma-provider-tools` instead.
