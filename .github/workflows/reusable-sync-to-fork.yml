@@ -101,6 +101,15 @@ jobs:
             music_assistant/providers/${DOMAIN}/ \
             tests/providers/${DOMAIN}/ 2>/dev/null || true
 
+      - name: Sync VERSION file alongside manifest
+        run: |
+          if [ -f provider-repo/VERSION ]; then
+            cp provider-repo/VERSION "ma-server/music_assistant/providers/${DOMAIN}/VERSION"
+            echo "Synced VERSION file: $(cat "ma-server/music_assistant/providers/${DOMAIN}/VERSION")"
+          else
+            echo "No VERSION file in provider repo; skipping"
+          fi
+
       - name: Regenerate requirements_all.txt
         run: |
           cd ma-server
