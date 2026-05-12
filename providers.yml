@@ -39,8 +39,6 @@ providers:
       - music-provider
       - yandex-music
       - yandex
-      - яндекс
-      - музыка
       - music
       - streaming
       - lossless-flac
@@ -88,9 +86,8 @@ providers:
       - music-provider
       - kion
       - music
-      - музыка
-      - кион
-      - мтс
+      - mtc
+      - mts
       - streaming
       - lossless-flac
     related_providers:
@@ -138,8 +135,7 @@ providers:
       - python
       - music-provider
       - zvuk
-      - звук
-      - музыка
+      - sberzvuk
       - music
       - streaming
       - lossless-flac
@@ -225,9 +221,7 @@ providers:
       - yandex
       - glagol
       - station
-      - Станция
-      - Яндекс
-      - Алиса
+      - voice
       - alice
       - smart-speaker
     related_providers:
@@ -270,10 +264,8 @@ providers:
       - yandex
       - alice
       - voice-control
-      - Яндекс
-      - Дом
-      - Алиса
-      - УДЯ
+      - dialog
+      - smarthome
       - smart-home
     related_providers:
       - yandex_alice
@@ -316,9 +308,8 @@ providers:
       - yandex
       - voice-control
       - voice-assistant
-      - алиса
-      - станция
-      - яндекс
+      - alice
+      - station
       - russian-nlu
       - dialogs-api
     related_providers:
@@ -364,8 +355,7 @@ providers:
       - ynison
       - yandex-music
       - music-connect
-      - яндекс
-      - музыка
+      - music
       - spotify-connect-alt
     related_providers:
       - yandex_music
@@ -444,6 +434,11 @@ providers:
       - claude-code
       - codex
       - cursor
+      - chatgpt
+      - gemini
+      - vscode
+      - cline
+      - zed
       - ai-agents
       - llm-tools
     skip_wrappers:
