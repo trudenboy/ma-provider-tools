@@ -39,8 +39,8 @@ providers:
       - music-provider
       - yandex-music
       - yandex
-      - Яндекс
-      - Музыка
+      - яндекс
+      - музыка
       - music
       - streaming
       - lossless-flac
