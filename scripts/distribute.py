@@ -161,6 +161,7 @@ def _render_readme_header(provider: dict, all_providers: list[dict]) -> str:
         else provider["repo"]
     )
     ctx = {
+        "domain": provider["domain"],
         "repo": provider["repo"],
         "locale": provider.get("locale", "en"),
         "github_homepage": provider.get(
