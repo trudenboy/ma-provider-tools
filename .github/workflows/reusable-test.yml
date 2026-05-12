@@ -39,18 +39,77 @@ jobs:
           ref: dev
           path: ma-server
           fetch-depth: 1
+      # Auto-derive whether this provider actually needs the audio test env.
+      # Music + player providers always do. Plugin providers do only if their
+      # SUPPORTED_FEATURES include AUDIO_SOURCE; control-plane plugins (no
+      # AUDIO_SOURCE) skip ffmpeg + heavy requirements_all.txt install. Errors
+      # / unparseable cases fall through to the safe full-install path.
+      - name: Detect test deps
+        id: deps
+        run: |
+          python3 - <<'PYEOF'
+          import ast, os, sys
+          from pathlib import Path
+
+          ptype = "${{ inputs.provider_type }}"
+          ppath = "${{ inputs.provider_path }}".rstrip("/")
+
+          def emit(ffmpeg: bool, full: bool) -> None:
+              with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+                  fh.write(f"needs_ffmpeg={'true' if ffmpeg else 'false'}\n")
+                  fh.write(f"needs_ma_full_deps={'true' if full else 'false'}\n")
+
+          # Music + player providers always need the full audio env.
+          if ptype in ("music_provider", "player_provider"):
+              emit(True, True); sys.exit(0)
+
+          # Plugin providers: recursively scan all *.py under provider_path
+          # for an AUDIO_SOURCE identifier/attribute reference. SUPPORTED_FEATURES
+          # may live in __init__.py OR a sibling module (e.g. provider.py for
+          # dlna_receiver). Docstrings / comments don't trigger AST Name/Attribute
+          # nodes, so false positives are avoided.
+          if not ppath or not Path(ppath).is_dir():
+              emit(True, True); sys.exit(0)
+
+          has_audio = False
+          for py in Path(ppath).rglob("*.py"):
+              try:
+                  tree = ast.parse(py.read_text())
+              except (SyntaxError, OSError):
+                  continue
+              for node in ast.walk(tree):
+                  if isinstance(node, ast.Attribute) and node.attr == "AUDIO_SOURCE":
+                      has_audio = True
+                      break
+                  if isinstance(node, ast.Name) and node.id == "AUDIO_SOURCE":
+                      has_audio = True
+                      break
+              if has_audio:
+                  break
+
+          emit(has_audio, has_audio)
+          PYEOF
       - name: Install ffmpeg
+        if: ${{ steps.deps.outputs.needs_ffmpeg == 'true' }}
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: "3.14"
-      - name: Install dependencies
+      - name: Install dependencies (full — audio providers)
+        if: ${{ steps.deps.outputs.needs_ma_full_deps == 'true' }}
         working-directory: ma-server
         run: |
           uv venv .venv
           source .venv/bin/activate
           uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]" -r requirements_all.txt
+      - name: Install dependencies (lean — control-plane plugin)
+        if: ${{ steps.deps.outputs.needs_ma_full_deps != 'true' }}
+        working-directory: ma-server
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]"
       - name: Install provider dependencies
         working-directory: ${{ github.workspace }}
         run: |
@@ -236,18 +295,75 @@ jobs:
           ref: dev
           path: ma-server
           fetch-depth: 1
+      # Mirror of the detect step in test-music-provider — kept for uniformity
+      # so plugin-vs-player edge cases never silently regress. Player providers
+      # always resolve to true/true and run the full install.
+      - name: Detect test deps
+        id: deps
+        run: |
+          python3 - <<'PYEOF'
+          import ast, os, sys
+          from pathlib import Path
+
+          ptype = "${{ inputs.provider_type }}"
+          ppath = "${{ inputs.provider_path }}".rstrip("/")
+
+          def emit(ffmpeg: bool, full: bool) -> None:
+              with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+                  fh.write(f"needs_ffmpeg={'true' if ffmpeg else 'false'}\n")
+                  fh.write(f"needs_ma_full_deps={'true' if full else 'false'}\n")
+
+          # Music + player providers always need the full audio env.
+          if ptype in ("music_provider", "player_provider"):
+              emit(True, True); sys.exit(0)
+
+          # Plugin providers: recursively scan all *.py under provider_path
+          # for an AUDIO_SOURCE identifier/attribute reference. SUPPORTED_FEATURES
+          # may live in __init__.py OR a sibling module (e.g. provider.py for
+          # dlna_receiver). Docstrings / comments don't trigger AST Name/Attribute
+          # nodes, so false positives are avoided.
+          if not ppath or not Path(ppath).is_dir():
+              emit(True, True); sys.exit(0)
+
+          has_audio = False
+          for py in Path(ppath).rglob("*.py"):
+              try:
+                  tree = ast.parse(py.read_text())
+              except (SyntaxError, OSError):
+                  continue
+              for node in ast.walk(tree):
+                  if isinstance(node, ast.Attribute) and node.attr == "AUDIO_SOURCE":
+                      has_audio = True
+                      break
+                  if isinstance(node, ast.Name) and node.id == "AUDIO_SOURCE":
+                      has_audio = True
+                      break
+              if has_audio:
+                  break
+
+          emit(has_audio, has_audio)
+          PYEOF
       - name: Install ffmpeg
+        if: ${{ steps.deps.outputs.needs_ffmpeg == 'true' }}
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: "3.14"
-      - name: Install dependencies
+      - name: Install dependencies (full — audio providers)
+        if: ${{ steps.deps.outputs.needs_ma_full_deps == 'true' }}
         working-directory: ma-server
         run: |
           uv venv .venv
           source .venv/bin/activate
           uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]" -r requirements_all.txt
+      - name: Install dependencies (lean — control-plane plugin)
+        if: ${{ steps.deps.outputs.needs_ma_full_deps != 'true' }}
+        working-directory: ma-server
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]"
       - name: Install provider dependencies
         working-directory: ${{ github.workspace }}
         run: |
