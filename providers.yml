@@ -38,14 +38,19 @@ providers:
       - python
       - music-provider
       - yandex-music
-      - russia
-      - russian-music
-      - russian-streaming
+      - yandex
+      - Яндекс
+      - Музыка
+      - music
+      - streaming
       - lossless-flac
       - lyrics
       - recommendations
     related_providers:
       - yandex_ynison
+      - yandex_station
+      - yandex_smarthome
+      - yandex_alice
     legacy_files:
       - mkdocs.yml
       - docs/stylesheets/extra.css
@@ -75,16 +80,18 @@ providers:
       - label: "Рекомендации"
       - label: "Тексты песен"
       - label: "Просмотр каталога (Browse)"
-    github_description: "KION Music (КИОН) provider for Music Assistant — российский музыкальный стриминг с HMAC signed playback"
+    github_description: "KION Music (КИОН/MTC) provider for Music Assistant — российский музыкальный стриминг"
     github_topics:
       - music-assistant
       - home-assistant
       - python
       - music-provider
       - kion
-      - russia
-      - russian-music
-      - russian-streaming
+      - music
+      - музыка
+      - кион
+      - мтс
+      - streaming
       - lossless-flac
     related_providers:
       - yandex_music
@@ -131,9 +138,10 @@ providers:
       - python
       - music-provider
       - zvuk
-      - russia
-      - russian-music
-      - russian-streaming
+      - звук
+      - музыка
+      - music
+      - streaming
       - lossless-flac
       - lyrics
       - recommendations
@@ -173,6 +181,7 @@ providers:
       - python
       - player-provider
       - media-station-x
+      - msx
       - smart-tv
       - tv-streaming
       - playback-bridge
@@ -213,15 +222,18 @@ providers:
       - home-assistant
       - python
       - player-provider
-      - yandex-station
+      - yandex
       - glagol
-      - russia
-      - russian-music
+      - station
+      - Станция
+      - Яндекс
+      - Алиса
       - alice
       - smart-speaker
     related_providers:
       - yandex_smarthome
       - yandex_alice
+      - yandex_music
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -255,15 +267,18 @@ providers:
       - home-assistant
       - python
       - plugin-provider
-      - yandex-smarthome
+      - yandex
       - alice
       - voice-control
-      - russia
-      - russian-music
+      - Яндекс
+      - Дом
+      - Алиса
+      - УДЯ
       - smart-home
     related_providers:
       - yandex_alice
       - yandex_station
+      - yandex_music
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -298,15 +313,18 @@ providers:
       - home-assistant
       - python
       - plugin-provider
-      - yandex-alice
+      - yandex
       - voice-control
       - voice-assistant
-      - russia
+      - алиса
+      - станция
+      - яндекс
       - russian-nlu
       - dialogs-api
     related_providers:
       - yandex_smarthome
       - yandex_station
+      - yandex_music
     skip_wrappers:
       - sync-from-upstream.yml.j2
       - upstream-pr.yml.j2
@@ -341,11 +359,13 @@ providers:
       - home-assistant
       - python
       - plugin-provider
-      - yandex-ynison
+      - yandex-connect
+      - yandex
+      - ynison
       - yandex-music
       - music-connect
-      - russia
-      - russian-music
+      - яндекс
+      - музыка
       - spotify-connect-alt
     related_providers:
       - yandex_music
@@ -418,6 +438,8 @@ providers:
       - python
       - plugin-provider
       - mcp
+      - ai
+      - fastmcp
       - mcp-server
       - claude-code
       - codex
