@@ -1,0 +1,45 @@
+name: Update MA version badges
+
+on:
+  schedule:
+    # Every 4 hours. Refreshes public/badges/<domain>.json with the current
+    # MA channel inclusion + provider VERSION pin for each provider.
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-ma-version-badges
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Refresh badge JSON
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+        run: python3 scripts/update_ma_version_badges.py
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet public/badges/; then
+            echo "No badge changes — skipping commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/badges/
+          git commit -m "chore(badges): refresh MA version badges"
+          git push

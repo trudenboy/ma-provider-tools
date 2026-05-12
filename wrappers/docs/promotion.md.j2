@@ -14,6 +14,7 @@ description: Visual presentation and SEO settings for the {{ display_name }} rep
 
 - **`About`-блок** (`description`, `homepage`, `topics`) — задаются в `providers.yml` (поля `github_description`, `github_topics`, `github_homepage`) и применяются скриптом `scripts/sync_repo_settings.py` + workflow `sync-repo-settings.yml`.
 - **README-шапка** — блок между маркерами `<!-- >>> ma-provider-tools sync (readme header) >>> -->` и `<!-- <<< ma-provider-tools sync (readme header) <<< -->`. Содержит badges (CI / Release / License / Music Assistant / Stars), быстрые ссылки и cross-link на родственные провайдеры.
+- **Badge "Music Assistant"** — динамический shields.io endpoint badge: `https://trudenboy.github.io/ma-provider-tools/badges/{{ domain }}.json`. Cron `update-ma-version-badges.yml` обновляет JSON каждые 4 часа и показывает, в какие каналы MA (stable / beta / dev) включена текущая версия провайдера.
 - **Стартовая страница docs-site** (этот сайт) — hero-блок берёт `github_description`, под ним ряд тегов из `github_topics` и тот же ряд badges, что в README.
 
 Локальные правки этих блоков **не сохраняются**: следующий запуск `distribute.yml` перезапишет их. Чтобы изменить описание или topics — открывайте PR в `ma-provider-tools`.
@@ -36,6 +37,7 @@ Through `ma-provider-tools`:
 
 - **`About` block** (`description`, `homepage`, `topics`) — driven by `providers.yml` (fields `github_description`, `github_topics`, `github_homepage`) and applied by `scripts/sync_repo_settings.py` + the `sync-repo-settings.yml` workflow.
 - **README header block** — between markers `<!-- >>> ma-provider-tools sync (readme header) >>> -->` and `<!-- <<< ma-provider-tools sync (readme header) <<< -->`. Contains badges (CI / Release / License / Music Assistant / Stars), quick-links, and a cross-link row for related providers.
+- **`Music Assistant` badge** — dynamic shields.io endpoint at `https://trudenboy.github.io/ma-provider-tools/badges/{{ domain }}.json`. The `update-ma-version-badges.yml` cron in `ma-provider-tools` refreshes the JSON every 4 hours, showing which MA channel (stable / beta / dev) currently ships the provider and at what MA version.
 - **Docs-site landing page** (this site) — hero block reads `github_description`, followed by a topic-pill row from `github_topics` and the same badge row as the README.
 
 Hand-edits to these blocks are **not preserved**: the next `distribute.yml` run overwrites them. To change a description or topic — open a PR in `ma-provider-tools`.
