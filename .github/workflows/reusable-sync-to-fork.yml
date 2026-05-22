@@ -51,23 +51,53 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout fork
-        id: checkout-fork
+      - name: Check whether target branch exists on fork
+        id: branch-check
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+          FORK_REPO: ${{ inputs.fork_repo }}
+          TARGET_BRANCH: ${{ inputs.target_branch || 'dev' }}
+        run: |
+          # Distinguish three cases so auth/network errors surface loudly
+          # instead of being silently treated as "branch missing":
+          #   200 → branch exists, do a normal checkout
+          #   404 → branch missing, bootstrap from dev
+          #   anything else (401/403/5xx) → fail the job with context
+          http_code=$(gh api -i "repos/${FORK_REPO}/branches/${TARGET_BRANCH}" \
+                        2>/dev/null | awk '/^HTTP/ {print $2; exit}')
+          case "$http_code" in
+            200)
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              ;;
+            404)
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unable to query ${FORK_REPO}@${TARGET_BRANCH} (HTTP ${http_code:-no-response}). Verify FORK_SYNC_PAT is valid and has access to the fork." >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout fork (existing target branch)
+        if: steps.branch-check.outputs.exists == 'true'
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.fork_repo }}
           path: ma-server
           token: ${{ secrets.FORK_SYNC_PAT }}
           ref: ${{ inputs.target_branch || 'dev' }}
-        continue-on-error: true
 
-      - name: Create target branch if missing
-        if: steps.checkout-fork.outcome == 'failure'
+      - name: Bootstrap target branch from dev
+        if: steps.branch-check.outputs.exists == 'false'
+        env:
+          FORK_SYNC_PAT: ${{ secrets.FORK_SYNC_PAT }}
+          FORK_REPO: ${{ inputs.fork_repo }}
+          TARGET_BRANCH: ${{ inputs.target_branch }}
         run: |
           git clone --depth 1 --branch dev \
-            "https://x-access-token:${{ secrets.FORK_SYNC_PAT }}@github.com/${{ inputs.fork_repo }}.git" ma-server
+            "https://x-access-token:${FORK_SYNC_PAT}@github.com/${FORK_REPO}.git" ma-server
           cd ma-server
-          git checkout -b "${{ inputs.target_branch }}"
+          git checkout -b "${TARGET_BRANCH}"
 
       - name: Sync provider files into integration/dev
         run: |
