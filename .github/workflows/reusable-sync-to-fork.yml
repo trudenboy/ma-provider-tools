@@ -107,7 +107,11 @@ jobs:
             provider-repo/${{ inputs.provider_path }} \
             ma-server/music_assistant/providers/${DOMAIN}/
           if [ -d "provider-repo/tests" ]; then
-            rsync -av --delete \
+            # Skip doc-pinning tests that reference provider-local docs
+            # (e.g. `CLAUDE.local.md`) which intentionally do not sync to
+            # the integration fork or upstream — the test would FileNotFoundError
+            # in the synced layout and is provider-private by design.
+            rsync -av --delete --exclude='test_docs.py' \
               provider-repo/tests/ \
               ma-server/tests/providers/${DOMAIN}/
             # Rewrite test imports: from provider.X → from music_assistant.providers.DOMAIN.X
