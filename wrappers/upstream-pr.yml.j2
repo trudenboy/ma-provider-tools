@@ -199,14 +199,6 @@ jobs:
           PR_BODY+="- [ ] For changes to shared models, the companion PR in \`music-assistant/models\` is linked."$'\n'
           PR_BODY+="- [ ] For changes affecting the UI, the companion PR in \`music-assistant/frontend\` is linked."$'\n'
           PR_BODY+="- [ ] I have read and complied with the project's [AI Policy](https://github.com/music-assistant/.github/blob/main/AI_POLICY.md) for any AI-assisted contributions."
-          PR_BODY+=$'\n\n---\n\n'
-          PR_BODY+="### Human review attestation"
-          PR_BODY+=$'\n\n'
-          PR_BODY+="Per the upstream [AI policy](https://github.com/music-assistant/.github/blob/main/AI_POLICY.md), the named contributor confirms — by lifting this PR out of \`draft\` — that:"
-          PR_BODY+=$'\n\n'
-          PR_BODY+="- [x] I have personally reviewed every change in this PR."$'\n'
-          PR_BODY+="- [x] I can explain each change in my own words."$'\n'
-          PR_BODY+="- [x] Replies to maintainer questions on this PR will be written by me, not by an AI assistant. (AI-drafted replies to other AI review comments — e.g. Copilot — are permitted.)"
 
           # Defense-in-depth: strip AI co-author trailers from PR_BODY in case
           # they ever leak in via WHAT_NEW expansion. Single-line filter; safe
