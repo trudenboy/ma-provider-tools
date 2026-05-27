@@ -72,6 +72,24 @@ push dev → prepare → lint+test (gate) → release (if version changed) → s
 - `test.yml.j2` — remains for PR checks (push to main only)
 - `release.yml.j2` — remains as a manual fallback (workflow_dispatch)
 
+## Upstream PR Workflow
+
+`upstream-pr.yml.j2` is a `workflow_dispatch` flow (separate from the dev → release pipeline) that opens or updates a draft PR in `music-assistant/server` for a given provider release. It rsyncs provider source from a `vX.Y.Z` tag into `music_assistant/providers/<domain>/` and writes the PR body via shell string-concat.
+
+**PR bodies (auto-generated or manually edited) must match upstream's [`PULL_REQUEST_TEMPLATE.md`](https://github.com/music-assistant/.github/blob/main/.github/PULL_REQUEST_TEMPLATE.md).** Upstream's `pr-labels.yaml` parses the ticked `## Types of changes` checkbox(es) to apply labels; the release-notes generator slots by label. A body without that section silently breaks both.
+
+Required top-level skeleton, in order:
+
+1. `# What does this implement/fix?` — narrative (Source link, What's new, Changed files, prose) lives under this heading.
+2. `**Related issue (if applicable):**` block.
+3. `## Types of changes` — tick ≥ 1 box; multi-tick is supported for cross-cutting releases (e.g. `bugfix` + `enhancement` + `dependencies`).
+4. `## Checklist` — contributor confirmations.
+5. Optional `### Human review attestation` — internal AI-policy gate, kept below upstream's sections.
+
+When editing a live PR, use `gh api repos/music-assistant/server/pulls/<N> -X PATCH -F body=@file.md`. `gh pr edit` is currently broken on this repo by deprecated Projects-classic GraphQL fields. Preserve every section above — modify narrative under `# What does this implement/fix?`, never by deleting the structural headings.
+
+**`change_type` workflow input** — comma-separated string (e.g. `"bugfix,enhancement,dependencies"`). Whitespace and case are normalised. Auto-forced to `new-provider` when `PREV_TAG` is empty (first submission).
+
 ## Jinja2 Template Conventions
 
 Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`, `repo`, `default_branch`, `codespell_ignore_words`.
