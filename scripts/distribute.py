@@ -114,6 +114,11 @@ ALL_WRAPPER_FILES = [
         "check-feature-consistency.yml.j2",
         ".github/workflows/check-feature-consistency.yml",
     ),
+    # Rewrite-safe guard: fails provider CI early on import patterns that break the upstream import-path rewrite
+    (
+        "check-rewrite-safe.yml.j2",
+        ".github/workflows/check-rewrite-safe.yml",
+    ),
     # Spec template — top-level source path so validate_templates.py picks it up; distributed into specs/ subdir.
     ("feature-spec.md.j2", "specs/feature-spec.md"),
     # Fork upstream sync (server_fork only)

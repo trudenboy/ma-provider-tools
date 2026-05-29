@@ -1,0 +1,32 @@
+name: Reusable — Check rewrite-safe tests
+
+on:
+  workflow_call:
+    inputs:
+      ma_provider_tools_ref:
+        description: "ma-provider-tools ref providing the guard script"
+        default: "main"
+        type: string
+
+jobs:
+  check:
+    name: Provider Python is safe for the upstream import-path rewrite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-provider-tools
+          ref: ${{ inputs.ma_provider_tools_ref }}
+          path: .ma-provider-tools
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Scan provider/ and tests/ for rewrite-unsafe patterns
+        run: python3 .ma-provider-tools/scripts/check_rewrite_safe_tests.py
