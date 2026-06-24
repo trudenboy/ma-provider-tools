@@ -141,6 +141,9 @@ def render_mypy_block(mypy_cfg: dict[str, Any]) -> str:
     """
     cfg = dict(mypy_cfg)
     cfg.pop("exclude", None)
+    # `[[tool.mypy.overrides]]` parses as a list of dicts; it lives outside the
+    # auto-synced region (preserved in the template), so never render it here.
+    cfg.pop("overrides", None)
     cfg["packages"] = ["tests", "provider"]
 
     lines = ["[tool.mypy]"]
