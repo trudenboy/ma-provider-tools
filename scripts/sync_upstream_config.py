@@ -95,10 +95,22 @@ def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
     if "lint" in ruff_cfg:
         lint = ruff_cfg["lint"]
         out.append("[lint]")
-        # Order: select, ignore first (most-read), then nested tables.
+        # All scalar/list keys of [lint] MUST be emitted before any [lint.xxx]
+        # table header — once a sub-table is opened, bare `key = value` lines
+        # would bind to it instead of [lint]. Render select/ignore first (most
+        # read), then any other top-level non-table keys upstream may add
+        # (e.g. extend-select, extend-ignore, preview) in upstream order, so
+        # they propagate instead of being silently dropped.
+        emitted_lint_keys: set[str] = set()
         for key in ("select", "ignore"):
             if key in lint:
                 out.append(f"{key} = {_format_value(lint[key])}")
+                emitted_lint_keys.add(key)
+        for key, value in lint.items():
+            if key in emitted_lint_keys or isinstance(value, dict):
+                continue
+            out.append(f"{key} = {_format_value(value)}")
+            emitted_lint_keys.add(key)
         # Nested tables in a stable order matching the existing template.
         nested_order = [
             ("pydocstyle", "lint.pydocstyle"),
@@ -113,8 +125,8 @@ def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
                 out.append(f"[{header}]")
                 for sub_key, sub_value in lint[inner_key].items():
                     out.append(f"{sub_key} = {_format_value(sub_value)}")
-        # Append any remaining nested keys we didn't account for, defensively.
-        accounted = {"select", "ignore"} | {k for k, _ in nested_order}
+        # Append any remaining nested tables we didn't account for, defensively.
+        accounted = emitted_lint_keys | {k for k, _ in nested_order}
         for inner_key, inner_value in lint.items():
             if inner_key in accounted:
                 continue
