@@ -105,6 +105,9 @@ ALL_WRAPPER_FILES = [
     ("docs/development.md.j2", "docs-site/src/content/docs/development.md"),
     # PR template
     (".github/PULL_REQUEST_TEMPLATE.md.j2", ".github/PULL_REQUEST_TEMPLATE.md"),
+    # Code owners — gates VERSION changes to the maintainer (needs branch
+    # protection "Require review from Code Owners" to enforce)
+    ("CODEOWNERS.j2", ".github/CODEOWNERS"),
     # Claude Code shared development guide (universal block; provider-specific notes live in CLAUDE.local.md)
     ("CLAUDE.md.j2", "CLAUDE.md"),
     # Config-sync guard: fails CI if ruff.toml or [tool.mypy] / [tool.codespell].skip drift from the templated version
