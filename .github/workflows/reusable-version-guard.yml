@@ -1,0 +1,44 @@
+name: Reusable — Version Guard
+
+# Fails a PR that modifies the provider VERSION file unless the PR author is the
+# repository owner (the maintainer). Runs on every PR and reports a status even
+# when VERSION is untouched, so it is safe to mark as a required status check.
+
+on:
+  workflow_call:
+    inputs:
+      version_path:
+        description: "Path to the VERSION file in the provider repo (e.g. provider/VERSION)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: VERSION is maintainer-only
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Guard VERSION changes
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          OWNER: ${{ github.repository_owner }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          VERSION_PATH: ${{ inputs.version_path }}
+        run: |
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- "$VERSION_PATH")
+          if [ -z "$changed" ]; then
+            echo "OK: $VERSION_PATH not modified."
+            exit 0
+          fi
+          if [ "$PR_AUTHOR" = "$OWNER" ]; then
+            echo "OK: $VERSION_PATH changed by the maintainer ($PR_AUTHOR)."
+            exit 0
+          fi
+          echo "::error::$VERSION_PATH may only be changed by the maintainer ($OWNER); this PR is authored by $PR_AUTHOR. Remove the VERSION change — the maintainer bumps it at release time."
+          exit 1
