@@ -475,6 +475,7 @@ providers:
       - docs/incident-management.md.j2
       - docs/development.md.j2
       - .github/PULL_REQUEST_TEMPLATE.md.j2
+      - CODEOWNERS.j2
       - ruff.toml.j2
       - docs.yml.j2
       - mkdocs.yml.j2
