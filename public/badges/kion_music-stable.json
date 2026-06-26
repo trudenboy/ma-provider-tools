@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "stable",
-  "message": "v2.9.4 – not included",
-  "color": "lightgrey",
+  "message": "v2.9.4",
+  "color": "brightgreen",
   "cacheSeconds": 14400
 }
