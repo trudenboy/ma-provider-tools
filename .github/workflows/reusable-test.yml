@@ -183,8 +183,17 @@ jobs:
           python-version: "3.14"
       - name: Auto-fix lint issues
         run: |
-          uvx ruff check --fix .
-          uvx ruff format .
+          # ruff 0.15.x's formatter rewrites `except (A, B):` into the invalid
+          # `except A, B:`; constrain to the last known-good line until fixed
+          # upstream. Keep in lockstep with the `ruff` pin in
+          # wrappers/pyproject.toml.j2.
+          uvx --from 'ruff<0.15' ruff check --fix .
+          uvx --from 'ruff<0.15' ruff format .
+          # Safety net: never let a formatter regression push invalid syntax.
+          changed=$(git diff --name-only -- '*.py')
+          if [ -n "$changed" ]; then
+            python3 -m py_compile $changed
+          fi
       - name: Commit auto-fixes
         if: ${{ inputs.autofix }}
         run: |

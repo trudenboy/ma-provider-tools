@@ -129,7 +129,7 @@ jobs:
 
       - name: Format synced files with ruff
         run: |
-          pip install --quiet ruff
+          pip install --quiet 'ruff<0.15'  # 0.15.x formatter emits invalid `except A, B:`
           cd ma-server
           ruff format \
             music_assistant/providers/${DOMAIN}/ \
