@@ -50,14 +50,17 @@ All 5 provider repos are linked to the project:
 
 ### 1. Update FORK_SYNC_PAT Scope (Required for workflow automation)
 
-The `FORK_SYNC_PAT` secret must have **`project` scope** (classic PAT) or **`projects:write`** (fine-grained PAT).
+The `FORK_SYNC_PAT` secret must have:
 
-Without this, the "Track release/sync in MA Ecosystem project" steps will be skipped (they use `continue-on-error: true` so CI won't break).
+- **`project` scope** (classic PAT) or **`projects:write`** (fine-grained PAT) — for the MA Ecosystem project tracking steps.
+- **`workflow` scope** (classic PAT) or **Workflows: write** (fine-grained PAT) — for `upstream-pr.yml`. The `upstream/<domain>` branch is built from `upstream/dev`, which carries `.github/workflows/*.yml`; GitHub refuses to let the default `GITHUB_TOKEN` (a GitHub App token) push a ref that touches workflow files, so the push must authenticate as the PAT and the PAT must be allowed to write workflows.
+
+Without the `project` scope, the "Track release/sync in MA Ecosystem project" steps are skipped (they use `continue-on-error: true` so CI won't break). Without the `workflow` scope, the "Submit Provider to Upstream" run fails at `git push` with *"refusing to allow a GitHub App to create or update workflow … without `workflows` permission"*.
 
 Steps:
 1. Go to GitHub → Settings → Developer settings → Personal access tokens
 2. Edit the PAT used as `FORK_SYNC_PAT`
-3. Enable the **`project`** scope
+3. Enable the **`project`** and **`workflow`** scopes
 4. Update the secret in each provider repo and in this (`ma-provider-tools`) repo
 
 ### 2. Create Views
