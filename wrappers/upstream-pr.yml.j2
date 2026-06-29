@@ -160,6 +160,20 @@ jobs:
             cp provider-repo/VERSION "music_assistant/providers/${DOMAIN}/VERSION"
           fi
 
+          # Regenerate the Lokalise English source (translations/en.json) from the
+          # synced strings.json so upstream's build_translations_source pre-commit
+          # hook finds no diff. Without this, the provider's strings.json reaches
+          # upstream but en.json still reflects the previous state, and the hook
+          # rewrites it during the upstream `lint` job → failure. The script reads
+          # the strings.json files directly (only needs orjson, no MA runtime), so
+          # install just that and run it with plain python to avoid a full uv sync.
+          if [ -f scripts/build_translations.py ]; then
+            python3 -m pip install --quiet --break-system-packages orjson 2>/dev/null \
+              || python3 -m pip install --quiet orjson 2>/dev/null || true
+            python3 -m scripts.build_translations \
+              || python3 scripts/build_translations.py || true
+          fi
+
           # Remove the cloned provider-repo dir before staging to avoid adding it as a submodule
           rm -rf provider-repo
 
