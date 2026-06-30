@@ -174,6 +174,49 @@ def _already_present(reversed_patch: str, provider_dir: str) -> bool:
     return True
 
 
+def _create_draft_pr(
+    provider_repo: str,
+    default_branch: str,
+    branch: str,
+    title: str,
+    body: str,
+    labels: list[str],
+) -> str:
+    """Open a draft PR in the provider repo; return its URL.
+
+    Retries without labels if the labelled create fails — a provider repo may
+    not have the `reverse-sync` / `needs-human` labels yet, and the PR itself
+    matters far more than the advisory labels. Raises RuntimeError only if the
+    label-free attempt also fails.
+    """
+    base = [
+        "gh",
+        "pr",
+        "create",
+        "--repo",
+        provider_repo,
+        "--base",
+        default_branch,
+        "--head",
+        branch,
+        "--draft",
+        "--title",
+        title,
+        "--body",
+        body,
+    ]
+    label_args = [arg for label in labels for arg in ("--label", label)]
+    res = _run(base + label_args, capture_output=True)
+    if res.returncode != 0 and label_args:
+        # Labels likely absent in the provider repo — retry without them.
+        res = _run(base, capture_output=True)
+    if res.returncode != 0:
+        raise RuntimeError(
+            f"gh pr create failed (rc={res.returncode}): {res.stderr.strip()}"
+        )
+    return res.stdout.strip()
+
+
 def _git_mut(provider_dir: str, *args: str) -> subprocess.CompletedProcess:
     """Run a mutating git command; raise RuntimeError on non-zero exit."""
     result = _run(["git", "-C", provider_dir, *args], capture_output=True)
@@ -284,33 +327,17 @@ def open_reverse_pr(
     _git_mut(provider_dir, "push", "-u", "origin", branch, "--force-with-lease")
 
     labels = ["reverse-sync"] + (["needs-human"] if conflicts else [])
-    create = _run(
-        [
-            "gh",
-            "pr",
-            "create",
-            "--repo",
-            provider_repo,
-            "--base",
-            default_branch,
-            "--head",
-            branch,
-            "--draft",
-            "--title",
-            f"reverse-sync: {pr['title']} (#{pr_number})",
-            "--body",
-            build_pr_body(pr, domain, conflicts),
-            *sum((["--label", x] for x in labels), []),
-        ],
-        capture_output=True,
+    pr_url = _create_draft_pr(
+        provider_repo,
+        default_branch,
+        branch,
+        f"reverse-sync: {pr['title']} (#{pr_number})",
+        build_pr_body(pr, domain, conflicts),
+        labels,
     )
-    if create.returncode != 0:
-        raise RuntimeError(
-            f"gh pr create failed (rc={create.returncode}): {create.stderr.strip()}"
-        )
     return {
         "skipped": False,
-        "pr_url": create.stdout.strip(),
+        "pr_url": pr_url,
         "conflicts": conflicts,
     }
 

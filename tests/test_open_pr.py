@@ -380,3 +380,51 @@ def test_already_present_ignores_blank_added_lines(tmp_path):
     (tmp_path / "provider").mkdir()
     (tmp_path / "provider" / "api.py").write_text("x = 1\n\n")  # blank yes, real no
     assert o._already_present(patch, str(tmp_path)) is False
+
+
+# ---------------------------------------------------------------------------
+# _create_draft_pr label fallback (issue: labels missing in provider repo)
+# ---------------------------------------------------------------------------
+
+
+def test_create_draft_pr_falls_back_without_labels(monkeypatch):
+    calls = []
+
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        if "--label" in cmd:
+            return sp.CompletedProcess(
+                cmd, 1, "", "could not add label: 'reverse-sync' not found"
+            )
+        return sp.CompletedProcess(cmd, 0, "https://github.com/x/y/pull/5\n", "")
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    url = o._create_draft_pr(
+        "x/y", "dev", "br", "title", "body", ["reverse-sync", "needs-human"]
+    )
+    assert url == "https://github.com/x/y/pull/5"
+    assert len(calls) == 2  # labelled attempt failed, then label-free retry
+    assert "--label" in calls[0]
+    assert "--label" not in calls[1]
+
+
+def test_create_draft_pr_succeeds_first_try_with_labels(monkeypatch):
+    calls = []
+
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        return sp.CompletedProcess(cmd, 0, "https://github.com/x/y/pull/9\n", "")
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    url = o._create_draft_pr("x/y", "dev", "br", "t", "b", ["reverse-sync"])
+    assert url == "https://github.com/x/y/pull/9"
+    assert len(calls) == 1  # no retry needed
+    assert "--label" in calls[0]
+
+
+def test_create_draft_pr_raises_when_both_attempts_fail(monkeypatch):
+    monkeypatch.setattr(
+        o, "_run", lambda cmd, **kw: sp.CompletedProcess(cmd, 1, "", "boom")
+    )
+    with pytest.raises(RuntimeError, match="gh pr create failed"):
+        o._create_draft_pr("x/y", "dev", "br", "t", "b", ["reverse-sync"])
