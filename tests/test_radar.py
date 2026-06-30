@@ -61,3 +61,26 @@ def test_select_unhandled_filters_handled_and_cursor():
     out = r.select_unhandled(prs, data, "d", cursor="2026-05-15T00:00:00Z")
     # 100 handled, 102 below cursor -> only 101 remains
     assert [p["number"] for p in out] == [101]
+
+
+def test_upstream_default_branch_valid(monkeypatch):
+    monkeypatch.setattr(r, "_gh", lambda args: "main\n")
+    assert r._upstream_default_branch() == "main"
+
+
+def test_upstream_default_branch_empty_falls_back(monkeypatch):
+    monkeypatch.setattr(r, "_gh", lambda args: "\n")
+    assert r._upstream_default_branch() == "dev"
+
+
+def test_upstream_default_branch_null_falls_back(monkeypatch):
+    monkeypatch.setattr(r, "_gh", lambda args: "null\n")
+    assert r._upstream_default_branch() == "dev"
+
+
+def test_upstream_default_branch_error_falls_back(monkeypatch):
+    def boom(args):
+        raise RuntimeError("api down")
+
+    monkeypatch.setattr(r, "_gh", boom)
+    assert r._upstream_default_branch() == "dev"

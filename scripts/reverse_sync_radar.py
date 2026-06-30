@@ -63,9 +63,13 @@ def touches_provider(files: list[str], domain: str) -> bool:
 def _upstream_default_branch() -> str:
     """Return the default branch of the upstream repo, falling back to 'dev'."""
     try:
-        return _gh(["api", f"repos/{UPSTREAM}", "--jq", ".default_branch"]).strip()
+        result = _gh(["api", f"repos/{UPSTREAM}", "--jq", ".default_branch"]).strip()
     except Exception:
         return "dev"
+    # Guard against empty / "null" output (e.g. jq emits nothing) — an invalid
+    # ref here would silently turn the radar into a no-op, the exact failure
+    # this lookup exists to prevent.
+    return result if result and result != "null" else "dev"
 
 
 def select_unhandled(
