@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import reverse_sync_radar as r  # noqa: E402
 import reverse_sync_state as st  # noqa: E402
@@ -84,3 +86,36 @@ def test_upstream_default_branch_error_falls_back(monkeypatch):
 
     monkeypatch.setattr(r, "_gh", boom)
     assert r._upstream_default_branch() == "dev"
+
+
+def test_run_saves_state_on_unexpected_exception(monkeypatch, tmp_path):
+    """Fix 2: st.save must run via finally even when an unexpected (non-CalledProcessError)
+    exception propagates out of the provider loop.  The exception must still re-raise."""
+    providers_yml = tmp_path / "providers.yml"
+    providers_yml.write_text(
+        "providers:\n"
+        "  - domain: test_provider\n"
+        "    repo: owner/test-repo\n"
+        "    default_branch: dev\n"
+        "    manifest_path: provider/manifest.json\n"
+        "    provider_path: provider/\n"
+        "    provider_type: music_provider\n"
+    )
+    state_path = tmp_path / "reverse-sync.json"
+
+    monkeypatch.setattr(r, "PROVIDERS_PATH", str(providers_yml))
+    monkeypatch.setattr(r, "STATE_PATH", str(state_path))
+    monkeypatch.setattr(r, "_upstream_default_branch", lambda: "dev")
+
+    # _anchor raises KeyError — NOT caught by the per-provider
+    # "except subprocess.CalledProcessError", so it propagates out of the for loop.
+    def boom_anchor(domain, default_branch):
+        raise KeyError("unexpected_key")
+
+    monkeypatch.setattr(r, "_anchor", boom_anchor)
+
+    with pytest.raises(KeyError):
+        r.run()
+
+    # Despite the exception, st.save must have been called (finally block).
+    assert state_path.exists(), "st.save was NOT called — finally block missing"

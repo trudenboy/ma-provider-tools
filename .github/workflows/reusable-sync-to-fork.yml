@@ -115,7 +115,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
         run: |
+          set -euo pipefail
           DOMAIN=$(python3 -c "import json; print(json.load(open('provider-repo/${{ inputs.manifest_path }}'))['domain'])")
+          if [ -z "$DOMAIN" ]; then
+            echo "::error::Could not determine provider domain from manifest — refusing to sync (fail-closed)." >&2
+            exit 1
+          fi
           if ! python3 tools-hub/scripts/check_upstream_ahead.py \
                 --domain "$DOMAIN" \
                 --provider-path "${{ inputs.provider_path }}" \

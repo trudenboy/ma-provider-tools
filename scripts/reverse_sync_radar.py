@@ -141,90 +141,91 @@ def run() -> int:
 
     default_branch_up = _upstream_default_branch()
 
-    for prov in registry["providers"]:
-        domain = prov["domain"]
-        entry = st.entry(data, domain)
+    try:
+        for prov in registry["providers"]:
+            domain = prov["domain"]
+            entry = st.entry(data, domain)
 
-        # Per-provider upstream reads: a transient gh/network error for one
-        # provider must not abort all remaining providers.  A stderr log is
-        # sufficient — no incident issue for transient read errors.
-        try:
-            # Pass A — anchor
-            anchor = _anchor(domain, default_branch_up)
-            if anchor:
-                entry["last_synced_sha"] = anchor
+            # Per-provider upstream reads: a transient gh/network error for one
+            # provider must not abort all remaining providers.  A stderr log is
+            # sufficient — no incident issue for transient read errors.
+            try:
+                # Pass A — anchor
+                anchor = _anchor(domain, default_branch_up)
+                if anchor:
+                    entry["last_synced_sha"] = anchor
 
-            # Pass B — action
-            merged = _merged_prs(default_branch_up)
-        except subprocess.CalledProcessError as exc:
-            print(
-                f"WARNING: {domain} upstream read failed, skipping provider: {exc}",
-                file=sys.stderr,
-            )
-            continue
-
-        candidates = select_unhandled(merged, data, domain, entry["pulls_cursor"])
-
-        # Collect resolved and failed updated_at values to compute safe cursor.
-        resolved_ats: list[str] = []
-        min_failed_at: str | None = None
-
-        for pr in candidates:
-            if is_echo(pr, ECHO_LOGINS):
-                st.mark_handled(data, domain, pr["number"])
-                resolved_ats.append(pr["updated_at"])
+                # Pass B — action
+                merged = _merged_prs(default_branch_up)
+            except subprocess.CalledProcessError as exc:
+                print(
+                    f"WARNING: {domain} upstream read failed, skipping provider: {exc}",
+                    file=sys.stderr,
+                )
                 continue
 
-            # Per-PR isolation: _pr_files, _clone_provider, and open_reverse_pr
-            # can each raise subprocess.CalledProcessError or RuntimeError.
-            # Any failure is caught here so one PR does not abort the others.
-            try:
-                if not touches_provider(_pr_files(pr["number"]), domain):
+            candidates = select_unhandled(merged, data, domain, entry["pulls_cursor"])
+
+            # Collect resolved and failed updated_at values to compute safe cursor.
+            resolved_ats: list[str] = []
+            min_failed_at: str | None = None
+
+            for pr in candidates:
+                if is_echo(pr, ECHO_LOGINS):
                     st.mark_handled(data, domain, pr["number"])
                     resolved_ats.append(pr["updated_at"])
                     continue
-                with tempfile.TemporaryDirectory() as tmp:
-                    pdir = os.path.join(tmp, "provider")
-                    _clone_provider(prov["repo"], prov["default_branch"], pdir)
-                    result = opener.open_reverse_pr(
-                        domain=domain,
-                        provider_path=prov["provider_path"],
-                        provider_repo=prov["repo"],
-                        default_branch=prov["default_branch"],
-                        pr_number=pr["number"],
-                        provider_dir=pdir,
+
+                # Per-PR isolation: _pr_files, _clone_provider, and open_reverse_pr
+                # can each raise subprocess.CalledProcessError or RuntimeError.
+                # Any failure is caught here so one PR does not abort the others.
+                try:
+                    if not touches_provider(_pr_files(pr["number"]), domain):
+                        st.mark_handled(data, domain, pr["number"])
+                        resolved_ats.append(pr["updated_at"])
+                        continue
+                    with tempfile.TemporaryDirectory() as tmp:
+                        pdir = os.path.join(tmp, "provider")
+                        _clone_provider(prov["repo"], prov["default_branch"], pdir)
+                        result = opener.open_reverse_pr(
+                            domain=domain,
+                            provider_path=prov["provider_path"],
+                            provider_repo=prov["repo"],
+                            default_branch=prov["default_branch"],
+                            pr_number=pr["number"],
+                            provider_dir=pdir,
+                        )
+                        print(f"{domain} PR#{pr['number']}: {result}")
+                        st.mark_handled(data, domain, pr["number"])
+                        resolved_ats.append(pr["updated_at"])
+                except (RuntimeError, subprocess.CalledProcessError) as exc:
+                    # One provider/PR failure must NOT abort the rest of the run.
+                    print(
+                        f"ERROR: {domain} PR#{pr['number']} opener failed: {exc}",
+                        file=sys.stderr,
                     )
-                    print(f"{domain} PR#{pr['number']}: {result}")
-                    st.mark_handled(data, domain, pr["number"])
-                    resolved_ats.append(pr["updated_at"])
-            except (RuntimeError, subprocess.CalledProcessError) as exc:
-                # One provider/PR failure must NOT abort the rest of the run.
-                print(
-                    f"ERROR: {domain} PR#{pr['number']} opener failed: {exc}",
-                    file=sys.stderr,
-                )
-                if min_failed_at is None or pr["updated_at"] < min_failed_at:
-                    min_failed_at = pr["updated_at"]
-                title = f"reverse-sync failed — {domain} PR#{pr['number']}"
-                body = (
-                    f"reverse_sync_radar failed to open reverse PR for "
-                    f"`{domain}` upstream PR#{pr['number']}:\n\n"
-                    f"```\n{exc}\n```"
-                )
-                reverse_sync_notify.upsert_issue(
-                    HUB_REPO, "incident:reverse-sync", title, body
-                )
+                    if min_failed_at is None or pr["updated_at"] < min_failed_at:
+                        min_failed_at = pr["updated_at"]
+                    title = f"reverse-sync failed — {domain} PR#{pr['number']}"
+                    body = (
+                        f"reverse_sync_radar failed to open reverse PR for "
+                        f"`{domain}` upstream PR#{pr['number']}:\n\n"
+                        f"```\n{exc}\n```"
+                    )
+                    reverse_sync_notify.upsert_issue(
+                        HUB_REPO, "incident:reverse-sync", title, body
+                    )
 
-        # Advance cursor only up to resolved PRs that precede the earliest
-        # failure.  This keeps failed PRs re-discoverable on the next run
-        # (their updated_at will exceed the cursor and is_handled returns False).
-        max_cursor = entry["pulls_cursor"]
-        for at in resolved_ats:
-            if min_failed_at is None or at < min_failed_at:
-                max_cursor = max(max_cursor or "", at)
-        entry["pulls_cursor"] = max_cursor
-
-    st.save(STATE_PATH, data)
+            # Advance cursor only up to resolved PRs that precede the earliest
+            # failure.  This keeps failed PRs re-discoverable on the next run
+            # (their updated_at will exceed the cursor and is_handled returns False).
+            max_cursor = entry["pulls_cursor"]
+            for at in resolved_ats:
+                if min_failed_at is None or at < min_failed_at:
+                    max_cursor = max(max_cursor or "", at)
+            entry["pulls_cursor"] = max_cursor
+    finally:
+        st.save(STATE_PATH, data)
     return 0
 
 
