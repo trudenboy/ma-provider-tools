@@ -62,6 +62,16 @@ def _run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, text=True, **kw)
 
 
+def _git_mut(provider_dir: str, *args: str) -> subprocess.CompletedProcess:
+    """Run a mutating git command; raise RuntimeError on non-zero exit."""
+    result = _run(["git", "-C", provider_dir, *args], capture_output=True)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"git {' '.join(args)} failed (rc={result.returncode}): {result.stderr.strip()}"
+        )
+    return result
+
+
 def open_reverse_pr(
     domain: str,
     provider_path: str,
@@ -105,7 +115,6 @@ def open_reverse_pr(
         return {"skipped": True, "reason": "no provider-path changes"}
 
     branch = build_branch(domain, pr_number)
-    git = lambda *a: _run(["git", "-C", provider_dir, *a], capture_output=True)  # noqa: E731
 
     # Echo dedup: if the patch already applies as a no-op, skip.
     check = _run(
@@ -116,8 +125,8 @@ def open_reverse_pr(
     if check.returncode == 0:
         return {"skipped": True, "reason": "already present (no-op)"}
 
-    git("checkout", default_branch)
-    git("checkout", "-B", branch)
+    _git_mut(provider_dir, "checkout", default_branch)
+    _git_mut(provider_dir, "checkout", "-B", branch)
 
     apply_res = _run(
         ["git", "-C", provider_dir, "apply", "--3way", "-"],
@@ -133,11 +142,16 @@ def open_reverse_pr(
         with open(dest, mode) as fh:
             fh.write(content)
 
-    git("add", "-A")
+    _git_mut(provider_dir, "add", "-A")
     author = pr["user"]["login"]
     trailer = f"Co-authored-by: {author} <{author}@users.noreply.github.com>"
-    git("commit", "-m", f"reverse-sync: port {UPSTREAM}#{pr_number}\n\n{trailer}")
-    git("push", "-u", "origin", branch, "--force-with-lease")
+    _git_mut(
+        provider_dir,
+        "commit",
+        "-m",
+        f"reverse-sync: port {UPSTREAM}#{pr_number}\n\n{trailer}",
+    )
+    _git_mut(provider_dir, "push", "-u", "origin", branch, "--force-with-lease")
 
     labels = ["reverse-sync"] + (["needs-human"] if conflicts else [])
     create = _run(
@@ -160,6 +174,10 @@ def open_reverse_pr(
         ],
         capture_output=True,
     )
+    if create.returncode != 0:
+        raise RuntimeError(
+            f"gh pr create failed (rc={create.returncode}): {create.stderr.strip()}"
+        )
     return {
         "skipped": False,
         "pr_url": create.stdout.strip(),
