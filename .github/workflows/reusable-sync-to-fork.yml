@@ -27,6 +27,10 @@ on:
         description: "Create a PR instead of pushing directly (used for stable backports)"
         type: boolean
         default: false
+      ack_upstream_ahead:
+        description: "Sync even if upstream is ahead of the provider repo (override the preflight guard)"
+        type: boolean
+        default: false
     secrets:
       FORK_SYNC_PAT:
         required: true
@@ -98,6 +102,29 @@ jobs:
             "https://x-access-token:${FORK_SYNC_PAT}@github.com/${FORK_REPO}.git" ma-server
           cd ma-server
           git checkout -b "${TARGET_BRANCH}"
+
+      - name: Checkout tools hub (for preflight scripts)
+        uses: actions/checkout@v4
+        with:
+          repository: trudenboy/ma-provider-tools
+          path: tools-hub
+          ref: main
+
+      - name: Preflight — block if upstream is ahead
+        if: ${{ !inputs.ack_upstream_ahead }}
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+        run: |
+          DOMAIN=$(python3 -c "import json; print(json.load(open('provider-repo/${{ inputs.manifest_path }}'))['domain'])")
+          if ! python3 tools-hub/scripts/check_upstream_ahead.py \
+                --domain "$DOMAIN" \
+                --provider-path "${{ inputs.provider_path }}" \
+                --provider-dir provider-repo; then
+            echo "::error::Upstream music-assistant/server is ahead of this provider repo for '${DOMAIN}'." \
+                 "A contributor's change would be reverted by this sync." \
+                 "Run a reverse-sync first, or re-dispatch with ack_upstream_ahead=true to override." >&2
+            exit 1
+          fi
 
       - name: Sync provider files into integration/dev
         run: |
