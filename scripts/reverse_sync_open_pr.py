@@ -217,6 +217,45 @@ def _create_draft_pr(
     return res.stdout.strip()
 
 
+def _fetch_upstream_base(provider_dir: str, pr_number: int) -> None:
+    """Best-effort: fetch the upstream PR's base commit into the provider clone.
+
+    `git apply --3way` needs the patch's pre-image blobs; for a reverse-sync
+    patch those originate in music-assistant/server, absent from the provider
+    clone, so --3way otherwise rejects every drifted file. Fetching the PR base
+    (read-only, shallow) makes the blobs available and lets --3way produce real
+    conflict markers. Silent on any failure — the apply still runs, degrading to
+    direct application as before. Read-only: fetch only, never push to upstream.
+    """
+    try:
+        base = _run(
+            ["gh", "api", f"repos/{UPSTREAM}/pulls/{pr_number}", "--jq", ".base.sha"],
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        if not base:
+            return
+        _run(
+            [
+                "git",
+                "-C",
+                provider_dir,
+                "remote",
+                "add",
+                "upstream",
+                f"https://github.com/{UPSTREAM}.git",
+            ],
+            capture_output=True,
+        )
+        _run(
+            ["git", "-C", provider_dir, "fetch", "--depth", "1", "upstream", base],
+            capture_output=True,
+            check=True,
+        )
+    except Exception:
+        return
+
+
 def _git_mut(provider_dir: str, *args: str) -> subprocess.CompletedProcess:
     """Run a mutating git command; raise RuntimeError on non-zero exit."""
     result = _run(["git", "-C", provider_dir, *args], capture_output=True)
@@ -298,11 +337,18 @@ def open_reverse_pr(
     _git_mut(provider_dir, "checkout", default_branch)
     _git_mut(provider_dir, "checkout", "-B", branch)
 
-    # --reject: cleanly-applying hunks land; conflicting hunks drop to .rej
-    # files instead of aborting the entire file (issue #97). The PR body
-    # already tells the reviewer to look for .rej markers.
+    # Make `git apply --3way` work cross-repo: it needs the patch's pre-image
+    # blobs, which live in music-assistant/server, not the (shallow) provider
+    # clone — without them --3way reports "lacks the necessary blob" and rejects
+    # whole files. Fetch the PR's base commit (read-only) so the blobs are
+    # present and --3way produces real conflict markers (issue #97).
+    _fetch_upstream_base(provider_dir, pr_number)
+
+    # --3way ALONE (not with --reject — git rejects that flag combination):
+    # cleanly-applying hunks land, drifted hunks get <<<<<<< conflict markers a
+    # human resolves. A non-zero exit means at least one file conflicted.
     apply_res = _run(
-        ["git", "-C", provider_dir, "apply", "--3way", "--reject", "-"],
+        ["git", "-C", provider_dir, "apply", "--3way", "-"],
         input=reversed_patch,
         capture_output=True,
     )

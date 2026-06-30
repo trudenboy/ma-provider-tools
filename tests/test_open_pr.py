@@ -102,6 +102,7 @@ def test_push_failure_raises(tmp_path, monkeypatch):
         return real_run(cmd, **kw)
 
     monkeypatch.setattr(o, "_run", fake_run)
+    monkeypatch.setattr(o, "_fetch_upstream_base", lambda *a, **k: None)
 
     with pytest.raises(RuntimeError, match="push"):
         o.open_reverse_pr(
@@ -234,6 +235,7 @@ def test_commit_succeeds_without_preexisting_identity(tmp_path, monkeypatch):
         return orig_run(cmd, **kw)
 
     monkeypatch.setattr(o, "_run", fake_run)
+    monkeypatch.setattr(o, "_fetch_upstream_base", lambda *a, **k: None)
     # No remote -> push fails. The point: we reach PUSH (commit succeeded),
     # so the error is about push, NOT 'Author identity unknown'.
     with pytest.raises(RuntimeError) as exc:
@@ -243,16 +245,16 @@ def test_commit_succeeds_without_preexisting_identity(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# --reject flag test (issue #97)
+# apply flag test (issue #97)
 # ---------------------------------------------------------------------------
 
 
-def test_apply_command_includes_reject_flag(tmp_path, monkeypatch):
-    """The mutable git apply call must include --reject (issue #97).
+def test_apply_uses_3way_without_reject(tmp_path, monkeypatch):
+    """The mutable git apply call must use --3way and NOT --reject (issue #97).
 
-    With --reject, cleanly-applying hunks land and only conflicting hunks
-    drop to .rej files instead of aborting the entire file.  A clean patch
-    still returns rc=0, so the test flow reaches push (not apply) failure.
+    git rejects `--3way --reject` together ("cannot be used together"), which
+    made every apply fail. --3way alone produces conflict markers for drifted
+    hunks. A clean patch still returns rc=0, so the flow reaches push failure.
     """
     repo = tmp_path
     for cmd in [
@@ -314,10 +316,11 @@ def test_apply_command_includes_reject_flag(tmp_path, monkeypatch):
         o.open_reverse_pr("myprov", "provider/", "x/y", branch, 5, str(repo))
 
     # The mutable apply call (not the echo-dedup probe with --check --reverse)
-    # must include --reject.
+    # must use --3way and must NOT pass --reject (incompatible flags).
     mutable = [c for c in apply_cmds if "--check" not in c]
     assert mutable, "no mutable git apply call was recorded"
-    assert "--reject" in mutable[0], f"--reject missing from apply cmd: {mutable[0]}"
+    assert "--3way" in mutable[0], f"--3way missing from apply cmd: {mutable[0]}"
+    assert "--reject" not in mutable[0], f"--reject must not be combined: {mutable[0]}"
 
 
 # ---------------------------------------------------------------------------
@@ -428,3 +431,38 @@ def test_create_draft_pr_raises_when_both_attempts_fail(monkeypatch):
     )
     with pytest.raises(RuntimeError, match="gh pr create failed"):
         o._create_draft_pr("x/y", "dev", "br", "t", "b", ["reverse-sync"])
+
+
+# ---------------------------------------------------------------------------
+# _fetch_upstream_base — enable real --3way via base blobs (issue #97)
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_upstream_base_issues_readonly_commands(monkeypatch):
+    cmds = []
+
+    def fake_run(cmd, **kw):
+        cmds.append(cmd)
+        if cmd[:2] == ["gh", "api"]:
+            return sp.CompletedProcess(cmd, 0, "cfd9843\n", "")
+        return sp.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    o._fetch_upstream_base("/tmp/x", 4313)
+
+    assert cmds[0][:2] == ["gh", "api"]
+    assert "repos/music-assistant/server/pulls/4313" in cmds[0]
+    assert any(c[:4] == ["git", "-C", "/tmp/x", "remote"] for c in cmds)
+    fetch = [c for c in cmds if "fetch" in c][0]
+    assert fetch[-2:] == ["upstream", "cfd9843"]  # fetches the base sha, read-only
+    # No write verb to upstream anywhere (push/pr/issue).
+    assert not any("push" in c for c in cmds)
+
+
+def test_fetch_upstream_base_swallows_failure(monkeypatch):
+    def boom(cmd, **kw):
+        return sp.CompletedProcess(cmd, 1, "", "no auth")  # gh api base.sha empty
+
+    monkeypatch.setattr(o, "_run", boom)
+    # Must not raise — best-effort; apply proceeds without the base blobs.
+    o._fetch_upstream_base("/tmp/x", 4313)
