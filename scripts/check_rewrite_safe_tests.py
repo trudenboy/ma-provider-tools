@@ -14,10 +14,11 @@ variable* used in tests. Two patterns therefore pass in the provider repo but
 break at the upstream boundary, where they surface as confusing red CI on a
 PR nobody can edit directly:
 
-1. **Non-aliased ``import provider[.X]``** forces bare ``provider.X`` attribute
-   access, which the rewrite cannot translate without also clobbering the
-   fixture variable — so the usage stays unrewritten and raises ``NameError``
-   upstream. Use ``from provider import X`` or ``import provider.X as alias``.
+1. **``import provider[.X][as Y]``** — any ``import provider`` statement — is
+   not translated by the rewrite at all (including the aliased form).  The bare
+   ``provider.`` attribute access these enable stays unrewritten and raises
+   ``ModuleNotFoundError`` upstream.  Use ``from provider import X`` or
+   ``from provider.X import Y`` instead.
 
 2. **Per-line ``# noqa: PLC0415`` on a ``from provider`` import** does not
    survive the boundary: the rewrite lengthens the line, ruff reflows it to the
@@ -43,10 +44,13 @@ SCAN_ROOTS = ("provider", "tests")
 # own default is 88; the MA-synced template uses 100).
 _DEFAULT_LINE_LENGTH = 100
 
-# Rule A — a non-aliased ``import provider`` / ``import provider.sub`` statement.
-# Aliased forms (``import provider.sub as alias``) and ``from provider ...`` are
-# intentionally NOT matched: they don't force bare ``provider.`` attribute access.
-_IMPORT_PROVIDER_RE = re.compile(r"^\s*import\s+provider(?:\.[\w.]+)?\s*(?:#.*)?$")
+# Rule A — any bare ``import provider[.sub][as alias]`` statement.
+# All forms (plain, dotted, and aliased) are matched because none of them are
+# translated by the upstream-sync ``sed`` rewrite, which only handles
+# ``from provider.`` / ``from provider import`` / ``"provider.`` forms.
+_IMPORT_PROVIDER_RE = re.compile(
+    r"^\s*import\s+provider(?:\.[\w.]+)?(?:\s+as\s+\w+)?\s*(?:#.*)?$"
+)
 
 # Rule B — a ``from provider[.sub] import ...`` line carrying a per-line noqa
 # that suppresses PLC0415. Only a problem when the *rewritten* line exceeds the
@@ -108,10 +112,11 @@ def _scan_file(path: Path, *, domain: str, line_length: int) -> list[str]:
     for lineno, line in enumerate(text.splitlines(), start=1):
         if _IMPORT_PROVIDER_RE.match(line):
             issues.append(
-                f"{path}:{lineno}: non-aliased `import provider...` — the upstream "
-                "import-path rewrite cannot translate the bare `provider.` usage "
-                "this enables (it collides with the `provider` fixture variable). "
-                "Use `from provider import X` or `import provider.X as alias`.\n"
+                f"{path}:{lineno}: `import provider...` — the upstream "
+                "import-path rewrite does not translate any `import provider` form "
+                "(including aliased ones), so the module stays unrewritten and "
+                "raises ModuleNotFoundError upstream. "
+                "Use `from provider import X` or `from provider.X import Y`.\n"
                 f"    {line.strip()}"
             )
         elif _FROM_PROVIDER_NOQA_RE.match(line):
