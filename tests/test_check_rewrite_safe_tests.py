@@ -28,22 +28,23 @@ class TestImportProviderRe:
     def test_dotted_import_provider(self):
         assert g._IMPORT_PROVIDER_RE.match("import provider.debug")
 
-    def test_aliased_import_provider_dotted(self):
-        """Aliased form is now flagged (closes #77)."""
-        assert g._IMPORT_PROVIDER_RE.match(
-            "import provider.debug.event_buffer as ev_buf"
-        )
-
-    def test_aliased_import_provider_simple(self):
-        assert g._IMPORT_PROVIDER_RE.match("import provider as p")
-
-    def test_indented_aliased_import(self):
-        assert g._IMPORT_PROVIDER_RE.match("    import provider.sub as alias")
-
     def test_import_with_inline_comment(self):
         assert g._IMPORT_PROVIDER_RE.match("import provider.debug  # some comment")
 
     # --- forms that must NOT be flagged ---
+
+    def test_aliased_import_provider_dotted_not_flagged(self):
+        """Aliased dotted import is safe again (#99): the rewrite translates the
+        import line and the body uses the alias."""
+        assert not g._IMPORT_PROVIDER_RE.match(
+            "import provider.debug.event_buffer as ev_buf"
+        )
+
+    def test_aliased_import_provider_simple_not_flagged(self):
+        assert not g._IMPORT_PROVIDER_RE.match("import provider as p")
+
+    def test_indented_aliased_import_not_flagged(self):
+        assert not g._IMPORT_PROVIDER_RE.match("    import provider.sub as alias")
 
     def test_from_provider_import_not_flagged(self):
         assert not g._IMPORT_PROVIDER_RE.match("from provider import X")
@@ -91,12 +92,13 @@ def provider_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 class TestScanFile:
     """Integration tests using _scan_file directly."""
 
-    def test_aliased_import_flagged(self, provider_root: Path):
+    def test_aliased_import_not_flagged(self, provider_root: Path):
+        """Aliased imports are safe again (#99) — the rewrite handles the import
+        line and the body uses the alias."""
         f = provider_root / "provider" / "mod.py"
         f.write_text("import provider.debug.event_buffer as ev_buf\n", encoding="utf-8")
         issues = g._scan_file(f, domain=DOMAIN, line_length=LINE_LENGTH)
-        assert len(issues) == 1
-        assert "import provider" in issues[0]
+        assert issues == []
 
     def test_plain_import_flagged(self, provider_root: Path):
         f = provider_root / "provider" / "mod.py"

@@ -146,17 +146,20 @@ jobs:
             rsync -av --delete --exclude='test_docs.py' \
               provider-repo/tests/ \
               ma-server/tests/providers/${DOMAIN}/
-            # NOTE: these 3 sed rules are mirrored by scripts/_transform.py and
-            # asserted equal by tests/test_forward_sed_parity.py. Change both together.
-            # Rewrite test imports: from provider.X → from music_assistant.providers.DOMAIN.X
-            find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
-              sed -i "s/from provider\./from music_assistant.providers.${DOMAIN}./g" {} +
-            # Rewrite package-root imports: from provider import X → from music_assistant.providers.DOMAIN import X
-            find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
-              sed -i "s/from provider import/from music_assistant.providers.${DOMAIN} import/g" {} +
-            # Rewrite mock.patch string literals: "provider.X" → "music_assistant.providers.DOMAIN.X"
-            find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
-              sed -i "s/\"provider\./\"music_assistant.providers.${DOMAIN}./g" {} +
+            # Rewrite every `provider`-as-import shape the provider tests use.
+            # This rule set is the canonical one in scripts/_transform.py and is
+            # mirrored by upstream-pr.yml.j2; tests/test_forward_sed_parity.py
+            # asserts all three agree. Change all together (see issue #99).
+            NEW_PKG="music_assistant.providers.${DOMAIN}"
+            find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec sed -i \
+              -e "s/\\bfrom provider\\./from ${NEW_PKG}./g" \
+              -e "s/\\bfrom provider import\\b/from ${NEW_PKG} import/g" \
+              -e "s/\\bimport provider\\./import ${NEW_PKG}./g" \
+              -e "s/\\bimport provider\\(\\s\\+as\\s\\)/import ${NEW_PKG}\\1/g" \
+              -e "s/\\bimport provider\$/import ${NEW_PKG}/g" \
+              -e "s/\"provider\\./\"${NEW_PKG}./g" \
+              -e "s/'provider\\./'${NEW_PKG}./g" \
+              {} +
           else
             echo "No tests/ directory found in provider-repo, skipping test sync."
           fi

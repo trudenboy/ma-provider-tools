@@ -14,11 +14,14 @@ variable* used in tests. Two patterns therefore pass in the provider repo but
 break at the upstream boundary, where they surface as confusing red CI on a
 PR nobody can edit directly:
 
-1. **``import provider[.X][as Y]``** — any ``import provider`` statement — is
-   not translated by the rewrite at all (including the aliased form).  The bare
-   ``provider.`` attribute access these enable stays unrewritten and raises
-   ``ModuleNotFoundError`` upstream.  Use ``from provider import X`` or
-   ``from provider.X import Y`` instead.
+1. **Non-aliased ``import provider`` / ``import provider.X``** — the rewrite
+   now translates the *import statement* (see issue #99), but the bare
+   ``provider.`` / ``provider.X.`` **attribute access** these force in the body
+   is NOT translated (it can't be, without clobbering the legitimate
+   ``provider`` test fixture). So the usage stays unrewritten and breaks
+   upstream. The **aliased** form ``import provider.X as alias`` IS safe — the
+   import line is rewritten and the body uses ``alias`` — and is the recommended
+   alternative, alongside ``from provider import X`` / ``from provider.X import Y``.
 
 2. **Per-line ``# noqa: PLC0415`` on a ``from provider`` import** does not
    survive the boundary: the rewrite lengthens the line, ruff reflows it to the
@@ -44,13 +47,14 @@ SCAN_ROOTS = ("provider", "tests")
 # own default is 88; the MA-synced template uses 100).
 _DEFAULT_LINE_LENGTH = 100
 
-# Rule A — any bare ``import provider[.sub][as alias]`` statement.
-# All forms (plain, dotted, and aliased) are matched because none of them are
-# translated by the upstream-sync ``sed`` rewrite, which only handles
-# ``from provider.`` / ``from provider import`` / ``"provider.`` forms.
-_IMPORT_PROVIDER_RE = re.compile(
-    r"^\s*import\s+provider(?:\.[\w.]+)?(?:\s+as\s+\w+)?\s*(?:#.*)?$"
-)
+# Rule A — a NON-aliased ``import provider`` / ``import provider.sub`` statement.
+# The aliased form (``import provider.sub as alias``) is intentionally NOT
+# matched: the sync rewrite now translates the import line (issue #99) and the
+# body uses the alias, so it is safe. Plain/dotted non-aliased imports force
+# bare ``provider.`` attribute access in the body, which the rewrite cannot
+# translate without clobbering the ``provider`` test fixture — so they stay
+# broken upstream and are flagged.
+_IMPORT_PROVIDER_RE = re.compile(r"^\s*import\s+provider(?:\.[\w.]+)?\s*(?:#.*)?$")
 
 # Rule B — a ``from provider[.sub] import ...`` line carrying a per-line noqa
 # that suppresses PLC0415. Only a problem when the *rewritten* line exceeds the
@@ -112,11 +116,11 @@ def _scan_file(path: Path, *, domain: str, line_length: int) -> list[str]:
     for lineno, line in enumerate(text.splitlines(), start=1):
         if _IMPORT_PROVIDER_RE.match(line):
             issues.append(
-                f"{path}:{lineno}: `import provider...` — the upstream "
-                "import-path rewrite does not translate any `import provider` form "
-                "(including aliased ones), so the module stays unrewritten and "
-                "raises ModuleNotFoundError upstream. "
-                "Use `from provider import X` or `from provider.X import Y`.\n"
+                f"{path}:{lineno}: non-aliased `import provider...` forces bare "
+                "`provider.` attribute access in the body, which the upstream "
+                "rewrite cannot translate (it would clobber the `provider` test "
+                "fixture). Use `import provider.X as alias`, `from provider import "
+                "X`, or `from provider.X import Y`.\n"
                 f"    {line.strip()}"
             )
         elif _FROM_PROVIDER_NOQA_RE.match(line):

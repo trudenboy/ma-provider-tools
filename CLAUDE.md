@@ -167,9 +167,16 @@ in `music-assistant/server`; the radar detects merged ones and auto-opens a
 (`VERSION` / `translations/en.json` ignored) the job fails closed (also fails on
 an empty domain). Override with the `ack_upstream_ahead=true` dispatch input.
 
-The path/import transform (`_transform.py`) is the single source of truth; the
-forward `sed` rules in the sync workflow are pinned to it by
-`tests/test_forward_sed_parity.py`.
+The path/import transform (`_transform.py`) is the single source of truth: it
+canonicalizes the seven `provider.` import shapes (`from provider.` /
+`from provider import` / `import provider.` / `import provider as X` /
+`import provider` / `"provider.` / `'provider.`). **Both** forward `sed` blocks
+— `reusable-sync-to-fork.yml` and `upstream-pr.yml.j2` — are pinned to it by
+`tests/test_forward_sed_parity.py` (change all three together). The
+rewrite-safe gate (`check_rewrite_safe_tests.py`) flags only **non-aliased**
+`import provider[.X]` (the body's bare `provider.` access can't be rewritten);
+the aliased `import provider.X as alias` is safe because the import line is
+rewritten and the body uses the alias.
 
 ## Jinja2 Template Conventions
 

@@ -104,3 +104,55 @@ def test_reverse_diff_drops_foreign_files():
         "+y\n"
     )
     assert t.reverse_diff(patch, DOMAIN, PP).strip() == ""
+
+
+# Issue #99: unified import transform — all forms round-trip, no over-match.
+
+
+def test_all_import_forms_roundtrip():
+    src = (
+        "from provider.api import Client\n"
+        "from provider import Provider\n"
+        "import provider.debug.event_buffer as ev_buf\n"
+        "import provider as prov\n"
+        "import provider\n"
+        'm = mock.patch("provider.api.Client")\n'
+        "n = mock.patch('provider.api.Other')\n"
+    )
+    fwd = t.forward_content("tests/test_x.py", src, DOMAIN)
+    # every provider-import shape is rewritten to the package form
+    assert "from music_assistant.providers.yandex_music.api import Client" in fwd
+    assert "from music_assistant.providers.yandex_music import Provider" in fwd
+    assert (
+        "import music_assistant.providers.yandex_music.debug.event_buffer as ev_buf"
+        in fwd
+    )
+    assert "import music_assistant.providers.yandex_music as prov" in fwd
+    assert "import music_assistant.providers.yandex_music\n" in fwd
+    assert '"music_assistant.providers.yandex_music.api.Client"' in fwd
+    assert "'music_assistant.providers.yandex_music.api.Other'" in fwd
+    # round-trip
+    assert (
+        t.reverse_content("tests/providers/yandex_music/test_x.py", fwd, DOMAIN) == src
+    )
+
+
+def test_bare_import_not_overmatched_by_dotted_or_aliased():
+    # bare `import provider` at EOL must not eat the dotted/aliased forms
+    src = "import provider.x\nimport provider as y\nimport provider\n"
+    fwd = t.forward_content("tests/test_x.py", src, DOMAIN)
+    assert fwd == (
+        "import music_assistant.providers.yandex_music.x\n"
+        "import music_assistant.providers.yandex_music as y\n"
+        "import music_assistant.providers.yandex_music\n"
+    )
+    assert (
+        t.reverse_content("tests/providers/yandex_music/test_x.py", fwd, DOMAIN) == src
+    )
+
+
+def test_provider_fixture_attr_access_not_rewritten():
+    # bare `provider.` attribute access in a body line (not import, not quoted)
+    # must be left alone — it's the test fixture variable.
+    src = "def test_it(provider):\n    provider.login()\n    x = providerish\n"
+    assert t.forward_content("tests/test_x.py", src, DOMAIN) == src
