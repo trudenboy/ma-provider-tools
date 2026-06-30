@@ -30,3 +30,8 @@ jobs:
 
       - name: validate_providers_yml.py
         run: python3 scripts/validate_providers_yml.py
+
+      - name: pytest
+        run: |
+          pip install -r requirements-dev.txt
+          python -m pytest tests/ -q
