@@ -55,8 +55,17 @@ def is_echo(pr: dict, echo_logins: set[str]) -> bool:
 
 
 def touches_provider(files: list[str], domain: str) -> bool:
-    root = f"music_assistant/providers/{domain}/"
-    return any(f.startswith(root) for f in files)
+    src_root = f"music_assistant/providers/{domain}/"
+    test_root = f"tests/providers/{domain}/"
+    return any(f.startswith(src_root) or f.startswith(test_root) for f in files)
+
+
+def _upstream_default_branch() -> str:
+    """Return the default branch of the upstream repo, falling back to 'dev'."""
+    try:
+        return _gh(["api", f"repos/{UPSTREAM}", "--jq", ".default_branch"]).strip()
+    except Exception:
+        return "dev"
 
 
 def select_unhandled(
@@ -126,9 +135,10 @@ def run() -> int:
     registry = yaml.safe_load(Path(PROVIDERS_PATH).read_text())
     data = st.load(STATE_PATH)
 
+    default_branch_up = _upstream_default_branch()
+
     for prov in registry["providers"]:
         domain = prov["domain"]
-        default_branch_up = "dev"  # upstream default; adjust if upstream changes
         entry = st.entry(data, domain)
 
         # Per-provider upstream reads: a transient gh/network error for one

@@ -43,3 +43,28 @@ def test_foreign_upstream_path_ignored():
     up = {"music_assistant/server.py": "x"}
     prov = {}
     assert g.diff_files(up, prov, DOMAIN, PP) == []
+
+
+def test_test_file_content_change_is_ahead():
+    """A test file under tests/providers/<domain>/ that differs is flagged.
+
+    reverse_path maps tests/providers/yandex_music/test_api.py -> tests/test_api.py,
+    so diff_files should return ["tests/test_api.py"] when hashes differ.
+    """
+    up = {"tests/providers/yandex_music/test_api.py": "NEW"}
+    prov = {"tests/test_api.py": "OLD"}
+    assert g.diff_files(up, prov, DOMAIN, PP) == ["tests/test_api.py"]
+
+
+def test_test_file_identical_not_ahead():
+    """Test file with identical hash is not flagged."""
+    up = {"tests/providers/yandex_music/test_api.py": "SAME"}
+    prov = {"tests/test_api.py": "SAME"}
+    assert g.diff_files(up, prov, DOMAIN, PP) == []
+
+
+def test_test_file_new_upstream_is_ahead():
+    """New test file in upstream (absent in provider) is flagged."""
+    up = {"tests/providers/yandex_music/test_new.py": "x"}
+    prov = {}
+    assert g.diff_files(up, prov, DOMAIN, PP) == ["tests/test_new.py"]

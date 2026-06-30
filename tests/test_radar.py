@@ -22,6 +22,34 @@ def test_touches_provider():
     assert r.touches_provider(["music_assistant/server.py"], "yandex_music") is False
 
 
+def test_touches_provider_test_files():
+    # Test-only files under tests/providers/<domain>/ must be detected.
+    assert (
+        r.touches_provider(["tests/providers/yandex_music/test_api.py"], "yandex_music")
+        is True
+    )
+    # Mixed: source + test both under the domain -> True
+    assert (
+        r.touches_provider(
+            [
+                "music_assistant/providers/yandex_music/api.py",
+                "tests/providers/yandex_music/test_api.py",
+            ],
+            "yandex_music",
+        )
+        is True
+    )
+    # Foreign test (different domain) -> False
+    assert (
+        r.touches_provider(
+            ["tests/providers/other_provider/test_api.py"], "yandex_music"
+        )
+        is False
+    )
+    # Purely foreign source -> False
+    assert r.touches_provider(["music_assistant/server.py"], "yandex_music") is False
+
+
 def test_select_unhandled_filters_handled_and_cursor():
     data = {}
     st.mark_handled(data, "d", 100)

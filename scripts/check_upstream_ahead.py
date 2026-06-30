@@ -58,17 +58,23 @@ def _gh_json(args: list[str]) -> str:
 
 
 def _list_upstream_tree(domain: str, ref: str) -> dict[str, str]:
-    """Read-only: list files + blob sha under the provider path on upstream."""
+    """Read-only: list files + blob sha under the provider path on upstream.
+
+    Includes both the source root (music_assistant/providers/<domain>/) and
+    the test root (tests/providers/<domain>/) so test-only upstream
+    contributions are not silently missed.
+    """
     import json
 
-    root = f"music_assistant/providers/{domain}"
+    src_root = f"music_assistant/providers/{domain}"
+    test_root = f"tests/providers/{domain}"
     raw = _gh_json(
         [
             "api",
             f"repos/{UPSTREAM}/git/trees/{ref}?recursive=1",
             "--jq",
             '.tree[] | select(.type=="blob") | '
-            f'select(.path|startswith("{root}/")) | '
+            f'select(.path | (startswith("{src_root}/") or startswith("{test_root}/"))) | '
             "{path:.path, sha:.sha}",
         ]
     )
