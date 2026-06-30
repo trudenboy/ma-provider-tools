@@ -20,6 +20,8 @@ Changes to `wrappers/*.j2` or `providers.yml` trigger `distribute.yml`, which au
 | `wrappers/*.j2` | Templates rendered once per provider; use `{% raw %}...{% endraw %}` around GitHub Actions expression syntax (`${{ }}`) to prevent Jinja2 from interpreting it |
 | `.github/workflows/reusable-*.yml` | Shared logic called by provider repos via `workflow_call` |
 | `.github/workflows/distribute.yml` | Runs `distribute.py` on push to `main` when wrappers or registry changes |
+| `scripts/reverse_sync_*.py`, `scripts/check_upstream_ahead.py`, `scripts/_transform.py` | Reverse-sync channel (see "Reverse-sync Channel" below) |
+| `state/reverse-sync.json` | Committed radar progress state (per-domain `handled_prs` / cursor / anchor) |
 
 ## Running distribute.py Locally
 
@@ -91,18 +93,83 @@ When editing a live PR, use `gh api repos/music-assistant/server/pulls/<N> -X PA
 
 ## Reverse-sync Channel
 
-`reverse-sync-radar.yml` (cron every 2h + dispatch) polls `music-assistant/server`
-**read-only** for merged PRs touching `music_assistant/providers/<domain>/` and
-auto-opens **draft** reverse-sync PRs in the provider repo (best-effort
-`git apply --3way`; conflicts left in-tree, labelled `needs-human`). Progress is
-in `state/reverse-sync.json`. The forward-sync (`reusable-sync-to-fork.yml`) has
-a preflight guard that blocks the destructive rsync when upstream is ahead;
-override with the `ack_upstream_ahead=true` dispatch input.
+The inverse of forward-sync: contributors PR against the inlined provider tree
+in `music-assistant/server`; the radar detects merged ones and auto-opens a
+**draft** PR porting them back into the provider repo (the source of truth).
 
-Path/import mapping lives in `scripts/_transform.py` (single source of truth;
+`reverse-sync-radar.yml` (cron every 2h + `workflow_dispatch`, uses
+`FORK_SYNC_PAT`) runs `scripts/reverse_sync_radar.py` over every provider in
+`providers.yml`. Two passes per provider:
+- **Pass A (anchor):** latest upstream SHA on the provider path → `last_synced_sha`
+  in state (consumed by the P0 guard below).
+- **Pass B (action):** merged PRs touching `music_assistant/providers/<domain>/`
+  **or** `tests/providers/<domain>/` → `reverse_sync_open_pr.open_reverse_pr`.
+
+### Scripts
+
+| Script | Role |
+|--------|------|
+| `reverse_sync_radar.py` | Two-pass radar; iterates `providers.yml`; updates+commits `state/reverse-sync.json` |
+| `reverse_sync_open_pr.py` | Fetch → reverse-transform → dedup → apply → scaffold → draft PR |
+| `reverse_sync_state.py` | Load/save the committed state file |
+| `reverse_sync_notify.py` | Open/update a deduped issue in THIS hub (never upstream) |
+| `check_upstream_ahead.py` | P0 preflight-guard core (content-hash compare) |
+| `_transform.py` | Single source of truth for the path/import transform |
+
+### Opener pipeline (and the non-obvious constraints — each is a fixed bug; don't regress)
+
+1. **Fetch diff via REST, not `gh pr diff`** — `_fetch_pr_diff` uses
+   `gh api repos/.../pulls/<n>` with `Accept: application/vnd.github.diff`.
+   `gh pr diff` emits a *per-commit* patch (a file appears once per commit),
+   which breaks reverse-apply on multi-commit PRs.
+2. **Reverse the transform** (`_transform.reverse_diff`), then **strip
+   maintainer-owned files** (`_drop_maintainer_owned`: `VERSION`,
+   `translations/en.json`) — the PR body promises these are untouched.
+3. **Dedup** — skip if already ported: a fast `git apply --check --reverse`
+   probe, then `_already_present`, which checks every **added line** is present
+   in the provider file (NOT whole-file equality — the SoT advances past a
+   merged PR's base, so whole-file compare never matches).
+4. **Committer identity** — the opener sets a bot `user.name`/`user.email` on
+   the clone; CI clones have none and `git commit` would fail rc=128.
+5. **Apply** — `git apply --3way` **alone** (NOT `--3way --reject`; git rejects
+   that combination). `_fetch_upstream_base` first fetches the upstream PR's
+   base commit into the (shallow) clone so `--3way` has the pre-image blobs —
+   without them it reports "lacks the necessary blob" and rejects whole files,
+   producing a scaffold-only PR. Conflicts → `<<<<<<<` markers left in-tree.
+6. **Push** with plain `--force` (not `--force-with-lease`: a fresh
+   `--branch dev` clone has no remote-tracking ref for the bot-owned
+   `reverse-sync/*` branch to lease against).
+7. **Open draft PR** (`_create_draft_pr`) with the upstream contributor as
+   `Co-authored-by`, labels `reverse-sync` + (`needs-human` if conflicts).
+   Retries **without labels** if they don't exist in the provider repo (labels
+   are distributed via `labels.yml.j2`, but the PR matters more).
+
+### Other behavior
+
+- **Pagination:** `_merged_prs` pages until the `pulls_cursor` watermark
+  (`MAX_PAGES=10`) so a provider PR buried past page 1 on the high-traffic
+  upstream isn't missed.
+- **Failure isolation:** per-PR and per-provider failures are caught so one
+  failure doesn't abort the run; a failed port is NOT marked handled (stays
+  re-discoverable; cursor held below the earliest failure) and raises an
+  incident issue (`incident:reverse-sync`).
+- **State** `state/reverse-sync.json`: `{ "<domain>": { last_synced_sha,
+  handled_prs:[], pulls_cursor, digest_issue } }`. To re-process a PR, remove it
+  from `handled_prs` and set `pulls_cursor` below its `updated_at`.
+- **AI-Policy rule 2:** no reverse-sync script ever opens/comments/pushes/closes
+  in `music-assistant/*` — only read-only `gh api` GET / `gh pr view`/`diff` and
+  read-only `git fetch`. Enforced by `tests/test_ai_policy_readonly.py`.
+
+### P0 forward-sync guard
+
+`reusable-sync-to-fork.yml` runs `check_upstream_ahead.py` before its destructive
+`rsync --delete`: if upstream is ahead of the provider repo on a non-ignored path
+(`VERSION` / `translations/en.json` ignored) the job fails closed (also fails on
+an empty domain). Override with the `ack_upstream_ahead=true` dispatch input.
+
+The path/import transform (`_transform.py`) is the single source of truth; the
 forward `sed` rules in the sync workflow are pinned to it by
-`tests/test_forward_sed_parity.py`). Per AI-Policy rule 2, no reverse-sync script
-ever writes to `music-assistant/*`.
+`tests/test_forward_sed_parity.py`.
 
 ## Jinja2 Template Conventions
 
@@ -148,9 +215,12 @@ EOF
 
 ## Secrets
 
-`FORK_SYNC_PAT` — a PAT with `contents:write` — must be set in:
+`FORK_SYNC_PAT` — a PAT with `contents:write` (and `pull-requests:write` on the
+provider repos) — must be set in:
 - Each provider repo (for sync-to-fork and release workflows)
-- This repo (for `distribute.yml` to create PRs in provider repos)
+- This repo (for `distribute.yml` to create PRs in provider repos, **and** for
+  `reverse-sync-radar.yml` to clone provider repos, push `reverse-sync/*`
+  branches, and open reverse PRs)
 
 ## Adding a Provider
 

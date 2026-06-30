@@ -228,3 +228,41 @@ holds its number) — no spam. Zero writes to `music-assistant/*`.
   detection items) — deferred, maybe later.
 - P2: automated Decision layer (mechanical-regenerate vs feature-scaffold) and
   cross-PR conflict-surface pre-checks.
+
+---
+
+## Implementation notes (post-build, live-validated)
+
+The channel was built subagent-driven, then validated against live
+`music-assistant/server` PRs, which surfaced several constraints the brainstorm
+didn't anticipate. Each is now encoded in code + tests; documented here and in
+the repo `CLAUDE.md` so future edits don't regress them.
+
+- **Diff source:** the opener fetches the combined diff via
+  `gh api .../pulls/<n>` with `Accept: application/vnd.github.diff`, NOT
+  `gh pr diff` (which emits a per-commit patch that breaks reverse-apply on
+  multi-commit PRs).
+- **Maintainer-owned strip:** `VERSION` / `translations/en.json` are stripped
+  from the reversed patch *before apply* (`_drop_maintainer_owned`), not just
+  omitted from the scaffold — otherwise `git apply` would modify them.
+- **Dedup is added-line presence, not whole-file equality:** the SoT advances
+  past a merged PR's base, so whole-file comparison never matches an
+  already-ported PR. `_already_present` checks that every added line exists in
+  the provider file.
+- **Committer identity:** the opener sets a bot `user.name`/`user.email` on the
+  clone (CI clones have none; `git commit` fails rc=128 otherwise).
+- **Real `--3way`:** use `git apply --3way` ALONE (`--3way --reject` is an
+  invalid combination). `_fetch_upstream_base` fetches the upstream PR base
+  commit into the shallow clone so `--3way` has the pre-image blobs and produces
+  real conflict markers instead of rejecting whole files (scaffold-only PRs).
+- **Push:** plain `--force` (a fresh `--branch dev` clone has no remote-tracking
+  ref to lease for `--force-with-lease`).
+- **Label fallback:** `_create_draft_pr` retries without labels if the provider
+  repo lacks `reverse-sync`/`needs-human` (also added to `labels.yml.j2`).
+- **Pagination:** `_merged_prs` pages until the cursor (`MAX_PAGES=10`) so PRs
+  buried past page 1 on the high-traffic upstream aren't missed.
+
+These were tracked as issues #94 (pagination), #95 (dedup drift), #97 (`--3way`),
+plus the pre-existing #77 (rewrite-safe gate) — all closed. End-to-end validation:
+`music-assistant/server#4313` → `trudenboy/ma-provider-mcp#152` carried the real
+contributor delta with genuine conflict markers.
