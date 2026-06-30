@@ -97,7 +97,7 @@ def test_push_failure_raises(tmp_path, monkeypatch):
                 ),
                 "",
             )
-        if cmd[0] == "gh" and "diff" in cmd:
+        if cmd[0] == "gh" and any("application/vnd.github.diff" in c for c in cmd):
             return sp.CompletedProcess(cmd, 0, upstream_patch, "")
         return real_run(cmd, **kw)
 
@@ -112,3 +112,33 @@ def test_push_failure_raises(tmp_path, monkeypatch):
             pr_number=999,
             provider_dir=repo,
         )
+
+
+def test_fetch_pr_diff_uses_combined_rest_diff(monkeypatch):
+    """Opener must fetch the combined REST diff, not the per-commit `gh pr diff`.
+
+    `gh pr diff` emits one `diff --git` section per commit for a multi-commit
+    PR, which breaks the reverse echo-dedup probe; the REST diff media type
+    returns a single combined section per file.
+    """
+    captured = {}
+
+    class FakeResult:
+        returncode = 0
+        stdout = "diff --git a/x b/x\n"
+        stderr = ""
+
+    def fake_run(cmd, **kw):
+        captured["cmd"] = cmd
+        return FakeResult()
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    out = o._fetch_pr_diff(4392)
+
+    cmd = captured["cmd"]
+    assert cmd[:3] == ["gh", "api", "repos/music-assistant/server/pulls/4392"]
+    assert "-H" in cmd
+    assert "Accept: application/vnd.github.diff" in cmd
+    # Must NOT use the per-commit `gh pr diff` form.
+    assert not (cmd[:3] == ["gh", "pr", "diff"])
+    assert out == "diff --git a/x b/x\n"

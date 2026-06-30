@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Open a draft reverse-sync PR in a provider repo for one inbound upstream PR.
 
-Read-only against music-assistant/server (gh pr diff / view). All writes target
+Read-only against music-assistant/server (gh pr view + REST combined diff). All writes target
 the provider repo only. Best-effort apply: always opens a draft PR; conflicts
 are left in-tree and the PR is labelled needs-human.
 """
@@ -62,6 +62,31 @@ def _run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, text=True, **kw)
 
 
+def _fetch_pr_diff(pr_number: int) -> str:
+    """Return the upstream PR's combined diff (read-only).
+
+    Uses the REST diff media type rather than ``gh pr diff``: the latter emits
+    a per-commit patch series, so a file touched by N commits appears as N
+    separate ``diff --git`` sections.  Reverse-applying such interdependent
+    same-file sections in forward order spuriously fails, which would defeat
+    the echo no-op dedup below for multi-commit PRs (false "not present" ->
+    duplicate/conflicting PR).  The API diff is a single combined section per
+    file, so reverse_diff, the dedup probe, and ``git apply --3way`` all behave
+    deterministically.
+    """
+    return _run(
+        [
+            "gh",
+            "api",
+            f"repos/{UPSTREAM}/pulls/{pr_number}",
+            "-H",
+            "Accept: application/vnd.github.diff",
+        ],
+        capture_output=True,
+        check=True,
+    ).stdout
+
+
 def _git_mut(provider_dir: str, *args: str) -> subprocess.CompletedProcess:
     """Run a mutating git command; raise RuntimeError on non-zero exit."""
     result = _run(["git", "-C", provider_dir, *args], capture_output=True)
@@ -105,11 +130,7 @@ def open_reverse_pr(
         "user": {"login": raw["author"]["login"]},
     }
 
-    patch = _run(
-        ["gh", "pr", "diff", str(pr_number), "--repo", UPSTREAM, "--patch"],
-        capture_output=True,
-        check=True,
-    ).stdout
+    patch = _fetch_pr_diff(pr_number)
     reversed_patch = t.reverse_diff(patch, domain, provider_path)
     if not reversed_patch.strip():
         return {"skipped": True, "reason": "no provider-path changes"}
