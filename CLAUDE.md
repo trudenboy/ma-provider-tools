@@ -89,6 +89,21 @@ When editing a live PR, use `gh api repos/music-assistant/server/pulls/<N> -X PA
 
 **`change_type` workflow input** — comma-separated string (e.g. `"bugfix,enhancement,dependencies"`). Whitespace and case are normalised. Auto-forced to `new-provider` when `PREV_TAG` is empty (first submission).
 
+## Reverse-sync Channel
+
+`reverse-sync-radar.yml` (cron every 2h + dispatch) polls `music-assistant/server`
+**read-only** for merged PRs touching `music_assistant/providers/<domain>/` and
+auto-opens **draft** reverse-sync PRs in the provider repo (best-effort
+`git apply --3way`; conflicts left in-tree, labelled `needs-human`). Progress is
+in `state/reverse-sync.json`. The forward-sync (`reusable-sync-to-fork.yml`) has
+a preflight guard that blocks the destructive rsync when upstream is ahead;
+override with the `ack_upstream_ahead=true` dispatch input.
+
+Path/import mapping lives in `scripts/_transform.py` (single source of truth;
+forward `sed` rules in the sync workflow are pinned to it by
+`tests/test_forward_sed_parity.py`). Per AI-Policy rule 2, no reverse-sync script
+ever writes to `music-assistant/*`.
+
 ## Jinja2 Template Conventions
 
 Templates in `wrappers/` receive these variables: `domain`, `display_name`, `manifest_path`, `provider_path`, `provider_type`, `locale`, `repo`, `default_branch`, `codespell_ignore_words`.
