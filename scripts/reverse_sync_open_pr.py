@@ -9,7 +9,6 @@ are left in-tree and the PR is labelled needs-human.
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import os
 import subprocess
@@ -124,92 +123,55 @@ def _fetch_pr_diff(pr_number: int) -> str:
     ).stdout
 
 
-def _already_present(
-    pr_number: int,
-    domain: str,
-    provider_path: str,
-    provider_dir: str,
-) -> bool:
-    """Drift-insensitive content-presence check.
+def _added_lines_by_file(reversed_patch: str) -> dict[str, list[str]]:
+    """Map each target file (provider-repo path) to the lines the patch ADDS.
 
-    Returns True only if every upstream-PR file that would be ported is already
-    present in the provider dir with matching content after the reverse transform.
-    Returns False on any network/parse error — safer to open a PR than to skip.
-
-    All upstream access is read-only (GET).
+    Operates on an already reverse-transformed, maintainer-stripped patch.
+    Added lines are content lines beginning with '+' (excluding the '+++'
+    file-marker), with the leading '+' removed.
     """
-    try:
-        # 1. Fetch PR head ref (repo + sha) — read-only GET.
-        head_res = _run(
-            ["gh", "api", f"repos/{UPSTREAM}/pulls/{pr_number}"],
-            capture_output=True,
-        )
-        if head_res.returncode != 0:
-            return False
-        head_info = json.loads(head_res.stdout)
-        head_repo = head_info["head"]["repo"]["full_name"]
-        head_sha = head_info["head"]["sha"]
-
-        # 2. Fetch the PR's changed-files list — read-only GET.
-        files_res = _run(
-            [
-                "gh",
-                "api",
-                f"repos/{UPSTREAM}/pulls/{pr_number}/files?per_page=100",
-            ],
-            capture_output=True,
-        )
-        if files_res.returncode != 0:
-            return False
-        files = json.loads(files_res.stdout)
-
-        # 3. Keep only provider-relevant, non-maintainer-owned, non-deletion files.
-        relevant: list[tuple[str, str]] = []
-        for f in files:
-            if f.get("status") == "removed":
-                continue
-            up_path = f["filename"]
-            prov_rel = t.reverse_path(up_path, domain, provider_path)
-            if prov_rel is None:
-                continue
-            if any(prov_rel.endswith(s) for s in MAINTAINER_OWNED_SUFFIXES):
-                continue
-            relevant.append((up_path, prov_rel))
-
-        if not relevant:
-            return False  # nothing to confirm → open PR (safe)
-
-        # 4. For each file, fetch head content, apply reverse transform, compare.
-        #    HEAD repo may be a fork (e.g. steamEngineer/server) — still read-only.
-        for up_path, prov_rel in relevant:
-            content_res = _run(
-                [
-                    "gh",
-                    "api",
-                    f"repos/{head_repo}/contents/{up_path}?ref={head_sha}",
-                ],
-                capture_output=True,
+    out: dict[str, list[str]] = {}
+    cur: str | None = None
+    for ln in reversed_patch.splitlines():
+        if ln.startswith("diff --git "):
+            parts = ln.split()
+            cur = (
+                parts[3][2:] if len(parts) >= 4 and parts[3].startswith("b/") else None
             )
-            if content_res.returncode != 0:
-                return False  # can't fetch → open PR (safe)
-            content_obj = json.loads(content_res.stdout)
-            # GitHub base64-encodes content with embedded newlines; strip them.
-            upstream_text = base64.b64decode(
-                content_obj["content"].replace("\n", "")
-            ).decode("utf-8")
-            expected_text = t.reverse_content(prov_rel, upstream_text, domain)
+            if cur is not None:
+                out.setdefault(cur, [])
+        elif ln.startswith("+++ ") or ln.startswith("---"):
+            continue
+        elif ln.startswith("+") and cur is not None:
+            out[cur].append(ln[1:])
+    return out
 
-            provider_file = os.path.join(provider_dir, prov_rel)
-            if not os.path.exists(provider_file):
-                return False
-            with open(provider_file) as fh:
-                local_text = fh.read()
-            if local_text != expected_text:
-                return False
 
-        return True
-    except Exception:
-        return False  # any unexpected error → open PR (safe)
+def _already_present(reversed_patch: str, provider_dir: str) -> bool:
+    """Drift- and snapshot-insensitive content-presence check.
+
+    Returns True only if every line the patch ADDS is already present in the
+    corresponding provider file. Unlike a whole-file comparison, this tolerates
+    both surrounding drift AND the provider repo (SoT) having advanced past the
+    upstream PR's base (extra content added by later merges) — the common case
+    for an already-ported merged PR. Returns False if any target file is missing
+    or any added line is absent (safer to open a PR than to wrongly skip).
+
+    No network access; operates purely on the reversed patch and local files.
+    """
+    added = _added_lines_by_file(reversed_patch)
+    if not added:
+        return False
+    for rel, lines in added.items():
+        provider_file = os.path.join(provider_dir, rel)
+        if not os.path.exists(provider_file):
+            return False
+        with open(provider_file) as fh:
+            file_lines = set(fh.read().splitlines())
+        for added_line in lines:
+            if added_line.strip() and added_line not in file_lines:
+                return False
+    return True
 
 
 def _git_mut(provider_dir: str, *args: str) -> subprocess.CompletedProcess:
@@ -275,7 +237,7 @@ def open_reverse_pr(
     # Drift-insensitive dedup: the echo probe above is context-sensitive and
     # fails when SoT has drifted around the patched lines even if the change
     # content is already present (issue #95). Compare actual file contents.
-    if _already_present(pr_number, domain, provider_path, provider_dir):
+    if _already_present(reversed_patch, provider_dir):
         return {"skipped": True, "reason": "already present (content match)"}
 
     # Set a committer identity on the clone: CI runners and shallow clones have
