@@ -42,6 +42,7 @@ ECHO_LOGINS = {"github-actions[bot]", "trudenboy", "trudenboy[bot]"}
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(REPO_ROOT, "state", "reverse-sync.json")
 PROVIDERS_PATH = os.path.join(REPO_ROOT, "providers.yml")
+MAX_PAGES = 10  # safety cap for _merged_prs pagination (~1 000 PRs)
 
 
 def _gh(args: list[str]) -> str:
@@ -98,18 +99,42 @@ def _anchor(domain: str, default_branch: str) -> str | None:
     return raw or None
 
 
-def _merged_prs(default_branch: str) -> list[dict]:
-    raw = _gh(
-        [
-            "api",
-            f"repos/{UPSTREAM}/pulls?state=closed&base={default_branch}"
-            "&sort=updated&direction=desc&per_page=50",
-            "--jq",
-            "[.[] | select(.merged_at != null) | "
-            "{number, updated_at, user:{login:.user.login}}]",
-        ]
-    )
-    return json.loads(raw)
+def _merged_prs(default_branch: str, cursor: str | None) -> list[dict]:
+    """Return merged PRs from the upstream repo, paginating until the cursor.
+
+    Fetches pages of up to 100 PRs (sorted by updated_at DESC) and stops as
+    soon as an empty page is received, a PR with updated_at <= cursor is found
+    on the current page, or MAX_PAGES pages have been scanned.  A stderr
+    warning is emitted when MAX_PAGES is reached without hitting the cursor so
+    truncation is never silent.
+    """
+    results: list[dict] = []
+    for page in range(1, MAX_PAGES + 1):
+        raw = _gh(
+            [
+                "api",
+                f"repos/{UPSTREAM}/pulls?state=closed&base={default_branch}"
+                f"&sort=updated&direction=desc&per_page=100&page={page}",
+                "--jq",
+                "[.[] | select(.merged_at != null) | "
+                "{number, updated_at, user:{login:.user.login}}]",
+            ]
+        )
+        page_prs: list[dict] = json.loads(raw)
+        if not page_prs:
+            break
+        results.extend(page_prs)
+        # Results are sorted DESC; once a PR at or before the cursor appears,
+        # every subsequent PR is older — no need to fetch further pages.
+        if cursor and any(pr["updated_at"] <= cursor for pr in page_prs):
+            break
+    else:
+        print(
+            f"WARNING: _merged_prs scanned {MAX_PAGES} pages without reaching "
+            f"cursor {cursor!r}; some merged PRs may have been truncated.",
+            file=sys.stderr,
+        )
+    return results
 
 
 def _pr_files(number: int) -> list[str]:
@@ -156,7 +181,7 @@ def run() -> int:
                     entry["last_synced_sha"] = anchor
 
                 # Pass B — action
-                merged = _merged_prs(default_branch_up)
+                merged = _merged_prs(default_branch_up, entry["pulls_cursor"])
             except subprocess.CalledProcessError as exc:
                 print(
                     f"WARNING: {domain} upstream read failed, skipping provider: {exc}",

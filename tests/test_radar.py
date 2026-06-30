@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -119,3 +120,121 @@ def test_run_saves_state_on_unexpected_exception(monkeypatch, tmp_path):
 
     # Despite the exception, st.save must have been called (finally block).
     assert state_path.exists(), "st.save was NOT called — finally block missing"
+
+
+# ---------------------------------------------------------------------------
+# _merged_prs pagination tests
+# ---------------------------------------------------------------------------
+
+
+def _page_from_args(args: list[str]) -> int:
+    """Extract the &page=N value from the gh api URL argument."""
+    url = next(a for a in args if "pulls?" in a)
+    page_part = next(p for p in url.split("&") if p.startswith("page="))
+    return int(page_part.split("=")[1])
+
+
+def test_merged_prs_aggregates_multiple_pages(monkeypatch):
+    """Results from multiple pages are combined into one list."""
+    pages = {
+        1: [
+            {
+                "number": 10,
+                "updated_at": "2026-06-10T00:00:00Z",
+                "user": {"login": "alice"},
+            }
+        ],
+        2: [
+            {
+                "number": 9,
+                "updated_at": "2026-06-09T00:00:00Z",
+                "user": {"login": "bob"},
+            }
+        ],
+        3: [],  # empty page → stops pagination
+    }
+
+    def fake_gh(args):
+        return json.dumps(pages.get(_page_from_args(args), []))
+
+    monkeypatch.setattr(r, "_gh", fake_gh)
+    result = r._merged_prs("dev", cursor=None)
+    assert [pr["number"] for pr in result] == [10, 9]
+
+
+def test_merged_prs_stops_at_cursor(monkeypatch):
+    """Pagination stops as soon as a page contains a PR with updated_at <= cursor."""
+    pages = {
+        1: [
+            {
+                "number": 10,
+                "updated_at": "2026-06-10T00:00:00Z",
+                "user": {"login": "alice"},
+            }
+        ],
+        2: [
+            {
+                "number": 9,
+                "updated_at": "2026-06-09T00:00:00Z",
+                "user": {"login": "bob"},
+            },
+            # This PR is at/below the cursor → should trigger stop
+            {
+                "number": 8,
+                "updated_at": "2026-05-01T00:00:00Z",
+                "user": {"login": "carol"},
+            },
+        ],
+        3: [
+            {
+                "number": 7,
+                "updated_at": "2026-04-01T00:00:00Z",
+                "user": {"login": "dave"},
+            }
+        ],
+    }
+    pages_fetched: list[int] = []
+
+    def fake_gh(args):
+        p = _page_from_args(args)
+        pages_fetched.append(p)
+        return json.dumps(pages.get(p, []))
+
+    monkeypatch.setattr(r, "_gh", fake_gh)
+    result = r._merged_prs("dev", cursor="2026-06-01T00:00:00Z")
+    # PRs from pages 1 and 2 are returned; page 2 stops iteration
+    assert [pr["number"] for pr in result] == [10, 9, 8]
+    # Page 3 must never be fetched
+    assert 3 not in pages_fetched
+
+
+def test_merged_prs_stops_at_max_pages(monkeypatch, capsys):
+    """With cursor=None, pagination stops at MAX_PAGES and emits a warning."""
+    monkeypatch.setattr(r, "MAX_PAGES", 2)
+
+    pages_fetched: list[int] = []
+
+    def fake_gh(args):
+        p = _page_from_args(args)
+        pages_fetched.append(p)
+        # Always return a non-empty page so only MAX_PAGES limits the scan
+        return json.dumps(
+            [
+                {
+                    "number": 100 - p,
+                    "updated_at": f"2026-06-{10 - p:02d}T00:00:00Z",
+                    "user": {"login": "x"},
+                }
+            ]
+        )
+
+    monkeypatch.setattr(r, "_gh", fake_gh)
+    result = r._merged_prs("dev", cursor=None)
+
+    # Exactly MAX_PAGES pages were fetched
+    assert pages_fetched == [1, 2]
+    # Results from both pages accumulated
+    assert len(result) == 2
+    # Warning must be emitted to stderr
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.err
