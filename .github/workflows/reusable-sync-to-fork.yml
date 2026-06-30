@@ -114,6 +114,8 @@ jobs:
             rsync -av --delete --exclude='test_docs.py' \
               provider-repo/tests/ \
               ma-server/tests/providers/${DOMAIN}/
+            # NOTE: these 3 sed rules are mirrored by scripts/_transform.py and
+            # asserted equal by tests/test_forward_sed_parity.py. Change both together.
             # Rewrite test imports: from provider.X → from music_assistant.providers.DOMAIN.X
             find ma-server/tests/providers/${DOMAIN}/ -name '*.py' -exec \
               sed -i "s/from provider\./from music_assistant.providers.${DOMAIN}./g" {} +
