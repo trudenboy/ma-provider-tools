@@ -9,6 +9,8 @@ are left in-tree and the PR is labelled needs-human.
 from __future__ import annotations
 
 import argparse
+import base64
+import json
 import os
 import subprocess
 import sys
@@ -122,6 +124,94 @@ def _fetch_pr_diff(pr_number: int) -> str:
     ).stdout
 
 
+def _already_present(
+    pr_number: int,
+    domain: str,
+    provider_path: str,
+    provider_dir: str,
+) -> bool:
+    """Drift-insensitive content-presence check.
+
+    Returns True only if every upstream-PR file that would be ported is already
+    present in the provider dir with matching content after the reverse transform.
+    Returns False on any network/parse error — safer to open a PR than to skip.
+
+    All upstream access is read-only (GET).
+    """
+    try:
+        # 1. Fetch PR head ref (repo + sha) — read-only GET.
+        head_res = _run(
+            ["gh", "api", f"repos/{UPSTREAM}/pulls/{pr_number}"],
+            capture_output=True,
+        )
+        if head_res.returncode != 0:
+            return False
+        head_info = json.loads(head_res.stdout)
+        head_repo = head_info["head"]["repo"]["full_name"]
+        head_sha = head_info["head"]["sha"]
+
+        # 2. Fetch the PR's changed-files list — read-only GET.
+        files_res = _run(
+            [
+                "gh",
+                "api",
+                f"repos/{UPSTREAM}/pulls/{pr_number}/files?per_page=100",
+            ],
+            capture_output=True,
+        )
+        if files_res.returncode != 0:
+            return False
+        files = json.loads(files_res.stdout)
+
+        # 3. Keep only provider-relevant, non-maintainer-owned, non-deletion files.
+        relevant: list[tuple[str, str]] = []
+        for f in files:
+            if f.get("status") == "removed":
+                continue
+            up_path = f["filename"]
+            prov_rel = t.reverse_path(up_path, domain, provider_path)
+            if prov_rel is None:
+                continue
+            if any(prov_rel.endswith(s) for s in MAINTAINER_OWNED_SUFFIXES):
+                continue
+            relevant.append((up_path, prov_rel))
+
+        if not relevant:
+            return False  # nothing to confirm → open PR (safe)
+
+        # 4. For each file, fetch head content, apply reverse transform, compare.
+        #    HEAD repo may be a fork (e.g. steamEngineer/server) — still read-only.
+        for up_path, prov_rel in relevant:
+            content_res = _run(
+                [
+                    "gh",
+                    "api",
+                    f"repos/{head_repo}/contents/{up_path}?ref={head_sha}",
+                ],
+                capture_output=True,
+            )
+            if content_res.returncode != 0:
+                return False  # can't fetch → open PR (safe)
+            content_obj = json.loads(content_res.stdout)
+            # GitHub base64-encodes content with embedded newlines; strip them.
+            upstream_text = base64.b64decode(
+                content_obj["content"].replace("\n", "")
+            ).decode("utf-8")
+            expected_text = t.reverse_content(prov_rel, upstream_text, domain)
+
+            provider_file = os.path.join(provider_dir, prov_rel)
+            if not os.path.exists(provider_file):
+                return False
+            with open(provider_file) as fh:
+                local_text = fh.read()
+            if local_text != expected_text:
+                return False
+
+        return True
+    except Exception:
+        return False  # any unexpected error → open PR (safe)
+
+
 def _git_mut(provider_dir: str, *args: str) -> subprocess.CompletedProcess:
     """Run a mutating git command; raise RuntimeError on non-zero exit."""
     result = _run(["git", "-C", provider_dir, *args], capture_output=True)
@@ -155,8 +245,6 @@ def open_reverse_pr(
         capture_output=True,
         check=True,
     ).stdout
-    import json
-
     raw = json.loads(pr_json)
     pr = {
         "number": raw["number"],
@@ -174,7 +262,8 @@ def open_reverse_pr(
 
     branch = build_branch(domain, pr_number)
 
-    # Echo dedup: if the patch already applies as a no-op, skip.
+    # Echo dedup: fast exact-match probe — if the patch applies cleanly in
+    # reverse, every context line already matches and we can skip cheaply.
     check = _run(
         ["git", "-C", provider_dir, "apply", "--check", "--reverse", "-"],
         input=reversed_patch,
@@ -182,6 +271,12 @@ def open_reverse_pr(
     )
     if check.returncode == 0:
         return {"skipped": True, "reason": "already present (no-op)"}
+
+    # Drift-insensitive dedup: the echo probe above is context-sensitive and
+    # fails when SoT has drifted around the patched lines even if the change
+    # content is already present (issue #95). Compare actual file contents.
+    if _already_present(pr_number, domain, provider_path, provider_dir):
+        return {"skipped": True, "reason": "already present (content match)"}
 
     # Set a committer identity on the clone: CI runners and shallow clones have
     # no user.name/user.email, so `git commit` would fail with rc=128
@@ -198,8 +293,11 @@ def open_reverse_pr(
     _git_mut(provider_dir, "checkout", default_branch)
     _git_mut(provider_dir, "checkout", "-B", branch)
 
+    # --reject: cleanly-applying hunks land; conflicting hunks drop to .rej
+    # files instead of aborting the entire file (issue #97). The PR body
+    # already tells the reviewer to look for .rej markers.
     apply_res = _run(
-        ["git", "-C", provider_dir, "apply", "--3way", "-"],
+        ["git", "-C", provider_dir, "apply", "--3way", "--reject", "-"],
         input=reversed_patch,
         capture_output=True,
     )
