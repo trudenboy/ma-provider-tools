@@ -183,6 +183,18 @@ def open_reverse_pr(
     if check.returncode == 0:
         return {"skipped": True, "reason": "already present (no-op)"}
 
+    # Set a committer identity on the clone: CI runners and shallow clones have
+    # no user.name/user.email, so `git commit` would fail with rc=128
+    # "Author identity unknown". The contributor is credited via the
+    # Co-authored-by trailer; the committer is the bot.
+    _git_mut(provider_dir, "config", "user.name", "github-actions[bot]")
+    _git_mut(
+        provider_dir,
+        "config",
+        "user.email",
+        "41898282+github-actions[bot]@users.noreply.github.com",
+    )
+
     _git_mut(provider_dir, "checkout", default_branch)
     _git_mut(provider_dir, "checkout", "-B", branch)
 

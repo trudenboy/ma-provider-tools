@@ -175,3 +175,68 @@ def test_drop_maintainer_owned_noop_when_absent():
         "--- a/provider/api.py\n+++ b/provider/api.py\n@@ -1 +1,2 @@\n a\n+b\n"
     )
     assert o._drop_maintainer_owned(patch) == patch
+
+
+def test_commit_succeeds_without_preexisting_identity(tmp_path, monkeypatch):
+    """Regression: a CI clone has no user.name/email; the opener must set its
+    own committer identity so `git commit` doesn't fail rc=128 'Author identity
+    unknown' (which silently broke every reverse port in production)."""
+    import subprocess as sp
+
+    repo = str(tmp_path / "prov")
+    real_run = sp.run
+    for c in (
+        ["git", "-C", tmp_path.as_posix(), "init", "prov"],
+        ["git", "-C", repo, "config", "user.email", "seed@example.com"],
+        ["git", "-C", repo, "config", "user.name", "Seed"],
+    ):
+        real_run(c, check=True, capture_output=True)
+    (tmp_path / "prov" / "provider").mkdir(parents=True)
+    (tmp_path / "prov" / "provider" / "main.py").write_text("x = 1\n")
+    real_run(["git", "-C", repo, "add", "-A"], check=True, capture_output=True)
+    real_run(
+        ["git", "-C", repo, "commit", "-m", "init"], check=True, capture_output=True
+    )
+    branch = real_run(
+        ["git", "-C", repo, "rev-parse", "--abbrev-ref", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    # Remove identity so ONLY the opener's own config can make commit succeed.
+    real_run(["git", "-C", repo, "config", "--unset", "user.name"], capture_output=True)
+    real_run(
+        ["git", "-C", repo, "config", "--unset", "user.email"], capture_output=True
+    )
+
+    upstream_patch = (
+        "diff --git a/music_assistant/providers/fastmcp_server/main.py "
+        "b/music_assistant/providers/fastmcp_server/main.py\n"
+        "--- a/music_assistant/providers/fastmcp_server/main.py\n"
+        "+++ b/music_assistant/providers/fastmcp_server/main.py\n"
+        "@@ -1 +1,2 @@\n x = 1\n+y = 2\n"
+    )
+
+    orig_run = o._run  # original wrapper (adds text=True) for git fallthrough
+
+    def fake_run(cmd, **kw):
+        if cmd[0] == "gh" and "view" in cmd:
+            return sp.CompletedProcess(
+                cmd,
+                0,
+                json.dumps(
+                    {"number": 1, "title": "t", "url": "u", "author": {"login": "a"}}
+                ),
+                "",
+            )
+        if cmd[0] == "gh" and any("application/vnd.github.diff" in c for c in cmd):
+            return sp.CompletedProcess(cmd, 0, upstream_patch, "")
+        return orig_run(cmd, **kw)
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    # No remote -> push fails. The point: we reach PUSH (commit succeeded),
+    # so the error is about push, NOT 'Author identity unknown'.
+    with pytest.raises(RuntimeError) as exc:
+        o.open_reverse_pr("fastmcp_server", "provider/", "x/y", branch, 1, repo)
+    assert "push" in str(exc.value)
+    assert "identity" not in str(exc.value).lower()
