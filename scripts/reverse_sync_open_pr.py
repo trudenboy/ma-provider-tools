@@ -324,7 +324,13 @@ def open_reverse_pr(
         "-m",
         f"reverse-sync: port {UPSTREAM}#{pr_number}\n\n{trailer}",
     )
-    _git_mut(provider_dir, "push", "-u", "origin", branch, "--force-with-lease")
+    # Plain --force (not --force-with-lease): the fresh `--branch dev` clone has
+    # no remote-tracking ref for an existing reverse-sync/* branch, so a lease
+    # can't be evaluated and the push is rejected. These branches are bot-owned
+    # and regenerated deterministically; a force here only ever overwrites a
+    # prior FAILED attempt (once the PR opens, the PR is marked handled and the
+    # branch is never pushed again), so there is no human work to clobber.
+    _git_mut(provider_dir, "push", "-u", "--force", "origin", branch)
 
     labels = ["reverse-sync"] + (["needs-human"] if conflicts else [])
     pr_url = _create_draft_pr(
