@@ -142,3 +142,36 @@ def test_fetch_pr_diff_uses_combined_rest_diff(monkeypatch):
     # Must NOT use the per-commit `gh pr diff` form.
     assert not (cmd[:3] == ["gh", "pr", "diff"])
     assert out == "diff --git a/x b/x\n"
+
+
+def test_drop_maintainer_owned_strips_version_and_translations():
+    """VERSION and translations/en.json must be removed before apply, so the
+    opener's "maintainer-owned files NOT touched" promise holds."""
+    patch = (
+        "diff --git a/provider/VERSION b/provider/VERSION\n"
+        "--- a/provider/VERSION\n+++ b/provider/VERSION\n"
+        "@@ -1 +1 @@\n-1.0.0\n+1.0.1\n"
+        "diff --git a/provider/config.py b/provider/config.py\n"
+        "--- a/provider/config.py\n+++ b/provider/config.py\n"
+        "@@ -1 +1,2 @@\n x=1\n+y=2\n"
+        "diff --git a/provider/translations/en.json b/provider/translations/en.json\n"
+        "--- a/provider/translations/en.json\n+++ b/provider/translations/en.json\n"
+        "@@ -1 +1 @@\n-{}\n+{a}\n"
+        "diff --git a/provider/strings.json b/provider/strings.json\n"
+        "--- a/provider/strings.json\n+++ b/provider/strings.json\n"
+        "@@ -1 +1 @@\n-{}\n+{b}\n"
+    )
+    out = o._drop_maintainer_owned(patch)
+    assert "provider/VERSION" not in out
+    assert "provider/translations/en.json" not in out
+    # Genuine provider content is kept (strings.json is contributor-owned source):
+    assert "provider/config.py" in out
+    assert "provider/strings.json" in out
+
+
+def test_drop_maintainer_owned_noop_when_absent():
+    patch = (
+        "diff --git a/provider/api.py b/provider/api.py\n"
+        "--- a/provider/api.py\n+++ b/provider/api.py\n@@ -1 +1,2 @@\n a\n+b\n"
+    )
+    assert o._drop_maintainer_owned(patch) == patch

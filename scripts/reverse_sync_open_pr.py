@@ -18,6 +18,41 @@ import _transform as t  # noqa: E402
 
 UPSTREAM = "music-assistant/server"
 
+# Maintainer-owned files: never carried into a reverse PR (mirrors the
+# forward-sync guard's ignore-list). The PR body promises these are untouched,
+# so they must be stripped from the patch before it is applied.
+MAINTAINER_OWNED_SUFFIXES = ("VERSION", "translations/en.json")
+
+
+def _drop_maintainer_owned(patch_text: str) -> str:
+    """Remove diff sections targeting maintainer-owned files (VERSION, en.json).
+
+    The patch is already in provider-repo layout (post reverse_diff). Splits on
+    ``diff --git`` and drops any section whose target path ends with a
+    maintainer-owned suffix, so ``git apply`` can never modify those files.
+    """
+    sections: list[str] = []
+    cur: list[str] = []
+    for ln in patch_text.splitlines(keepends=True):
+        if ln.startswith("diff --git "):
+            if cur:
+                sections.append("".join(cur))
+            cur = [ln]
+        else:
+            cur.append(ln)
+    if cur:
+        sections.append("".join(cur))
+
+    kept = []
+    for sec in sections:
+        header = sec.splitlines()[0] if sec else ""
+        parts = header.split()
+        target = parts[3][2:] if len(parts) >= 4 and parts[3].startswith("b/") else ""
+        if any(target.endswith(s) for s in MAINTAINER_OWNED_SUFFIXES):
+            continue
+        kept.append(sec)
+    return "".join(kept)
+
 
 def build_branch(domain: str, pr_number: int) -> str:
     return f"reverse-sync/{domain}-pr{pr_number}"
@@ -131,7 +166,9 @@ def open_reverse_pr(
     }
 
     patch = _fetch_pr_diff(pr_number)
-    reversed_patch = t.reverse_diff(patch, domain, provider_path)
+    reversed_patch = _drop_maintainer_owned(
+        t.reverse_diff(patch, domain, provider_path)
+    )
     if not reversed_patch.strip():
         return {"skipped": True, "reason": "no provider-path changes"}
 
