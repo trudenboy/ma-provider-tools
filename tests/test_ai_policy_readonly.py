@@ -4,6 +4,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 REVERSE = [
     "reverse_sync_radar.py",
+    "reverse_sync_notify.py",
     "reverse_sync_open_pr.py",
     "check_upstream_ahead.py",
 ]
@@ -20,6 +21,6 @@ def test_no_writes_to_upstream():
             if verb in WRITE_VERBS:
                 # ensure UPSTREAM constant not used as --repo for this call:
                 window = text[m.start() : m.start() + 400]
-                assert "UPSTREAM" not in window, (
-                    f"{name}: write verb {verb!r} near UPSTREAM"
-                )
+                assert (
+                    "UPSTREAM" not in window and "music-assistant/server" not in window
+                ), f"{name}: write verb {verb!r} near an upstream-repo reference"
