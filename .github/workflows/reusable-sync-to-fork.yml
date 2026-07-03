@@ -166,11 +166,26 @@ jobs:
 
       - name: Format synced files with ruff
         run: |
-          pip install --quiet 'ruff<0.15'  # 0.15.x formatter emits invalid `except A, B:`
           cd ma-server
-          ruff format \
-            music_assistant/providers/${DOMAIN}/ \
-            tests/providers/${DOMAIN}/ 2>/dev/null || true
+          RUFF_TARGETS="music_assistant/providers/${DOMAIN}/"
+          [ -d "tests/providers/${DOMAIN}" ] && RUFF_TARGETS="$RUFF_TARGETS tests/providers/${DOMAIN}/"
+          if [[ "${{ inputs.target_branch }}" == upstream/* ]]; then
+            # upstream/<domain> feeds the draft PR against music-assistant/server,
+            # whose dev lint enforces rules (D213, RUF012, ...) that the provider
+            # repos' main-mirrored ruff.toml does not — a format-only pass leaves
+            # those violations in and paints the upstream PR red until the next
+            # upstream-pr.yml rebuild. Reproduce upstream's own pre-commit edits
+            # instead: full autofix with upstream's exact ruff pin (read from its
+            # pyproject.toml — a different ruff version resolves rules like D213
+            # differently). Mirrors the fix/format pass in upstream-pr.yml.j2;
+            # tests/test_ruff_pass_parity.py asserts the two stay in sync.
+            RUFF_REQ=$(grep -oE 'ruff==[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml | head -1)
+            pip install --quiet "${RUFF_REQ:-ruff}"
+            ruff check --fix --unsafe-fixes $RUFF_TARGETS || true
+          else
+            pip install --quiet 'ruff<0.15'  # 0.15.x formatter emits invalid `except A, B:`
+          fi
+          ruff format $RUFF_TARGETS 2>/dev/null || true
 
       - name: Sync VERSION file alongside manifest
         run: |
