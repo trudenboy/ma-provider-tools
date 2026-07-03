@@ -186,6 +186,21 @@ jobs:
             pip install --quiet 'ruff<0.15'  # 0.15.x formatter emits invalid `except A, B:`
           fi
           ruff format $RUFF_TARGETS 2>/dev/null || true
+          if [[ "${{ inputs.target_branch }}" == upstream/* ]]; then
+            # Regenerate the Lokalise English source (translations/en.json) from the
+            # synced strings.json so upstream's build_translations_source pre-commit
+            # hook finds no diff. Without this, the provider's strings.json reaches
+            # upstream but en.json still reflects the previous state, and the hook
+            # rewrites it during the upstream `lint` job → failure (observed on the
+            # fastmcp_server v0.13.3 sync). Mirrors the block in upstream-pr.yml.j2;
+            # tests/test_ruff_pass_parity.py pins the canonical lines of both.
+            if [ -f scripts/build_translations.py ]; then
+              python3 -m pip install --quiet --break-system-packages orjson 2>/dev/null \
+                || python3 -m pip install --quiet orjson 2>/dev/null || true
+              python3 -m scripts.build_translations \
+                || python3 scripts/build_translations.py || true
+            fi
+          fi
 
       - name: Sync VERSION file alongside manifest
         run: |

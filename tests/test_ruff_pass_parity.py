@@ -18,12 +18,18 @@ FILES = [
 ]
 
 # The canonical lines of the pass. Both files must contain each of them
-# verbatim: the pin extraction from upstream's pyproject.toml and the full
-# autofix (``--unsafe-fixes`` covers the D213 / RUF012 class of fixes).
+# verbatim (ignoring indentation): the pin extraction from upstream's
+# pyproject.toml, the full autofix (``--unsafe-fixes`` covers the D213 /
+# RUF012 class of fixes), and the translations/en.json regeneration that keeps
+# upstream's build_translations_source pre-commit hook diff-free.
 CANON_LINES = [
     r"RUFF_REQ=$(grep -oE 'ruff==[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml | head -1)",
     "ruff check --fix --unsafe-fixes $RUFF_TARGETS || true",
     "ruff format $RUFF_TARGETS",
+    "if [ -f scripts/build_translations.py ]; then",
+    "|| python3 -m pip install --quiet orjson 2>/dev/null || true",
+    "python3 -m scripts.build_translations \\",
+    "|| python3 scripts/build_translations.py || true",
 ]
 
 
