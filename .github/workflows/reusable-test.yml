@@ -109,7 +109,13 @@ jobs:
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]"
+          # MA core (webserver auth helpers) imports hass_client unconditionally,
+          # but the dep is only declared in the hass provider manifest /
+          # requirements_all.txt. The lean path skips requirements_all.txt, so
+          # pull the hass-client pin from there until upstream declares it in
+          # the core dependencies.
+          uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]" \
+            $(grep -i '^hass-client' requirements_all.txt || true)
       - name: Install provider dependencies
         working-directory: ${{ github.workspace }}
         run: |
@@ -372,7 +378,13 @@ jobs:
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]"
+          # MA core (webserver auth helpers) imports hass_client unconditionally,
+          # but the dep is only declared in the hass provider manifest /
+          # requirements_all.txt. The lean path skips requirements_all.txt, so
+          # pull the hass-client pin from there until upstream declares it in
+          # the core dependencies.
+          uv pip install --index-strategy unsafe-best-match -e "." -e ".[test]" \
+            $(grep -i '^hass-client' requirements_all.txt || true)
       - name: Install provider dependencies
         working-directory: ${{ github.workspace }}
         run: |
