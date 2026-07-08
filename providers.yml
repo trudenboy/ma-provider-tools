@@ -7,6 +7,7 @@ providers:
     provider_path: provider/
     provider_type: music_provider
     locale: ru
+    python_version: "3.14"
     runtime_dependencies:
       - "ya-passport-auth==1.4.1"
       - "yandex-music==3.0.0"
