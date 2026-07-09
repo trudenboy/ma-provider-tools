@@ -177,16 +177,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - uses: actions/checkout@v4
-        with:
-          repository: music-assistant/server
-          ref: dev
-          path: ma-server
-          fetch-depth: 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           python-version: "3.14"
+      # Auto-fix + commit run BEFORE the ma-server checkout lands in the
+      # workspace: `ruff --fix .` must never touch the upstream clone, and a
+      # provider repo that tracks an `ma-server` gitlink must never get that
+      # pointer (or unstageable submodule content) swept into the auto-fix
+      # commit by `git add`.
       - name: Auto-fix lint issues
         run: |
           # ruff 0.15.x's formatter rewrites `except (A, B):` into the invalid
@@ -203,13 +202,19 @@ jobs:
       - name: Commit auto-fixes
         if: ${{ inputs.autofix }}
         run: |
-          if ! git diff --quiet; then
+          if ! git diff --quiet -- '*.py' '*.pyi'; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
+            git add -- '*.py' '*.pyi'
             git commit -m "style: auto-fix ruff"
             git push
           fi
+      - uses: actions/checkout@v4
+        with:
+          repository: music-assistant/server
+          ref: dev
+          path: ma-server
+          fetch-depth: 1
       - name: Install dependencies
         working-directory: ma-server
         run: |
