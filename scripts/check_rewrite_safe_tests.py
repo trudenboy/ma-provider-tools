@@ -28,12 +28,22 @@ PR nobody can edit directly:
    parenthesised form, and the trailing ``# noqa`` detaches — so PLC0415 fires
    upstream. Use a file-level ``# ruff: noqa: PLC0415`` instead.
 
+3. **Unguarded filesystem references to the sibling ``provider/`` directory in
+   test code** (e.g. ``Path(__file__).parent.parent / "provider"`` fed into
+   ``spec_from_file_location`` for working-tree aliasing). The path exists in
+   the provider repo but NOT in the upstream layout, where the synced tests
+   live in ``tests/providers/<domain>/`` next to no ``provider/`` sibling —
+   dereferencing it kills collection with ``FileNotFoundError``. Any name
+   bound to such a path must be guarded with ``.is_dir()`` / ``.exists()`` /
+   ``.is_file()`` so the logic no-ops upstream.
+
 This guard runs inside the provider repo's working directory and scans
 ``provider/`` and ``tests/``. Exits 1 if any unsafe pattern is found.
 """
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 import sys
@@ -109,10 +119,59 @@ def _iter_python_files(root: Path) -> list[Path]:
     return sorted(p for p in root.rglob("*.py") if p.is_file())
 
 
+_GUARD_ATTRS = frozenset({"exists", "is_dir", "is_file"})
+
+
+def _mentions_provider_path(node: ast.AST) -> bool:
+    """True when *node* combines ``__file__`` with a ``"provider"`` segment."""
+    has_file = any(
+        isinstance(n, ast.Name) and n.id == "__file__" for n in ast.walk(node)
+    )
+    has_provider = any(
+        isinstance(n, ast.Constant) and n.value == "provider" for n in ast.walk(node)
+    )
+    return has_file and has_provider
+
+
+def _provider_path_guard_issues(path: Path, text: str) -> list[str]:
+    """Rule C: sibling-``provider/`` paths in tests must be existence-guarded."""
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return []
+    bound: dict[str, int] = {}
+    guarded: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and _mentions_provider_path(node.value):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    bound.setdefault(target.id, node.lineno)
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in _GUARD_ATTRS
+            and isinstance(node.func.value, ast.Name)
+        ):
+            guarded.add(node.func.value.id)
+    return [
+        f"{path}:{lineno}: `{name}` points at the sibling `provider/` directory, "
+        "which does not exist in the upstream layout (synced tests live in "
+        "`tests/providers/<domain>/`) — dereferencing it there kills collection "
+        "with FileNotFoundError. Guard the logic with "
+        f"`if {name}.is_dir(): ...` so it no-ops upstream."
+        for name, lineno in sorted(bound.items(), key=lambda kv: kv[1])
+        if name not in guarded
+    ]
+
+
 def _scan_file(path: Path, *, domain: str, line_length: int) -> list[str]:
     """Return a list of human-readable issue strings for one file."""
     issues: list[str] = []
     text = path.read_text(encoding="utf-8")
+    # Rule C applies to test code only: it is what gets rsynced into
+    # tests/providers/<domain>/ upstream (the repo-root conftest.py is not).
+    if path.parts and path.parts[0] == "tests":
+        issues.extend(_provider_path_guard_issues(path, text))
     for lineno, line in enumerate(text.splitlines(), start=1):
         if _IMPORT_PROVIDER_RE.match(line):
             issues.append(

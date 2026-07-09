@@ -135,3 +135,75 @@ class TestScanFile:
         )
         issues = g._scan_file(f, domain=DOMAIN, line_length=LINE_LENGTH)
         assert issues == []
+
+
+# ---------------------------------------------------------------------------
+# Rule C: sibling-provider/ paths in tests must be existence-guarded
+# ---------------------------------------------------------------------------
+
+_UNGUARDED_CONFTEST = """
+import importlib.util
+import sys
+from pathlib import Path
+
+_PROVIDER_DIR = Path(__file__).resolve().parent.parent / "provider"
+_spec = importlib.util.spec_from_file_location("pkg", _PROVIDER_DIR / "__init__.py")
+"""
+
+_GUARDED_CONFTEST = """
+import importlib.util
+import sys
+from pathlib import Path
+
+_PROVIDER_DIR = Path(__file__).resolve().parent.parent / "provider"
+if _PROVIDER_DIR.is_dir():
+    _spec = importlib.util.spec_from_file_location("pkg", _PROVIDER_DIR / "__init__.py")
+"""
+
+
+class TestProviderPathGuard:
+    def test_unguarded_sibling_path_flagged(self):
+        issues = g._provider_path_guard_issues(
+            Path("tests/conftest.py"), _UNGUARDED_CONFTEST
+        )
+        assert len(issues) == 1
+        assert "_PROVIDER_DIR" in issues[0]
+        assert "is_dir()" in issues[0]
+
+    def test_guarded_sibling_path_passes(self):
+        assert (
+            g._provider_path_guard_issues(Path("tests/conftest.py"), _GUARDED_CONFTEST)
+            == []
+        )
+
+    def test_exists_guard_accepted(self):
+        code = _UNGUARDED_CONFTEST + "\nprint(_PROVIDER_DIR.exists())\n"
+        assert g._provider_path_guard_issues(Path("tests/conftest.py"), code) == []
+
+    def test_unrelated_paths_ignored(self):
+        code = (
+            "from pathlib import Path\n"
+            'FIXTURES = Path(__file__).parent / "fixtures"\n'
+            'OTHER = Path("provider")\n'
+        )
+        assert g._provider_path_guard_issues(Path("tests/test_x.py"), code) == []
+
+    def test_rule_c_only_applies_to_tests_root(self, provider_root: Path):
+        # A provider/-rooted file with the same pattern is not test code and
+        # is not synced with the tests rsync — must not be flagged.
+        target = provider_root / "provider" / "helper.py"
+        target.write_text(_UNGUARDED_CONFTEST, encoding="utf-8")
+        issues = g._scan_file(
+            Path("provider/helper.py"), domain="test_provider", line_length=100
+        )
+        assert issues == []
+
+    def test_scan_file_flags_tests_conftest(self, provider_root: Path):
+        tests_dir = provider_root / "tests"
+        tests_dir.mkdir()
+        target = tests_dir / "conftest.py"
+        target.write_text(_UNGUARDED_CONFTEST, encoding="utf-8")
+        issues = g._scan_file(
+            Path("tests/conftest.py"), domain="test_provider", line_length=100
+        )
+        assert len(issues) == 1
