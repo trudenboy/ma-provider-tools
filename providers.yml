@@ -9,7 +9,7 @@ providers:
     locale: ru
     python_version: "3.14"
     runtime_dependencies:
-      - "ya-passport-auth==1.5.0"
+      - "ya-passport-auth[ma]==1.6.0"
       - "yandex-music==3.0.0"
     codespell_ignore_words: "provid,hass,followings,childs,explict,additionals,commitish,nam,"
     service_url: https://music.yandex.ru
@@ -207,7 +207,7 @@ providers:
     locale: ru
     python_version: "3.14"
     runtime_dependencies:
-      - "ya-passport-auth==1.5.0"
+      - "ya-passport-auth[ma]==1.6.0"
     service_url: https://yandex.ru/alice/station
     auth_method: "Yandex X-Token"
     max_quality: "FLAC (lossless)"
@@ -249,7 +249,7 @@ providers:
     locale: ru
     python_version: "3.14"
     runtime_dependencies:
-      - "ya-passport-auth==1.5.0"
+      - "ya-passport-auth[ma]==1.6.0"
       - "ya-dialogs-api>=2.0.0"
     codespell_ignore_words: "hass,"
     service_url: https://yandex.ru/dev/dialogs/smart-home/
@@ -293,7 +293,7 @@ providers:
     locale: ru
     python_version: "3.14"
     runtime_dependencies:
-      - "ya-passport-auth==1.5.0"
+      - "ya-passport-auth[ma]==1.6.0"
       - "ya-dialogs-api>=2.0.0"
     # `sting` is the singer's name (Стинг) referenced in tts_dictionary.py / CHANGELOG, not a typo of `string`.
     codespell_ignore_words: "hass,sting,"
@@ -339,7 +339,7 @@ providers:
     locale: ru
     python_version: "3.14"
     runtime_dependencies:
-      - "ya-passport-auth==1.5.0"
+      - "ya-passport-auth[ma]==1.6.0"
     extra_test_dependencies:
       - "aiohttp>=3.9.0"
     service_url: https://music.yandex.ru
