@@ -216,6 +216,35 @@ jobs:
           cd ma-server
           if [ -f scripts/gen_requirements_all.py ]; then
             python3 scripts/gen_requirements_all.py
+            # The generator dedups first-pin-wins across all inlined
+            # manifests — verify this provider's own requirements survived,
+            # otherwise a sibling's conflicting pin ships a broken branch.
+            python3 - "music_assistant/providers/${DOMAIN}/manifest.json" << 'REQCHECK'
+          import json
+          import re
+          import sys
+
+          wanted = json.load(open(sys.argv[1])).get("requirements", [])
+          have = open("requirements_all.txt").read().splitlines()
+
+          def base(spec):
+              return re.split(r"[\[=<>~!]", spec, 1)[0].strip().lower()
+
+          missing = [req for req in wanted if req not in have]
+          if missing:
+              print(
+                  "::error::requirements_all.txt lost this provider's pin(s) "
+                  "to a conflicting sibling manifest (dedup is first-pin-wins):"
+              )
+              for req in missing:
+                  clashes = [line for line in have if base(line) == base(req)]
+                  print(
+                      f"::error::  manifest wants '{req}' but requirements_all.txt "
+                      f"carries {clashes or 'no entry'} — align the sibling "
+                      "providers' manifests on one version of the package"
+                  )
+              sys.exit(1)
+          REQCHECK
           fi
 
       - name: Commit and push
