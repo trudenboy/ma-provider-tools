@@ -386,32 +386,12 @@ def test_already_present_ignores_blank_added_lines(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# _create_draft_pr label fallback (issue: labels missing in provider repo)
+# _create_draft_pr labelling (issue #114: needs-human dropped when any label
+# is missing in the provider repo — labels must be applied independently)
 # ---------------------------------------------------------------------------
 
 
-def test_create_draft_pr_falls_back_without_labels(monkeypatch):
-    calls = []
-
-    def fake_run(cmd, **kw):
-        calls.append(cmd)
-        if "--label" in cmd:
-            return sp.CompletedProcess(
-                cmd, 1, "", "could not add label: 'reverse-sync' not found"
-            )
-        return sp.CompletedProcess(cmd, 0, "https://github.com/x/y/pull/5\n", "")
-
-    monkeypatch.setattr(o, "_run", fake_run)
-    url = o._create_draft_pr(
-        "x/y", "dev", "br", "title", "body", ["reverse-sync", "needs-human"]
-    )
-    assert url == "https://github.com/x/y/pull/5"
-    assert len(calls) == 2  # labelled attempt failed, then label-free retry
-    assert "--label" in calls[0]
-    assert "--label" not in calls[1]
-
-
-def test_create_draft_pr_succeeds_first_try_with_labels(monkeypatch):
+def test_create_draft_pr_creates_unlabelled_then_adds_each_label(monkeypatch):
     calls = []
 
     def fake_run(cmd, **kw):
@@ -419,13 +399,55 @@ def test_create_draft_pr_succeeds_first_try_with_labels(monkeypatch):
         return sp.CompletedProcess(cmd, 0, "https://github.com/x/y/pull/9\n", "")
 
     monkeypatch.setattr(o, "_run", fake_run)
-    url = o._create_draft_pr("x/y", "dev", "br", "t", "b", ["reverse-sync"])
+    url = o._create_draft_pr(
+        "x/y", "dev", "br", "t", "b", ["reverse-sync", "needs-human"]
+    )
     assert url == "https://github.com/x/y/pull/9"
-    assert len(calls) == 1  # no retry needed
-    assert "--label" in calls[0]
+    assert "--label" not in calls[0]  # PR creation never depends on labels
+    add_label_calls = [c for c in calls[1:] if "--add-label" in c]
+    assert len(add_label_calls) == 2
+    assert any("reverse-sync" in c for c in add_label_calls)
+    assert any("needs-human" in c for c in add_label_calls)
 
 
-def test_create_draft_pr_raises_when_both_attempts_fail(monkeypatch):
+def test_create_draft_pr_missing_label_created_then_added(monkeypatch):
+    calls = []
+    failed_once = []
+
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        if "--add-label" in cmd and "needs-human" in cmd and not failed_once:
+            failed_once.append(True)
+            return sp.CompletedProcess(cmd, 1, "", "'needs-human' not found")
+        return sp.CompletedProcess(cmd, 0, "https://github.com/x/y/pull/5\n", "")
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    o._create_draft_pr("x/y", "dev", "br", "t", "b", ["needs-human"])
+    creates = [c for c in calls if c[:3] == ["gh", "label", "create"]]
+    assert len(creates) == 1 and "needs-human" in creates[0]
+    retries = [c for c in calls if "--add-label" in c]
+    assert len(retries) == 2  # failed add, then retry after label create
+
+
+def test_create_draft_pr_one_bad_label_does_not_drop_others(monkeypatch):
+    calls = []
+
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        if "needs-human" in cmd:
+            return sp.CompletedProcess(cmd, 1, "", "boom")
+        return sp.CompletedProcess(cmd, 0, "https://github.com/x/y/pull/5\n", "")
+
+    monkeypatch.setattr(o, "_run", fake_run)
+    url = o._create_draft_pr(
+        "x/y", "dev", "br", "t", "b", ["needs-human", "reverse-sync"]
+    )
+    assert url == "https://github.com/x/y/pull/5"  # PR survives label failure
+    ok_adds = [c for c in calls if "--add-label" in c and "reverse-sync" in c]
+    assert len(ok_adds) == 1  # the other label is still applied
+
+
+def test_create_draft_pr_raises_when_create_fails(monkeypatch):
     monkeypatch.setattr(
         o, "_run", lambda cmd, **kw: sp.CompletedProcess(cmd, 1, "", "boom")
     )

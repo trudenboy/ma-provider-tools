@@ -184,37 +184,80 @@ def _create_draft_pr(
 ) -> str:
     """Open a draft PR in the provider repo; return its URL.
 
-    Retries without labels if the labelled create fails — a provider repo may
-    not have the `reverse-sync` / `needs-human` labels yet, and the PR itself
-    matters far more than the advisory labels. Raises RuntimeError only if the
-    label-free attempt also fails.
+    The PR is created without labels, then each label is added independently
+    (issue #114): the old all-or-nothing `--label` fallback silently dropped
+    *every* label when any one was missing in the provider repo, so conflicted
+    reverse-syncs arrived without `needs-human`. A missing label is created
+    with its canonical color/description (mirroring labels.yml.j2) and the add
+    retried; a label that still fails is warned about and skipped — the PR
+    matters far more than the advisory labels.
     """
-    base = [
-        "gh",
-        "pr",
-        "create",
-        "--repo",
-        provider_repo,
-        "--base",
-        default_branch,
-        "--head",
-        branch,
-        "--draft",
-        "--title",
-        title,
-        "--body",
-        body,
-    ]
-    label_args = [arg for label in labels for arg in ("--label", label)]
-    res = _run(base + label_args, capture_output=True)
-    if res.returncode != 0 and label_args:
-        # Labels likely absent in the provider repo — retry without them.
-        res = _run(base, capture_output=True)
+    res = _run(
+        [
+            "gh",
+            "pr",
+            "create",
+            "--repo",
+            provider_repo,
+            "--base",
+            default_branch,
+            "--head",
+            branch,
+            "--draft",
+            "--title",
+            title,
+            "--body",
+            body,
+        ],
+        capture_output=True,
+    )
     if res.returncode != 0:
         raise RuntimeError(
             f"gh pr create failed (rc={res.returncode}): {res.stderr.strip()}"
         )
-    return res.stdout.strip()
+    url = res.stdout.strip()
+    for label in labels:
+        _add_label(provider_repo, url, label)
+    return url
+
+
+# Canonical colors/descriptions, kept in lockstep with wrappers/labels.yml.j2
+# so an on-the-fly created label matches the distributed one.
+_LABEL_SPECS = {
+    "reverse-sync": (
+        "0e8a16",
+        "PR auto-opened by the reverse-sync radar from an upstream contribution",
+    ),
+    "needs-human": (
+        "d93f0b",
+        "Reverse-sync applied with conflicts/.rej — needs manual resolution",
+    ),
+}
+
+
+def _add_label(provider_repo: str, pr_url: str, label: str) -> None:
+    """Best-effort: add one label, creating it in the repo if missing."""
+    add = ["gh", "pr", "edit", pr_url, "--repo", provider_repo, "--add-label", label]
+    if _run(add, capture_output=True).returncode == 0:
+        return
+    color, desc = _LABEL_SPECS.get(label, ("ededed", ""))
+    _run(
+        [
+            "gh",
+            "label",
+            "create",
+            label,
+            "--repo",
+            provider_repo,
+            "--color",
+            color,
+            "--description",
+            desc,
+        ],
+        capture_output=True,
+    )
+    if _run(add, capture_output=True).returncode != 0:
+        print(f"::warning::could not apply label '{label}' to {pr_url}", flush=True)
 
 
 def _fetch_upstream_base(provider_dir: str, pr_number: int) -> None:
