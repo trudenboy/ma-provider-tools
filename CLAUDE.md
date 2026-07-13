@@ -19,6 +19,7 @@ Changes to `wrappers/*.j2` or `providers.yml` trigger `distribute.yml`, which au
 | `scripts/distribute.py` | Renders Jinja2 templates and creates PRs in provider repos |
 | `wrappers/*.j2` | Templates rendered once per provider; use `{% raw %}...{% endraw %}` around GitHub Actions expression syntax (`${{ }}`) to prevent Jinja2 from interpreting it |
 | `.github/workflows/reusable-*.yml` | Shared logic called by provider repos via `workflow_call` |
+| `wrappers/scripts/check_method_order.py.j2` | Vendored mirror of upstream's method-order rule (private methods last), distributed into each provider's pre-commit gate and pinned by `check_config_sync.py` (issue #115) |
 | `.github/workflows/distribute.yml` | Runs `distribute.py` on push to `main` when wrappers or registry changes |
 | `scripts/reverse_sync_*.py`, `scripts/check_upstream_ahead.py`, `scripts/_transform.py` | Reverse-sync channel (see "Reverse-sync Channel" below) |
 | `state/reverse-sync.json` | Committed radar progress state (per-domain `handled_prs` / cursor / anchor) |
@@ -65,7 +66,7 @@ push dev → prepare → lint+test (gate) → release (if version changed) → s
 **Stages:**
 1. **prepare** — reads version from `VERSION` file, determines channel (PEP 440: `1.2.0` = stable, `1.2.0b1` = beta), checks if version changed vs latest tag
 2. **gate** — calls `reusable-test.yml` (lint + test); blocks pipeline on failure
-3. **release** — conditional: only runs if version in `VERSION` file differs from latest tag. Creates tag, GitHub Release (prerelease for beta), updates CHANGELOG (stable only)
+3. **release** — conditional: only runs if version in `VERSION` file differs from latest tag. Creates tag and GitHub Release (prerelease for beta). CHANGELOG is maintained by hand in the provider repos (Changelog Discipline) — there is no automated write-back (issue #112: a direct push can't satisfy the required version-guard check)
 4. **sync** — routes based on channel:
    - **beta** → `integration/dev` in `trudenboy/ma-server`
    - **stable** → `integration/dev` + parallel `upstream/[domain]` (e.g. `upstream/yandex_music`)
@@ -166,6 +167,15 @@ in `music-assistant/server`; the radar detects merged ones and auto-opens a
 `rsync --delete`: if upstream is ahead of the provider repo on a non-ignored path
 (`VERSION` / `translations/en.json` ignored) the job fails closed (also fails on
 an empty domain). Override with the `ack_upstream_ahead=true` dispatch input.
+
+The guard is direction-aware (issues #104/#113): a differing file is only
+"upstream ahead" if upstream's copy matches **none** of the provider repo's
+recent release-tag states (`drop_provider_ahead`, newest-first tag walk, capped
+at `--max-baseline-tags`, default 30; each tag snapshot goes through the same
+boundary transforms). Upstream merely lagging behind our releases — every
+normal release with not-yet-upstreamed work — no longer trips the guard. No
+tags / no git metadata → fail-closed (every difference flagged); the workflow
+checks out the provider repo with `fetch-depth: 0` so tags are present.
 
 The path/import transform (`_transform.py`) is the single source of truth: it
 canonicalizes the seven `provider.` import shapes (`from provider.` /

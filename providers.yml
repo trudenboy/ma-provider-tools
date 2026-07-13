@@ -501,6 +501,7 @@ providers:
       - setup.sh.j2
       - pyproject.toml.j2
       - .pre-commit-config.yaml.j2
+      - scripts/check_method_order.py.j2
       - sync-kion-from-yandex.yml.j2
       - LICENSE.j2
       - docs/configuration.md.j2

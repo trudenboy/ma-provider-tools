@@ -92,6 +92,9 @@ ALL_WRAPPER_FILES = [
     ("setup.sh.j2", "scripts/setup.sh"),
     ("pyproject.toml.j2", "pyproject.toml"),
     (".pre-commit-config.yaml.j2", ".pre-commit-config.yaml"),
+    # Vendored upstream method-order rule (issue #115) — runs in the local
+    # pre-commit gate so it can't first surface at the upstream PR
+    ("scripts/check_method_order.py.j2", "scripts/check_method_order.py"),
     # Docker dev environment
     ("docker-compose.dev.yml.j2", "docker-compose.dev.yml"),
     ("scripts/docker-init.sh.j2", "scripts/docker-init.sh"),

@@ -40,7 +40,7 @@ jobs:
           python3 .ma-provider-tools/scripts/render_for_provider.py \
             --domain "${{ inputs.domain }}" \
             --out-dir _expected \
-            ruff.toml.j2 pyproject.toml.j2
+            ruff.toml.j2 pyproject.toml.j2 scripts/check_method_order.py.j2
 
       - name: Compare against templates
         run: python3 .ma-provider-tools/scripts/check_config_sync.py

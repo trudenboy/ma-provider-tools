@@ -26,12 +26,17 @@ WRAPPERS = REPO_ROOT / "wrappers"
 PROVIDERS_FILE = REPO_ROOT / "providers.yml"
 
 
-def build_context(domain: str) -> dict:
+def _provider_entry(domain: str) -> tuple[dict, list[dict]]:
     registry = yaml.safe_load(PROVIDERS_FILE.read_text())
     providers = registry["providers"]
     provider = next((p for p in providers if p["domain"] == domain), None)
     if provider is None:
         raise SystemExit(f"Provider {domain!r} not found in providers.yml")
+    return provider, providers
+
+
+def build_context(domain: str) -> dict:
+    provider, providers = _provider_entry(domain)
     return {
         "domain": provider["domain"],
         "display_name": provider.get("display_name", ""),
@@ -75,12 +80,19 @@ def main() -> int:
         keep_trailing_newline=True,
     )
     ctx = build_context(args.domain)
+    provider, _ = _provider_entry(args.domain)
+    skipped = set(provider.get("skip_wrappers", []))
 
     for tpl in args.templates:
+        if tpl in skipped:
+            print(f"Skipped {tpl} (skip_wrappers for {args.domain})")
+            continue
         rendered = env.get_template(tpl).render(**ctx)
         out_name = tpl[:-3] if tpl.endswith(".j2") else tpl
-        (out_dir / out_name).write_text(rendered)
-        print(f"Rendered {tpl} -> {out_dir / out_name}")
+        out_path = out_dir / out_name
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(rendered)
+        print(f"Rendered {tpl} -> {out_path}")
     return 0
 
 
