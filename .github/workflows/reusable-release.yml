@@ -88,44 +88,10 @@ jobs:
           generateReleaseNotes: true
           prerelease: ${{ steps.version-info.outputs.prerelease == 'true' || inputs.prerelease }}
 
-      - name: Update CHANGELOG.md
-        if: steps.version-info.outputs.is_beta != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ inputs.version }}
-        run: |
-          PREV_TAG=$(git tag --sort=-version:refname \
-            | grep -E '^v[0-9]' \
-            | grep -v "^v${VERSION}$" \
-            | head -1)
-
-          if [ -n "$PREV_TAG" ]; then
-            git log "${PREV_TAG}..v${VERSION}" \
-              --pretty=format:"- %s (\`%h\`)" \
-              --no-merges > /tmp/release_notes.txt
-          else
-            git log "v${VERSION}" \
-              --pretty=format:"- %s (\`%h\`)" \
-              --no-merges > /tmp/release_notes.txt
-          fi
-
-          if [ ! -s /tmp/release_notes.txt ]; then
-            echo "No changes." > /tmp/release_notes.txt
-          fi
-
-          gh api repos/trudenboy/ma-provider-tools/contents/scripts/update_changelog.py \
-            --jq '.content' | base64 -d > /tmp/update_changelog.py
-
-          python3 /tmp/update_changelog.py \
-            "$VERSION" "$(date -u +%Y-%m-%d)" /tmp/release_notes.txt
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git diff --cached --quiet && echo "No changelog changes to commit" || {
-            git commit -m "chore: update changelog for v${VERSION} [skip ci]"
-            git push
-          }
+      # CHANGELOG write-back removed (issue #112): a direct push to the
+      # protected branch can never satisfy the required version-guard check,
+      # and provider repos maintain `## [X.Y.Z]` blocks by hand per the
+      # Changelog Discipline section of their CLAUDE.md.
 
       - name: Trigger sync to fork
         if: ${{ inputs.skip_sync != true }}

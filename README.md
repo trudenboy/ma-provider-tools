@@ -126,7 +126,6 @@ scripts/
   update_ma_version_badges.py          ← writes public/badges/<domain>-{stable,beta}.json
   dev-workspace.py                     ← shared dev workspace (multi-provider)
   generate_dashboard.py                ← generates provider dashboard data
-  update_changelog.py                  ← automates changelog entries for releases
   check_package_safety.py              ← dependency safety checks
   parse_manifest_deps.py               ← parses provider manifest dependencies
 providers.yml                          ← registry: all providers, their repos and config
@@ -279,7 +278,6 @@ scripts/
   update_ma_version_badges.py          ← пишет public/badges/<domain>-{stable,beta}.json
   dev-workspace.py                     ← общее dev-окружение (мульти-провайдер)
   generate_dashboard.py                ← генерирует данные для дашборда провайдеров
-  update_changelog.py                  ← автоматизирует записи changelog при релизах
   check_package_safety.py              ← проверка безопасности зависимостей
   parse_manifest_deps.py               ← парсинг зависимостей из манифеста провайдера
 providers.yml                          ← реестр: все провайдеры, их репозитории и конфигурация
