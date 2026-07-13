@@ -262,6 +262,77 @@ def transformed_hashes(
     return out
 
 
+def _tag_list(provider_dir: str) -> list[str]:
+    res = subprocess.run(
+        ["git", "-C", provider_dir, "tag", "--sort=-version:refname", "--list", "v*"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if res.returncode != 0:
+        return []
+    return [t for t in res.stdout.split() if t]
+
+
+def _file_at_ref(provider_dir: str, ref: str, rel: str) -> bytes | None:
+    res = subprocess.run(
+        ["git", "-C", provider_dir, "show", f"{ref}:{rel}"],
+        capture_output=True,
+        check=False,
+    )
+    return res.stdout if res.returncode == 0 else None
+
+
+def drop_provider_ahead(
+    ahead: list[str],
+    upstream_files: dict[str, str],
+    provider_dir: str,
+    domain: str,
+    provider_path: str,
+    ruff_runner: RuffRunner | None,
+    max_tags: int = 30,
+) -> list[str]:
+    """Drop files where upstream merely lags behind a past provider release.
+
+    A working-tree diff cannot tell direction (issues #104/#113): the provider
+    repo being ahead — every normal release — used to trip the guard exactly
+    like a genuine contributor edit. A file stays flagged only if upstream's
+    copy matches *none* of the last ``max_tags`` release states (each snapshot
+    pushed through the same boundary transforms). No tags / no git metadata →
+    nothing is dropped (fail-closed).
+    """
+    remaining = set(ahead)
+    for tag in _tag_list(provider_dir)[:max_tags]:
+        if not remaining:
+            break
+        with tempfile.TemporaryDirectory(prefix="baseline-") as snap:
+            subset: dict[str, str] = {}
+            for up_path, up_hash in upstream_files.items():
+                rel = t.reverse_path(up_path, domain, provider_path)
+                if rel not in remaining:
+                    continue
+                subset[up_path] = up_hash
+                data = _file_at_ref(provider_dir, tag, rel)
+                if data is None:
+                    continue
+                dest = os.path.join(snap, rel)
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                with open(dest, "wb") as fh:
+                    fh.write(data)
+            hashes = transformed_hashes(
+                subset, snap, domain, provider_path, ruff_runner
+            )
+        still = set(diff_files(subset, hashes, domain, provider_path))
+        for rel in sorted(remaining - still):
+            print(
+                f"::notice::{rel}: upstream matches provider release {tag} "
+                "(provider repo is ahead — not blocking).",
+                file=sys.stderr,
+            )
+        remaining &= still
+    return sorted(remaining)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--domain", required=True)
@@ -275,9 +346,22 @@ def main() -> int:
         action="store_true",
         help="compare raw file hashes without the boundary transforms",
     )
+    ap.add_argument(
+        "--no-tag-walk",
+        action="store_true",
+        help="treat any difference as upstream-ahead without checking whether "
+        "upstream merely matches an older provider release",
+    )
+    ap.add_argument(
+        "--max-baseline-tags",
+        type=int,
+        default=30,
+        help="how many release tags (newest first) to check in the tag walk",
+    )
     args = ap.parse_args()
 
     upstream = _list_upstream_tree(args.domain, args.upstream_ref)
+    runner: RuffRunner | None = None
     if args.no_transform:
         provider: dict[str, str] = {}
         for up_path in upstream:
@@ -288,7 +372,6 @@ def main() -> int:
             if sha is not None:
                 provider[rel] = sha
     else:
-        runner: RuffRunner | None = None
         try:
             runner = default_ruff_runner(_fetch_upstream_pyproject(args.upstream_ref))
         except Exception as exc:  # noqa: BLE001 -- degrade, never skip the guard
@@ -302,6 +385,16 @@ def main() -> int:
         )
 
     ahead = diff_files(upstream, provider, args.domain, args.provider_path)
+    if ahead and not args.no_tag_walk:
+        ahead = drop_provider_ahead(
+            ahead,
+            upstream,
+            args.provider_dir,
+            args.domain,
+            args.provider_path,
+            runner,
+            args.max_baseline_tags,
+        )
     if ahead:
         print("::warning::Upstream is ahead of the provider repo on:", file=sys.stderr)
         for f in ahead:

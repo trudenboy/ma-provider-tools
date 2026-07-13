@@ -43,6 +43,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: provider-repo
+          # Full history + tags: the upstream-ahead guard walks release tags
+          # to tell "provider repo is ahead" from "upstream is ahead"
+          # (issues #104/#113). Without tags it degrades to flagging every
+          # difference (fail-closed).
+          fetch-depth: 0
 
       - name: Resolve version tag
         id: tag

@@ -1,3 +1,4 @@
+import subprocess
 import sys
 from pathlib import Path
 
@@ -156,3 +157,132 @@ def test_ruff_pin_extracted_from_pyproject() -> None:
     text = 'test = [\n  "ruff==0.15.6",\n]\n'
     assert g._ruff_pin(text) == "ruff==0.15.6"
     assert g._ruff_pin("no pin here") is None
+
+
+# ── direction-aware tag walk (issues #104 / #113) ───────────────────────────
+#
+# A diff against the working tree cannot tell WHO is ahead. A file is only
+# genuinely "upstream ahead" if upstream's copy matches none of our historical
+# release states — otherwise upstream simply lags behind the provider repo,
+# which is exactly what sync-to-fork exists to fix and must not block.
+
+
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+
+def _repo(tmp_path: Path) -> Path:
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "t")
+    return tmp_path
+
+
+def _commit_tag(root: Path, tag: str) -> None:
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "--allow-empty", "-m", tag)
+    _git(root, "tag", tag)
+
+
+def test_tag_walk_drops_file_matching_previous_release(tmp_path: Path) -> None:
+    """Upstream == our v1.0.0 state, working tree moved on → not ahead."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "OLD\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "NEW LOCAL WORK\n")
+    up = {ROOT + "api.py": _blob("OLD\n")}
+    out = g.drop_provider_ahead(
+        ["provider/api.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == []
+
+
+def test_tag_walk_keeps_contributor_edit(tmp_path: Path) -> None:
+    """Upstream matches no historical release → genuine contributor change."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "OLD\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "NEW LOCAL WORK\n")
+    up = {ROOT + "api.py": _blob("CONTRIBUTOR EDIT\n")}
+    out = g.drop_provider_ahead(
+        ["provider/api.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == ["provider/api.py"]
+
+
+def test_tag_walk_matches_release_several_tags_back(tmp_path: Path) -> None:
+    """Upstream lagging several releases behind still counts as ours."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "V1 CONTENT\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "V2 CONTENT\n")
+    _commit_tag(tmp_path, "v1.1.0")
+    _write(tmp_path, "provider/api.py", "V3 CONTENT\n")
+    up = {ROOT + "api.py": _blob("V1 CONTENT\n")}
+    out = g.drop_provider_ahead(
+        ["provider/api.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == []
+
+
+def test_tag_walk_new_upstream_file_stays_flagged(tmp_path: Path) -> None:
+    """A file that never existed in any release is a contribution."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "x\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    up = {ROOT + "feature.py": _blob("contributed\n")}
+    out = g.drop_provider_ahead(
+        ["provider/feature.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == ["provider/feature.py"]
+
+
+def test_tag_walk_locally_deleted_file_not_ahead(tmp_path: Path) -> None:
+    """We deleted a file since the last release; upstream still has our old
+    copy → provider repo is ahead, not upstream."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/gone.py", "SHIPPED\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    (tmp_path / "provider/gone.py").unlink()
+    up = {ROOT + "gone.py": _blob("SHIPPED\n")}
+    out = g.drop_provider_ahead(
+        ["provider/gone.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == []
+
+
+def test_tag_walk_applies_transform_to_tag_snapshot(tmp_path: Path) -> None:
+    """Tag-state test files get the same forward import rewrite before
+    comparison, so a lagging-but-ours test file is not flagged."""
+    _repo(tmp_path)
+    _write(tmp_path, "tests/test_api.py", "from provider.tools import x\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "tests/test_api.py", "from provider.tools import y\n")
+    up_text = f"from music_assistant.providers.{DOMAIN}.tools import x\n"
+    up = {f"tests/providers/{DOMAIN}/test_api.py": _blob(up_text)}
+    out = g.drop_provider_ahead(
+        ["tests/test_api.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == []
+
+
+def test_tag_walk_without_tags_keeps_everything(tmp_path: Path) -> None:
+    """No release history → fail-closed, nothing is dropped."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "x\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "no tags")
+    up = {ROOT + "api.py": _blob("y\n")}
+    out = g.drop_provider_ahead(
+        ["provider/api.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == ["provider/api.py"]
+
+
+def test_tag_walk_not_a_git_repo_keeps_everything(tmp_path: Path) -> None:
+    """Guard degrades safely when the checkout has no git metadata."""
+    up = {ROOT + "api.py": _blob("y\n")}
+    out = g.drop_provider_ahead(
+        ["provider/api.py"], up, str(tmp_path), DOMAIN, PP, None
+    )
+    assert out == ["provider/api.py"]
