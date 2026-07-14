@@ -192,8 +192,12 @@ jobs:
           # `except A, B:`; constrain to the last known-good line until fixed
           # upstream. Keep in lockstep with the `ruff` pin in
           # wrappers/pyproject.toml.j2.
-          uvx --from 'ruff<0.15' ruff check --fix .
-          uvx --from 'ruff<0.15' ruff format .
+          # Scope to the provider's own code — never lint the helper
+          # scripts/ (e.g. the vendored check_method_order.py) or docs.
+          targets=( "${{ inputs.provider_path }}" )
+          [ -d tests ] && targets+=( tests )
+          uvx --from 'ruff<0.15' ruff check --fix "${targets[@]}"
+          uvx --from 'ruff<0.15' ruff format "${targets[@]}"
           # Safety net: never let a formatter regression push invalid syntax.
           changed=$(git diff --name-only -- '*.py')
           if [ -n "$changed" ]; then
