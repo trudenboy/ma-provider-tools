@@ -194,19 +194,19 @@ def default_ruff_runner(pyproject_text: str) -> RuffRunner:
     return run
 
 
-def transformed_hashes(
+def transformed_contents(
     upstream_files: dict[str, str],
     provider_dir: str,
     domain: str,
     provider_path: str,
     ruff_runner: RuffRunner | None,
-) -> dict[str, str]:
-    """Hash the provider tree as the sync boundary would publish it.
+) -> dict[str, bytes]:
+    """Return provider files as the sync boundary would publish them.
 
     Writes every provider file that has an upstream counterpart into a temp
     tree in upstream layout (test files get the forward import rewrite), runs
-    the boundary ruff pass over it, and returns provider-relative git blob
-    hashes of the result.
+    the boundary ruff pass over it, and returns the resulting bytes keyed by
+    provider-relative path.
 
     :param upstream_files: Upstream tree listing (path -> blob sha).
     :param provider_dir: Checked-out provider repo root.
@@ -214,7 +214,7 @@ def transformed_hashes(
     :param provider_path: Provider source path inside the repo (e.g. provider/).
     :param ruff_runner: Boundary pass to run on the temp tree, or None to skip.
     """
-    out: dict[str, str] = {}
+    out: dict[str, bytes] = {}
     with tempfile.TemporaryDirectory(prefix="upstream-ahead-") as tmp:
         written: dict[str, str] = {}
         for up_path in upstream_files:
@@ -258,8 +258,28 @@ def transformed_hashes(
                 )
         for rel, dest in written.items():
             with open(dest, "rb") as fh:
-                out[rel] = _sha_git_blob(fh.read())
+                out[rel] = fh.read()
     return out
+
+
+def transformed_hashes(
+    upstream_files: dict[str, str],
+    provider_dir: str,
+    domain: str,
+    provider_path: str,
+    ruff_runner: RuffRunner | None,
+) -> dict[str, str]:
+    """Hash the provider tree as the sync boundary would publish it.
+
+    Same tree construction as :func:`transformed_contents`, returning
+    provider-relative git blob hashes of the result.
+    """
+    return {
+        rel: _sha_git_blob(data)
+        for rel, data in transformed_contents(
+            upstream_files, provider_dir, domain, provider_path, ruff_runner
+        ).items()
+    }
 
 
 def _tag_list(provider_dir: str) -> list[str]:
@@ -333,6 +353,121 @@ def drop_provider_ahead(
     return sorted(remaining)
 
 
+def _fetch_upstream_blob(up_path: str, ref: str) -> bytes | None:
+    """Read-only: fetch one file's content from upstream, None on any failure."""
+    import base64
+    import json
+
+    try:
+        raw = _gh_json(["api", f"repos/{UPSTREAM}/contents/{up_path}?ref={ref}"])
+        return base64.b64decode(json.loads(raw)["content"])
+    except Exception:  # noqa: BLE001 -- fail-closed: caller keeps the file flagged
+        return None
+
+
+def _line_delta(old: bytes, new: bytes) -> tuple[list[str], list[str]]:
+    """Return (added, removed) lines of the old -> new edit, context-free."""
+    import difflib
+
+    old_lines = old.decode("utf-8", errors="replace").splitlines()
+    new_lines = new.decode("utf-8", errors="replace").splitlines()
+    added: list[str] = []
+    removed: list[str] = []
+    for line in difflib.unified_diff(old_lines, new_lines, n=0, lineterm=""):
+        if line.startswith("+++") or line.startswith("---"):
+            continue
+        if line.startswith("+"):
+            added.append(line[1:])
+        elif line.startswith("-"):
+            removed.append(line[1:])
+    return added, removed
+
+
+def drop_already_ported(
+    ahead: list[str],
+    upstream_files: dict[str, str],
+    provider_dir: str,
+    domain: str,
+    provider_path: str,
+    ruff_runner: RuffRunner | None,
+    fetch_upstream_blob: Callable[[str], bytes | None],
+    max_tags: int = 30,
+) -> list[str]:
+    """Drop files whose upstream edits are already reflected in provider HEAD.
+
+    Complements :func:`drop_provider_ahead`. After a contributor edit merges
+    upstream and is reverse-ported into the provider repo, upstream's copy
+    equals neither any release tag (it carries the edit) nor HEAD (which has
+    moved on with local work) — the tag walk would block every sync until the
+    next upstream provider PR merges, even though the destructive rsync would
+    lose nothing (same idea as ``_already_present`` in the reverse opener,
+    ma-provider-msx-bridge#169 fallout).
+
+    A file is dropped when, against SOME recent release tag state T (in the
+    transformed comparison space):
+
+    - every line upstream ADDED relative to T is present in provider HEAD, and
+    - every line upstream REMOVED relative to T is absent from provider HEAD.
+
+    A missing HEAD counterpart, an unfetchable upstream copy, or no matching
+    tag keeps the file flagged (fail-closed).
+    """
+    remaining = set(ahead)
+    if not remaining:
+        return []
+    subset = {
+        up_path: up_hash
+        for up_path, up_hash in upstream_files.items()
+        if t.reverse_path(up_path, domain, provider_path) in remaining
+    }
+    head = transformed_contents(subset, provider_dir, domain, provider_path, ruff_runner)
+    upstream_blobs: dict[str, bytes] = {}
+    for up_path in subset:
+        data = fetch_upstream_blob(up_path)
+        if data is not None:
+            upstream_blobs[up_path] = data
+
+    for tag in _tag_list(provider_dir)[:max_tags]:
+        if not remaining:
+            break
+        with tempfile.TemporaryDirectory(prefix="ported-") as snap:
+            for up_path in subset:
+                rel = t.reverse_path(up_path, domain, provider_path)
+                if rel not in remaining:
+                    continue
+                data = _file_at_ref(provider_dir, tag, rel)
+                if data is None:
+                    continue
+                dest = os.path.join(snap, rel)
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                with open(dest, "wb") as fh:
+                    fh.write(data)
+            tag_state = transformed_contents(
+                subset, snap, domain, provider_path, ruff_runner
+            )
+        for up_path in sorted(subset):
+            rel = t.reverse_path(up_path, domain, provider_path)
+            if rel not in remaining:
+                continue
+            if up_path not in upstream_blobs or rel not in head or rel not in tag_state:
+                continue
+            added, removed = _line_delta(tag_state[rel], upstream_blobs[up_path])
+            head_lines = set(
+                head[rel].decode("utf-8", errors="replace").splitlines()
+            )
+            if all(a in head_lines for a in added) and all(
+                r not in head_lines for r in removed
+            ):
+                print(
+                    f"::notice::{rel}: upstream edits vs provider release {tag} "
+                    "are already reflected in provider HEAD "
+                    "(already ported — not blocking).",
+                    file=sys.stderr,
+                )
+                remaining.discard(rel)
+    return sorted(remaining)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--domain", required=True)
@@ -357,6 +492,12 @@ def main() -> int:
         type=int,
         default=30,
         help="how many release tags (newest first) to check in the tag walk",
+    )
+    ap.add_argument(
+        "--no-ported-check",
+        action="store_true",
+        help="keep a file flagged even when the upstream edit is already "
+        "reflected in provider HEAD (skip the already-ported pass)",
     )
     args = ap.parse_args()
 
@@ -393,6 +534,17 @@ def main() -> int:
             args.domain,
             args.provider_path,
             runner,
+            args.max_baseline_tags,
+        )
+    if ahead and not args.no_tag_walk and not args.no_ported_check:
+        ahead = drop_already_ported(
+            ahead,
+            upstream,
+            args.provider_dir,
+            args.domain,
+            args.provider_path,
+            runner,
+            lambda up_path: _fetch_upstream_blob(up_path, args.upstream_ref),
             args.max_baseline_tags,
         )
     if ahead:
