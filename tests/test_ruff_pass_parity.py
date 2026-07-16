@@ -43,15 +43,16 @@ def test_ruff_pass_lines_present_in_both() -> None:
 def test_sync_to_fork_gates_fix_pass_on_upstream_branches() -> None:
     """The full autofix must only run for upstream/* targets.
 
-    integration/dev keeps the plain format-only pass (with the ruff<0.15
-    formatter pin), so the fix pass has to sit behind the target_branch gate.
+    integration/dev keeps the plain format-only pass (with the ruff minor
+    pinned to upstream's), so the fix pass has to sit behind the
+    target_branch gate.
     """
     text = (REPO / ".github/workflows/reusable-sync-to-fork.yml").read_text(
         encoding="utf-8"
     )
     gate = text.index('if [[ "${{ inputs.target_branch }}" == upstream/* ]]')
     fix = text.index("ruff check --fix --unsafe-fixes")
-    fallback = text.index("pip install --quiet 'ruff<0.15'")
+    fallback = text.index("pip install --quiet 'ruff>=0.15,<0.16'")
     assert gate < fix < fallback, (
         "fix pass must be inside the upstream/* gate, before the fallback"
     )

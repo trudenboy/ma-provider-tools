@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Sync ruff/mypy/codespell config blocks from upstream music-assistant/server.
 
-Fetches `pyproject.toml` from `music-assistant/server` (main branch by default)
-and regenerates two wrapper templates so every provider repo lints and
-type-checks with the exact rules the upstream project uses:
+Fetches `pyproject.toml` from `music-assistant/server` (dev branch — the branch
+provider CI lints/type-checks against and forward-sync PRs target; main lags
+behind it between stable releases) and regenerates two wrapper templates so
+every provider repo lints and type-checks with the exact rules the upstream
+project uses:
 
 - `wrappers/ruff.toml.j2` — fully replaced by upstream `[tool.ruff]`.
 - `wrappers/pyproject.toml.j2` — only the auto-synced blocks (delimited by
@@ -33,7 +35,7 @@ RUFF_TEMPLATE = WRAPPERS / "ruff.toml.j2"
 PYPROJECT_TEMPLATE = WRAPPERS / "pyproject.toml.j2"
 
 UPSTREAM_URL = (
-    "https://raw.githubusercontent.com/music-assistant/server/main/pyproject.toml"
+    "https://raw.githubusercontent.com/music-assistant/server/dev/pyproject.toml"
 )
 
 RUFF_HEADER = (

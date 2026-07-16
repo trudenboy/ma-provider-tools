@@ -188,20 +188,24 @@ jobs:
       # commit by `git add`.
       - name: Auto-fix lint issues
         run: |
-          # ruff 0.15.x's formatter rewrites `except (A, B):` into the invalid
-          # `except A, B:`; constrain to the last known-good line until fixed
-          # upstream. Keep in lockstep with the `ruff` pin in
-          # wrappers/pyproject.toml.j2.
+          # Track upstream's ruff minor (music-assistant/server pins 0.15.x):
+          # the 0.15 formatter rewrites `except (A, B):` into the PEP 758
+          # `except A, B:` on target py314, matching how upstream dev formats
+          # its tree. Keep in lockstep with the `ruff` pin in
+          # wrappers/pyproject.toml.j2 and wrappers/.pre-commit-config.yaml.j2.
           # Scope to the provider's own code — never lint the helper
           # scripts/ (e.g. the vendored check_method_order.py) or docs.
           targets=( "${{ inputs.provider_path }}" )
           [ -d tests ] && targets+=( tests )
-          uvx --from 'ruff<0.15' ruff check --fix "${targets[@]}"
-          uvx --from 'ruff<0.15' ruff format "${targets[@]}"
+          uvx --from 'ruff>=0.15,<0.16' ruff check --fix "${targets[@]}"
+          uvx --from 'ruff>=0.15,<0.16' ruff format "${targets[@]}"
           # Safety net: never let a formatter regression push invalid syntax.
+          # Must compile with Python 3.14 (the project target): PEP 758 syntax
+          # emitted by the formatter is a SyntaxError on the runner's older
+          # system python3.
           changed=$(git diff --name-only -- '*.py')
           if [ -n "$changed" ]; then
-            python3 -m py_compile $changed
+            uv run --python 3.14 --no-project python -m py_compile $changed
           fi
       - name: Commit auto-fixes
         if: ${{ inputs.autofix }}
@@ -257,21 +261,27 @@ jobs:
                   check=True,
               )
           PYEOF
-      - name: Symlink provider
+      - name: Copy provider into ma-server
         run: |
-          rm -rf "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
-          ln -s "$GITHUB_WORKSPACE/${{ inputs.provider_path }}" \
-                "$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
-      - name: Symlink tests into ma-server (mirrors sync-to-fork rsync layout)
+          # A real copy, NOT a symlink: the upstream repo checks below walk
+          # the tree with pathlib rglob / os.walk, neither of which descends
+          # into symlinked directories — a symlink would silently skip the
+          # provider. mypy reads the copy just the same.
+          SRC="$GITHUB_WORKSPACE/${{ inputs.provider_path }}"
+          DEST="$GITHUB_WORKSPACE/ma-server/music_assistant/providers/${{ inputs.provider_domain }}"
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          rsync -a "${SRC%/}/" "$DEST/"
+      - name: Copy tests into ma-server (mirrors sync-to-fork rsync layout)
         run: |
-          # Mirror the layout sync-to-fork rsync uses so mypy / pytest see
-          # tests under tests/providers/<domain>/, matching how upstream
-          # music-assistant/server organises its repo.
+          # Mirror the layout sync-to-fork rsync uses so mypy / the upstream
+          # repo checks see tests under tests/providers/<domain>/, matching
+          # how upstream music-assistant/server organises its repo.
           mkdir -p "$GITHUB_WORKSPACE/ma-server/tests/providers"
           rm -rf "$GITHUB_WORKSPACE/ma-server/tests/providers/${{ inputs.provider_domain }}"
           if [ -d "$GITHUB_WORKSPACE/tests" ]; then
-            ln -s "$GITHUB_WORKSPACE/tests" \
-                  "$GITHUB_WORKSPACE/ma-server/tests/providers/${{ inputs.provider_domain }}"
+            rsync -a "$GITHUB_WORKSPACE/tests/" \
+                  "$GITHUB_WORKSPACE/ma-server/tests/providers/${{ inputs.provider_domain }}/"
           fi
       - name: Lint (pre-commit)
         run: |
@@ -304,6 +314,122 @@ jobs:
             paths+=(tests/providers/${{ inputs.provider_domain }})
           fi
           mypy "${paths[@]}"
+      - name: Upstream repo checks
+        working-directory: ma-server
+        env:
+          DOMAIN: ${{ inputs.provider_domain }}
+        run: |
+          source .venv/bin/activate
+          # Mirror the upstream-only pre-commit hooks that apply to
+          # music_assistant/providers/** and tests/providers/** so violations
+          # fail here instead of on the first upstream PR (same rationale as
+          # the vendored check_method_order — ma-provider-tools#115, but
+          # without a mirror: the scripts run straight from the upstream dev
+          # clone with this provider's tree copied in, so the rules are
+          # always upstream's current ones). A script missing at upstream
+          # HEAD (renamed/removed) is skipped rather than failed.
+          failed=0
+          for check in \
+            check_config_entries \
+            check_translatable_labels \
+            check_manifests \
+            check_test_layout; do
+            if [ ! -f "scripts/${check}.py" ]; then
+              echo "::notice::scripts/${check}.py not found at upstream HEAD — skipped"
+              continue
+            fi
+            echo "::group::${check}"
+            python -m "scripts.${check}" || failed=1
+            echo "::endgroup::"
+          done
+          # Baseline-aware checks (datetime, blocking-io, method-order,
+          # icons) also exit 1 on "improvements" — when the provider repo
+          # has FIXED a violation upstream's baseline still grandfathers.
+          # That is not actionable here (the remedy is a baseline refresh in
+          # the next upstream PR), so instead of running them verbatim:
+          # regenerate each baseline, then fail only if this provider's
+          # entries got WORSE (new file or higher count); improvements only
+          # warn.
+          BASELINE_CHECKS=""
+          for check in \
+            check_datetime_helpers \
+            check_blocking_io \
+            check_method_order \
+            check_provider_icons; do
+            if [ ! -f "scripts/${check}.py" ]; then
+              echo "::notice::scripts/${check}.py not found at upstream HEAD — skipped"
+              continue
+            fi
+            BASELINE_CHECKS="$BASELINE_CHECKS $check"
+            python -m "scripts.${check}" --update-baseline >/dev/null
+          done
+          rc=0
+          python3 - "$DOMAIN" <<'PYEOF' || rc=$?
+          import subprocess
+          import sys
+
+          domain = sys.argv[1]
+          prefixes = (
+              f"music_assistant/providers/{domain}/",
+              f"tests/providers/{domain}/",
+          )
+
+          def parse(text):
+              # Baseline format (scripts/lint_baseline.py): sorted
+              # "<path>\t<count>" lines; bare path means count 1; "#" and
+              # blank lines are comments.
+              counts = {}
+              for raw in text.splitlines():
+                  line = raw.strip()
+                  if not line or line.startswith("#"):
+                      continue
+                  path, sep, count = line.rpartition("\t")
+                  counts[path if sep else line] = int(count) if sep else 1
+              return counts
+
+          changed = subprocess.run(
+              ["git", "diff", "--name-only", "--", "scripts/lint_baselines/"],
+              capture_output=True, text=True, check=True,
+          ).stdout.split()
+          regressed = False
+          for f in changed:
+              head = subprocess.run(
+                  ["git", "show", f"HEAD:{f}"],
+                  capture_output=True, text=True, check=False,
+              )
+              old = parse(head.stdout if head.returncode == 0 else "")
+              with open(f, encoding="utf-8") as fh:
+                  new = parse(fh.read())
+              for path in sorted(set(old) | set(new)):
+                  if not path.startswith(prefixes):
+                      continue
+                  before, after = old.get(path, 0), new.get(path, 0)
+                  if after > before:
+                      print(f"::error::{f}: {path}: {before} -> {after} violation(s)")
+                      regressed = True
+                  elif after < before:
+                      print(
+                          f"::warning::{f}: {path}: provider fixed "
+                          f"{before - after} grandfathered violation(s); "
+                          "refresh this baseline in the next upstream PR"
+                      )
+          sys.exit(2 if regressed else 0)
+          PYEOF
+          if [ "$rc" -eq 2 ]; then
+            # Restore the pristine baselines and re-run the owning checks so
+            # the log shows every violation with its message and line.
+            git checkout -- scripts/lint_baselines/
+            for check in $BASELINE_CHECKS; do
+              echo "::group::${check}"
+              python -m "scripts.${check}" || true
+              echo "::endgroup::"
+            done
+            failed=1
+          elif [ "$rc" -ne 0 ]; then
+            echo "::error::baseline comparison itself failed (rc=$rc)"
+            failed=1
+          fi
+          exit $failed
 
   # ─── Player provider: clone fork ma-server, symlink, pre-commit + mypy + pytest ────
   test-player-provider:
