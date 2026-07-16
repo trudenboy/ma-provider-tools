@@ -209,6 +209,8 @@ jobs:
           fi
       - name: Commit auto-fixes
         if: ${{ inputs.autofix }}
+        env:
+          FORK_SYNC_PAT: ${{ secrets.FORK_SYNC_PAT }}
         run: |
           # git add errors (rc 128) on a pathspec that matches nothing —
           # '*.pyi' in a repo without stub files killed the whole gate the
@@ -220,7 +222,17 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             echo "$changed" | xargs -d '\n' git add --
             git commit -m "style: auto-fix ruff"
-            git push
+            # The default GITHUB_TOKEN cannot land on a protected default
+            # branch (GH006: required status checks expected). Push with the
+            # maintainer PAT when available; otherwise warn instead of
+            # killing the gate — the commit stays local, so the lint step
+            # below still runs on the fixed tree and the warning carries
+            # the file list to apply manually.
+            if [ -n "$FORK_SYNC_PAT" ]; then
+              git push "https://x-access-token:${FORK_SYNC_PAT}@github.com/${GITHUB_REPOSITORY}.git" HEAD
+            elif ! git push; then
+              echo "::warning::auto-fix commit could not be pushed (protected branch?). Apply locally: ${changed//$'\n'/, }"
+            fi
           fi
       - uses: actions/checkout@v4
         with:
