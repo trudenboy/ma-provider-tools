@@ -404,3 +404,33 @@ def test_ported_applies_transform_to_test_files(tmp_path: Path) -> None:
     up = {f"tests/providers/{DOMAIN}/conftest.py": _blob(up_text)}
     blobs = {f"tests/providers/{DOMAIN}/conftest.py": up_text.encode()}
     assert _ported(tmp_path, ["tests/conftest.py"], up, blobs) == []
+
+
+def test_ported_reordered_head_with_common_line_deletion(tmp_path: Path) -> None:
+    """Count-based reflection: HEAD adopted upstream's deletion of a common
+    line (one of several identical occurrences) and also reordered blocks —
+    set-membership would over-flag ('removed line still present elsewhere'),
+    occurrence counts must not."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "block_a\nend\nblock_b\nend\nblock_c\nend\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    # upstream deleted block_b + one 'end' (net: end x2)
+    up_text = "block_a\nend\nblock_c\nend\n"
+    # HEAD ported the deletion AND reordered the remaining blocks
+    _write(tmp_path, "provider/api.py", "block_c\nend\nblock_a\nend\n")
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == []
+
+
+def test_ported_counts_catch_partial_deletion(tmp_path: Path) -> None:
+    """Upstream removed two occurrences, HEAD removed only one → flagged."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "x\nend\ny\nend\nz\nend\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    up_text = "x\nz\n"  # upstream dropped y and ALL three 'end' lines? no: two ends
+    up_text = "x\nend\nz\n"  # net: -y, -end x2
+    _write(tmp_path, "provider/api.py", "x\nend\nz\nend\n")  # HEAD dropped only one 'end'
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == ["provider/api.py"]

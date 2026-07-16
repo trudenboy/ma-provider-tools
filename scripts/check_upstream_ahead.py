@@ -365,22 +365,32 @@ def _fetch_upstream_blob(up_path: str, ref: str) -> bytes | None:
         return None
 
 
-def _line_delta(old: bytes, new: bytes) -> tuple[list[str], list[str]]:
-    """Return (added, removed) lines of the old -> new edit, context-free."""
-    import difflib
+def _line_counts(data: bytes) -> dict[str, int]:
+    """Return per-line occurrence counts of a text blob."""
+    from collections import Counter
 
-    old_lines = old.decode("utf-8", errors="replace").splitlines()
-    new_lines = new.decode("utf-8", errors="replace").splitlines()
-    added: list[str] = []
-    removed: list[str] = []
-    for line in difflib.unified_diff(old_lines, new_lines, n=0, lineterm=""):
-        if line.startswith("+++") or line.startswith("---"):
-            continue
-        if line.startswith("+"):
-            added.append(line[1:])
-        elif line.startswith("-"):
-            removed.append(line[1:])
-    return added, removed
+    return Counter(data.decode("utf-8", errors="replace").splitlines())
+
+
+def _edit_reflected(tag: bytes, upstream: bytes, head: bytes) -> bool:
+    """True when the tag -> upstream edit is textually reflected in head.
+
+    Compares per-line occurrence COUNTS (order-insensitive, so a provider-side
+    method reorder does not mask or fake a port): for every line upstream
+    added net copies of, head must carry at least upstream's count; for every
+    line upstream removed net copies of, head must carry at most upstream's
+    count. Any imbalance keeps the file flagged (fail-closed).
+    """
+    tag_c = _line_counts(tag)
+    up_c = _line_counts(upstream)
+    head_c = _line_counts(head)
+    for line in set(tag_c) | set(up_c):
+        delta = up_c.get(line, 0) - tag_c.get(line, 0)
+        if delta > 0 and head_c.get(line, 0) < up_c.get(line, 0):
+            return False
+        if delta < 0 and head_c.get(line, 0) > up_c.get(line, 0):
+            return False
+    return True
 
 
 def drop_already_ported(
@@ -404,10 +414,10 @@ def drop_already_ported(
     ma-provider-msx-bridge#169 fallout).
 
     A file is dropped when, against SOME recent release tag state T (in the
-    transformed comparison space):
-
-    - every line upstream ADDED relative to T is present in provider HEAD, and
-    - every line upstream REMOVED relative to T is absent from provider HEAD.
+    transformed comparison space), the T -> upstream edit is reflected in
+    provider HEAD by per-line occurrence counts (see :func:`_edit_reflected`;
+    count-based so a provider-side method reorder neither masks nor fakes a
+    port).
 
     A missing HEAD counterpart, an unfetchable upstream copy, or no matching
     tag keeps the file flagged (fail-closed).
@@ -453,11 +463,7 @@ def drop_already_ported(
                 continue
             if up_path not in upstream_blobs or rel not in head or rel not in tag_state:
                 continue
-            added, removed = _line_delta(tag_state[rel], upstream_blobs[up_path])
-            head_lines = set(head[rel].decode("utf-8", errors="replace").splitlines())
-            if all(a in head_lines for a in added) and all(
-                r not in head_lines for r in removed
-            ):
+            if _edit_reflected(tag_state[rel], upstream_blobs[up_path], head[rel]):
                 print(
                     f"::notice::{rel}: upstream edits vs provider release {tag} "
                     "are already reflected in provider HEAD "
