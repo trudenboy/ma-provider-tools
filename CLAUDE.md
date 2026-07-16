@@ -177,6 +177,16 @@ normal release with not-yet-upstreamed work — no longer trips the guard. No
 tags / no git metadata → fail-closed (every difference flagged); the workflow
 checks out the provider repo with `fetch-depth: 0` so tags are present.
 
+A second pass (`drop_already_ported`, msx_bridge conftest fallout) unblocks
+the reverse-port limbo: after a contributor edit merges upstream AND is
+ported into the provider repo, upstream's copy equals neither any tag (it
+carries the edit) nor HEAD (which moved on) — the tag walk alone would block
+until the next upstream provider PR merges. A file is dropped when, vs some
+recent tag state, every upstream-added line is present in HEAD and every
+upstream-removed line is absent (same idea as the reverse opener's
+`_already_present`); any fetch/tag/HEAD gap keeps it flagged (fail-closed).
+Disable with `--no-ported-check`.
+
 The path/import transform (`_transform.py`) is the single source of truth: it
 canonicalizes the seven `provider.` import shapes (`from provider.` /
 `from provider import` / `import provider.` / `import provider as X` /

@@ -286,3 +286,121 @@ def test_tag_walk_not_a_git_repo_keeps_everything(tmp_path: Path) -> None:
         ["provider/api.py"], up, str(tmp_path), DOMAIN, PP, None
     )
     assert out == ["provider/api.py"]
+
+
+# ── already-ported pass (msx_bridge conftest fallout) ───────────────────────
+#
+# After a contributor edit merges upstream AND is reverse-ported into the
+# provider repo, upstream's copy equals neither any release tag (it carries
+# the edit) nor HEAD (which moved on) — the tag walk alone would block every
+# sync until the next upstream provider PR merges, though nothing is lost.
+
+
+def _ported(tmp_path: Path, ahead: list[str], up: dict, blobs: dict) -> list[str]:
+    return g.drop_already_ported(
+        ahead, up, str(tmp_path), DOMAIN, PP, None, lambda p: blobs.get(p)
+    )
+
+
+def test_ported_pure_deletion_dropped(tmp_path: Path) -> None:
+    """Upstream removed a line; HEAD removed it too (and moved on) → drop."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "keep\nlegacy_mock\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "keep\nnew local work\n")
+    up_text = "keep\n"  # tag state minus the removed line
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == []
+
+
+def test_ported_addition_dropped(tmp_path: Path) -> None:
+    """Upstream added a line; HEAD contains it (reverse-port merged) → drop."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "base\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "base\ncontributed line\nlocal work\n")
+    up_text = "base\ncontributed line\n"
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == []
+
+
+def test_unported_addition_stays_flagged(tmp_path: Path) -> None:
+    """Upstream added a line HEAD does not have → genuine unported edit."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "base\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "base\nlocal work\n")
+    up_text = "base\ncontributed line\n"
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == ["provider/api.py"]
+
+
+def test_unported_deletion_stays_flagged(tmp_path: Path) -> None:
+    """Upstream removed a line HEAD still carries → sync would revert it."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "keep\nlegacy_mock\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "keep\nlegacy_mock\nlocal work\n")
+    up_text = "keep\n"
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == ["provider/api.py"]
+
+
+def test_ported_fetch_failure_stays_flagged(tmp_path: Path) -> None:
+    """Unfetchable upstream content → fail-closed."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "keep\nlegacy_mock\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(tmp_path, "provider/api.py", "keep\n")
+    up = {ROOT + "api.py": _blob("keep\n")}
+    assert _ported(tmp_path, ["provider/api.py"], up, {}) == ["provider/api.py"]
+
+
+def test_ported_new_upstream_file_stays_flagged(tmp_path: Path) -> None:
+    """A file with no HEAD counterpart is a new contribution → keep."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "x\n")
+    _commit_tag(tmp_path, "v1.0.0")
+    up_text = "contributed\n"
+    up = {ROOT + "feature.py": _blob(up_text)}
+    blobs = {ROOT + "feature.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/feature.py"], up, blobs) == [
+        "provider/feature.py"
+    ]
+
+
+def test_ported_without_tags_stays_flagged(tmp_path: Path) -> None:
+    """No release history → fail-closed, nothing dropped."""
+    _repo(tmp_path)
+    _write(tmp_path, "provider/api.py", "keep\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "no tags")
+    up_text = "keep\n"
+    up = {ROOT + "api.py": _blob(up_text)}
+    blobs = {ROOT + "api.py": up_text.encode()}
+    assert _ported(tmp_path, ["provider/api.py"], up, blobs) == ["provider/api.py"]
+
+
+def test_ported_applies_transform_to_test_files(tmp_path: Path) -> None:
+    """The msx scenario in the transformed space: a test-file deletion ported
+    into HEAD is recognized through the forward import rewrite."""
+    _repo(tmp_path)
+    _write(
+        tmp_path,
+        "tests/conftest.py",
+        "from provider.tools import x\nlegacy_mock\n",
+    )
+    _commit_tag(tmp_path, "v1.0.0")
+    _write(
+        tmp_path,
+        "tests/conftest.py",
+        "from provider.tools import x\nnew local fixture\n",
+    )
+    up_text = f"from music_assistant.providers.{DOMAIN}.tools import x\n"
+    up = {f"tests/providers/{DOMAIN}/conftest.py": _blob(up_text)}
+    blobs = {f"tests/providers/{DOMAIN}/conftest.py": up_text.encode()}
+    assert _ported(tmp_path, ["tests/conftest.py"], up, blobs) == []
