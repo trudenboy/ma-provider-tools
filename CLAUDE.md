@@ -85,12 +85,12 @@ Required top-level skeleton, in order:
 
 1. `# What does this implement/fix?` — narrative (Source link, What's new, Changed files, prose) lives under this heading.
 2. `**Related issue (if applicable):**` block.
-3. `## Types of changes` — tick ≥ 1 box; multi-tick is supported for cross-cutting releases (e.g. `bugfix` + `enhancement` + `dependencies`).
+3. `## Types of changes` — tick **exactly one** box: upstream's `Apply` check now rejects multi-tick bodies ("Tick exactly one", observed 2026-07-16 on PR #4827). Pick the dominant type; the `change_type` workflow input still accepts a comma-separated list but only the first box survives review.
 4. `## Checklist` — contributor confirmations. The `I have read and complied with the project's AI Policy` checkbox is the human-attestation checkpoint; no separate attestation block.
 
 When editing a live PR, use `gh api repos/music-assistant/server/pulls/<N> -X PATCH -F body=@file.md`. `gh pr edit` is currently broken on this repo by deprecated Projects-classic GraphQL fields. Preserve every section above — modify narrative under `# What does this implement/fix?`, never by deleting the structural headings.
 
-**`change_type` workflow input** — comma-separated string (e.g. `"bugfix,enhancement,dependencies"`). Whitespace and case are normalised. Auto-forced to `new-provider` when `PREV_TAG` is empty (first submission).
+**`change_type` workflow input** — comma-separated string, but upstream now enforces a single ticked box (see above) — pass one value. Whitespace and case are normalised. Auto-forced to `new-provider` when `PREV_TAG` is empty (first submission).
 
 ## Reverse-sync Channel
 
