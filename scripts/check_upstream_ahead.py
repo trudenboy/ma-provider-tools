@@ -420,7 +420,9 @@ def drop_already_ported(
         for up_path, up_hash in upstream_files.items()
         if t.reverse_path(up_path, domain, provider_path) in remaining
     }
-    head = transformed_contents(subset, provider_dir, domain, provider_path, ruff_runner)
+    head = transformed_contents(
+        subset, provider_dir, domain, provider_path, ruff_runner
+    )
     upstream_blobs: dict[str, bytes] = {}
     for up_path in subset:
         data = fetch_upstream_blob(up_path)
@@ -452,9 +454,7 @@ def drop_already_ported(
             if up_path not in upstream_blobs or rel not in head or rel not in tag_state:
                 continue
             added, removed = _line_delta(tag_state[rel], upstream_blobs[up_path])
-            head_lines = set(
-                head[rel].decode("utf-8", errors="replace").splitlines()
-            )
+            head_lines = set(head[rel].decode("utf-8", errors="replace").splitlines())
             if all(a in head_lines for a in added) and all(
                 r not in head_lines for r in removed
             ):
