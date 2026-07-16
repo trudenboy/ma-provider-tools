@@ -210,10 +210,15 @@ jobs:
       - name: Commit auto-fixes
         if: ${{ inputs.autofix }}
         run: |
-          if ! git diff --quiet -- '*.py' '*.pyi'; then
+          # git add errors (rc 128) on a pathspec that matches nothing —
+          # '*.pyi' in a repo without stub files killed the whole gate the
+          # moment autofix had anything to commit. Add exactly the files the
+          # diff reported instead.
+          changed=$(git diff --name-only -- '*.py' '*.pyi')
+          if [ -n "$changed" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -- '*.py' '*.pyi'
+            echo "$changed" | xargs -d '\n' git add --
             git commit -m "style: auto-fix ruff"
             git push
           fi
