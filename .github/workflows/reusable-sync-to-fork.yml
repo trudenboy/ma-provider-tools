@@ -175,20 +175,22 @@ jobs:
           RUFF_TARGETS="music_assistant/providers/${DOMAIN}/"
           [ -d "tests/providers/${DOMAIN}" ] && RUFF_TARGETS="$RUFF_TARGETS tests/providers/${DOMAIN}/"
           if [[ "${{ inputs.target_branch }}" == upstream/* ]]; then
-            # upstream/<domain> feeds the draft PR against music-assistant/server,
-            # whose dev lint enforces rules (D213, RUF012, ...) that the provider
-            # repos' main-mirrored ruff.toml does not — a format-only pass leaves
-            # those violations in and paints the upstream PR red until the next
-            # upstream-pr.yml rebuild. Reproduce upstream's own pre-commit edits
-            # instead: full autofix with upstream's exact ruff pin (read from its
-            # pyproject.toml — a different ruff version resolves rules like D213
-            # differently). Mirrors the fix/format pass in upstream-pr.yml.j2;
+            # upstream/<domain> feeds the draft PR against music-assistant/server.
+            # The provider repos' ruff.toml mirrors upstream dev, but the weekly
+            # sync can lag behind a rule change, and a format-only pass would
+            # leave lint violations in until the next upstream-pr.yml rebuild.
+            # Reproduce upstream's own pre-commit edits instead: full autofix
+            # with upstream's exact ruff pin (read from its pyproject.toml — a
+            # different ruff version resolves rules like D213 differently).
+            # Mirrors the fix/format pass in upstream-pr.yml.j2;
             # tests/test_ruff_pass_parity.py asserts the two stay in sync.
             RUFF_REQ=$(grep -oE 'ruff==[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml | head -1)
             pip install --quiet "${RUFF_REQ:-ruff}"
             ruff check --fix --unsafe-fixes $RUFF_TARGETS || true
           else
-            pip install --quiet 'ruff<0.15'  # 0.15.x formatter emits invalid `except A, B:`
+            # Track upstream's ruff minor; keep in lockstep with the pins in
+            # wrappers/pyproject.toml.j2 / wrappers/.pre-commit-config.yaml.j2.
+            pip install --quiet 'ruff>=0.15,<0.16'
           fi
           ruff format $RUFF_TARGETS 2>/dev/null || true
           if [[ "${{ inputs.target_branch }}" == upstream/* ]]; then
