@@ -79,6 +79,15 @@ push dev → prepare → lint+test (gate) → release (if version changed) → s
 
 `upstream-pr.yml.j2` is a `workflow_dispatch` flow (separate from the dev → release pipeline) that opens or updates a draft PR in `music-assistant/server` for a given provider release. It rsyncs provider source from a `vX.Y.Z` tag into `music_assistant/providers/<domain>/` and writes the PR body via shell string-concat.
 
+**Co-author carry (issue observed on music-assistant/server#4833):** the sync
+commit is a single bot commit, so the workflow collects `Co-authored-by`
+trailers from the `PREV_TAG...VERSION` compare range, drops AI-agent / bot
+trailers (anthropic/cursor/openai/copilot/claude/opencode/aider/devin/`[bot]`/
+github-actions — those stay in the provider repo per AI_POLICY), dedupes, and
+appends the human ones to the sync commit message (plus a `### Credits` list in
+the PR body). GitHub's squash merge then carries the credit into upstream
+history. The pipeline is pinned by `tests/test_human_coauthor_carry.py`.
+
 **PR bodies (auto-generated or manually edited) must match upstream's [`PULL_REQUEST_TEMPLATE.md`](https://github.com/music-assistant/.github/blob/main/.github/PULL_REQUEST_TEMPLATE.md).** Upstream's `pr-labels.yaml` parses the ticked `## Types of changes` checkbox(es) to apply labels; the release-notes generator slots by label. A body without that section silently breaks both.
 
 Required top-level skeleton, in order:
