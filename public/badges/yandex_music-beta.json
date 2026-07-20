@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "beta",
-  "message": "unknown",
-  "color": "lightgrey",
+  "message": "v2.10.0b6 – v3.8.2",
+  "color": "yellow",
   "cacheSeconds": 14400
 }
