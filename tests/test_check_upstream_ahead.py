@@ -162,21 +162,39 @@ def test_ruff_pin_extracted_from_pyproject() -> None:
     assert g._ruff_pin("no pin here") is None
 
 
-def test_fetch_upstream_blob_uses_immutable_tree_sha() -> None:
-    """The ported check fetches the exact blob discovered by the tree listing."""
+def test_fetch_upstream_blob_falls_back_to_immutable_tree_sha() -> None:
+    """When raw fails, Git Data still fetches the exact listed tree blob."""
     data = b"upstream\n"
     blob_sha = g._sha_git_blob(data)
     payload = json.dumps(
         {"content": base64.b64encode(data).decode(), "encoding": "base64"}
     )
-    with mock.patch.object(g, "_gh_json", return_value=payload) as gh_json:
+    with (
+        mock.patch("urllib.request.urlopen", side_effect=OSError("unavailable")),
+        mock.patch.object(g, "_gh_json", return_value=payload) as gh_json,
+    ):
         assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", blob_sha) == data
 
     gh_json.assert_called_once_with(["api", f"repos/{g.UPSTREAM}/git/blobs/{blob_sha}"])
 
 
-def test_fetch_upstream_blob_falls_back_to_verified_raw_content() -> None:
-    """A blocked Git Data endpoint falls back to public raw content."""
+def test_fetch_upstream_blob_prefers_verified_public_raw_content() -> None:
+    """The Actions-safe raw endpoint is attempted before token-scoped Git Data."""
+    data = b"upstream\n"
+    blob_sha = g._sha_git_blob(data)
+    response = mock.MagicMock()
+    response.__enter__.return_value.read.return_value = data
+    with (
+        mock.patch("urllib.request.urlopen", return_value=response),
+        mock.patch.object(g, "_gh_json") as gh_json,
+    ):
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", blob_sha) == data
+
+    gh_json.assert_not_called()
+
+
+def test_fetch_upstream_blob_builds_safe_raw_url() -> None:
+    """The public raw request keeps a fixed authority and encoded path parts."""
     data = b"upstream\n"
     blob_sha = g._sha_git_blob(data)
     response = mock.MagicMock()
@@ -205,7 +223,10 @@ def test_fetch_upstream_blob_failure_stays_fail_closed() -> None:
 def test_fetch_upstream_blob_rejects_malformed_base64() -> None:
     """Malformed API content cannot become a false already-ported match."""
     payload = json.dumps({"content": "!!!!", "encoding": "base64"})
-    with mock.patch.object(g, "_gh_json", return_value=payload):
+    with (
+        mock.patch("urllib.request.urlopen", side_effect=OSError("unavailable")),
+        mock.patch.object(g, "_gh_json", return_value=payload),
+    ):
         assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
 
 
@@ -217,7 +238,10 @@ def test_fetch_upstream_blob_rejects_sha_mismatch() -> None:
             "encoding": "base64",
         }
     )
-    with mock.patch.object(g, "_gh_json", return_value=payload):
+    with (
+        mock.patch("urllib.request.urlopen", side_effect=OSError("unavailable")),
+        mock.patch.object(g, "_gh_json", return_value=payload),
+    ):
         assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
 
 
@@ -230,6 +254,22 @@ def test_fetch_upstream_blob_rejects_raw_sha_mismatch() -> None:
         mock.patch("urllib.request.urlopen", return_value=response),
     ):
         assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
+
+
+def test_fetch_upstream_blob_recovers_from_raw_sha_mismatch_via_git_data() -> None:
+    """A ref race can recover through the immutable Git Blob endpoint."""
+    data = b"expected\n"
+    blob_sha = g._sha_git_blob(data)
+    raw_response = mock.MagicMock()
+    raw_response.__enter__.return_value.read.return_value = b"newer ref content\n"
+    git_payload = json.dumps(
+        {"content": base64.b64encode(data).decode(), "encoding": "base64"}
+    )
+    with (
+        mock.patch("urllib.request.urlopen", return_value=raw_response),
+        mock.patch.object(g, "_gh_json", return_value=git_payload),
+    ):
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", blob_sha) == data
 
 
 # ── direction-aware tag walk (issues #104 / #113) ───────────────────────────

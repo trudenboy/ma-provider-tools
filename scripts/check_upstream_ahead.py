@@ -356,31 +356,16 @@ def drop_provider_ahead(
 def _fetch_upstream_blob(up_path: str, ref: str, blob_sha: str) -> bytes | None:
     """Read-only: fetch upstream bytes bound to an immutable tree blob SHA.
 
-    The tree listing already resolved every path to an exact blob SHA. Fetching
-    that object directly avoids a second path/ref resolution through the
-    Contents API, which can be unavailable to repository-scoped Actions tokens
-    even when the Git Trees endpoint is readable. If Git Blobs is unavailable
-    too, public raw content is used only when its git-blob hash matches the tree.
+    The public raw endpoint is preferred because repository-scoped Actions
+    tokens may list a public upstream tree yet fail to read its Contents and
+    Git Blobs endpoints. A ref race or unexpected response is harmless because
+    bytes are accepted only when their git-blob hash matches the listed tree.
+    The immutable Git Blobs endpoint remains a verified fallback.
     """
     import base64
     import json
     from urllib.parse import quote
     from urllib.request import Request, urlopen
-
-    try:
-        raw = _gh_json(["api", f"repos/{UPSTREAM}/git/blobs/{blob_sha}"])
-    except Exception:  # noqa: BLE001 -- verified read-only fallback below
-        pass
-    else:
-        try:
-            response = json.loads(raw)
-            content = response.get("content")
-            if response.get("encoding") != "base64" or not isinstance(content, str):
-                return None
-            data = base64.b64decode("".join(content.split()), validate=True)
-            return data if _sha_git_blob(data) == blob_sha else None
-        except Exception:  # noqa: BLE001 -- malformed content must stay fail-closed
-            return None
 
     try:
         raw_url = (
@@ -390,6 +375,18 @@ def _fetch_upstream_blob(up_path: str, ref: str, blob_sha: str) -> bytes | None:
         request = Request(raw_url, headers={"User-Agent": "ma-provider-tools"})
         with urlopen(request, timeout=15) as response:  # noqa: S310 -- fixed GitHub host
             data = response.read()
+        if _sha_git_blob(data) == blob_sha:
+            return data
+    except Exception:  # noqa: BLE001 -- verified Git Data fallback below
+        pass
+
+    try:
+        raw = _gh_json(["api", f"repos/{UPSTREAM}/git/blobs/{blob_sha}"])
+        response = json.loads(raw)
+        content = response.get("content")
+        if response.get("encoding") != "base64" or not isinstance(content, str):
+            return None
+        data = base64.b64decode("".join(content.split()), validate=True)
         return data if _sha_git_blob(data) == blob_sha else None
     except Exception:  # noqa: BLE001 -- fail-closed: caller keeps the file flagged
         return None
