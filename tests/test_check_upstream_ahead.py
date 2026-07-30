@@ -170,22 +170,43 @@ def test_fetch_upstream_blob_uses_immutable_tree_sha() -> None:
         {"content": base64.b64encode(data).decode(), "encoding": "base64"}
     )
     with mock.patch.object(g, "_gh_json", return_value=payload) as gh_json:
-        assert g._fetch_upstream_blob(blob_sha) == data
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", blob_sha) == data
 
     gh_json.assert_called_once_with(["api", f"repos/{g.UPSTREAM}/git/blobs/{blob_sha}"])
 
 
+def test_fetch_upstream_blob_falls_back_to_verified_raw_content() -> None:
+    """A blocked Git Data endpoint falls back to public raw content."""
+    data = b"upstream\n"
+    blob_sha = g._sha_git_blob(data)
+    response = mock.MagicMock()
+    response.__enter__.return_value.read.return_value = data
+    with (
+        mock.patch.object(g, "_gh_json", side_effect=RuntimeError("unavailable")),
+        mock.patch("urllib.request.urlopen", return_value=response) as urlopen,
+    ):
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", blob_sha) == data
+
+    request = urlopen.call_args.args[0]
+    assert request.full_url == (
+        f"https://raw.githubusercontent.com/{g.UPSTREAM}/HEAD/{ROOT}api.py"
+    )
+
+
 def test_fetch_upstream_blob_failure_stays_fail_closed() -> None:
-    """An unavailable immutable blob remains a conservative fetch failure."""
-    with mock.patch.object(g, "_gh_json", side_effect=RuntimeError("unavailable")):
-        assert g._fetch_upstream_blob("deadbeef") is None
+    """Unavailable API and raw content remain a conservative fetch failure."""
+    with (
+        mock.patch.object(g, "_gh_json", side_effect=RuntimeError("unavailable")),
+        mock.patch("urllib.request.urlopen", side_effect=OSError("unavailable")),
+    ):
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
 
 
 def test_fetch_upstream_blob_rejects_malformed_base64() -> None:
     """Malformed API content cannot become a false already-ported match."""
     payload = json.dumps({"content": "!!!!", "encoding": "base64"})
     with mock.patch.object(g, "_gh_json", return_value=payload):
-        assert g._fetch_upstream_blob("deadbeef") is None
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
 
 
 def test_fetch_upstream_blob_rejects_sha_mismatch() -> None:
@@ -197,7 +218,18 @@ def test_fetch_upstream_blob_rejects_sha_mismatch() -> None:
         }
     )
     with mock.patch.object(g, "_gh_json", return_value=payload):
-        assert g._fetch_upstream_blob("deadbeef") is None
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
+
+
+def test_fetch_upstream_blob_rejects_raw_sha_mismatch() -> None:
+    """Fallback content is also bound to the immutable tree SHA."""
+    response = mock.MagicMock()
+    response.__enter__.return_value.read.return_value = b"different\n"
+    with (
+        mock.patch.object(g, "_gh_json", side_effect=RuntimeError("unavailable")),
+        mock.patch("urllib.request.urlopen", return_value=response),
+    ):
+        assert g._fetch_upstream_blob(ROOT + "api.py", "HEAD", "deadbeef") is None
 
 
 # ── direction-aware tag walk (issues #104 / #113) ───────────────────────────
