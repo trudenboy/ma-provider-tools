@@ -1,6 +1,9 @@
+import base64
+import json
 import subprocess
 import sys
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import check_upstream_ahead as g  # noqa: E402
@@ -157,6 +160,44 @@ def test_ruff_pin_extracted_from_pyproject() -> None:
     text = 'test = [\n  "ruff==0.15.6",\n]\n'
     assert g._ruff_pin(text) == "ruff==0.15.6"
     assert g._ruff_pin("no pin here") is None
+
+
+def test_fetch_upstream_blob_uses_immutable_tree_sha() -> None:
+    """The ported check fetches the exact blob discovered by the tree listing."""
+    data = b"upstream\n"
+    blob_sha = g._sha_git_blob(data)
+    payload = json.dumps(
+        {"content": base64.b64encode(data).decode(), "encoding": "base64"}
+    )
+    with mock.patch.object(g, "_gh_json", return_value=payload) as gh_json:
+        assert g._fetch_upstream_blob(blob_sha) == data
+
+    gh_json.assert_called_once_with(["api", f"repos/{g.UPSTREAM}/git/blobs/{blob_sha}"])
+
+
+def test_fetch_upstream_blob_failure_stays_fail_closed() -> None:
+    """An unavailable immutable blob remains a conservative fetch failure."""
+    with mock.patch.object(g, "_gh_json", side_effect=RuntimeError("unavailable")):
+        assert g._fetch_upstream_blob("deadbeef") is None
+
+
+def test_fetch_upstream_blob_rejects_malformed_base64() -> None:
+    """Malformed API content cannot become a false already-ported match."""
+    payload = json.dumps({"content": "!!!!", "encoding": "base64"})
+    with mock.patch.object(g, "_gh_json", return_value=payload):
+        assert g._fetch_upstream_blob("deadbeef") is None
+
+
+def test_fetch_upstream_blob_rejects_sha_mismatch() -> None:
+    """Content that does not match the tree SHA keeps the guard fail-closed."""
+    payload = json.dumps(
+        {
+            "content": base64.b64encode(b"different\n").decode(),
+            "encoding": "base64",
+        }
+    )
+    with mock.patch.object(g, "_gh_json", return_value=payload):
+        assert g._fetch_upstream_blob("deadbeef") is None
 
 
 # ── direction-aware tag walk (issues #104 / #113) ───────────────────────────

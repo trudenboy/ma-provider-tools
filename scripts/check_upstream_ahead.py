@@ -353,14 +353,25 @@ def drop_provider_ahead(
     return sorted(remaining)
 
 
-def _fetch_upstream_blob(up_path: str, ref: str) -> bytes | None:
-    """Read-only: fetch one file's content from upstream, None on any failure."""
+def _fetch_upstream_blob(blob_sha: str) -> bytes | None:
+    """Read-only: fetch an immutable upstream tree blob, None on any failure.
+
+    The tree listing already resolved every path to an exact blob SHA. Fetching
+    that object directly avoids a second path/ref resolution through the
+    Contents API, which can be unavailable to repository-scoped Actions tokens
+    even when the Git Trees/Data endpoints are readable.
+    """
     import base64
     import json
 
     try:
-        raw = _gh_json(["api", f"repos/{UPSTREAM}/contents/{up_path}?ref={ref}"])
-        return base64.b64decode(json.loads(raw)["content"])
+        raw = _gh_json(["api", f"repos/{UPSTREAM}/git/blobs/{blob_sha}"])
+        response = json.loads(raw)
+        content = response.get("content")
+        if response.get("encoding") != "base64" or not isinstance(content, str):
+            return None
+        data = base64.b64decode("".join(content.split()), validate=True)
+        return data if _sha_git_blob(data) == blob_sha else None
     except Exception:  # noqa: BLE001 -- fail-closed: caller keeps the file flagged
         return None
 
@@ -550,7 +561,7 @@ def main() -> int:
             args.domain,
             args.provider_path,
             runner,
-            lambda up_path: _fetch_upstream_blob(up_path, args.upstream_ref),
+            lambda up_path: _fetch_upstream_blob(upstream[up_path]),
             args.max_baseline_tags,
         )
     if ahead:
