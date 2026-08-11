@@ -31,6 +31,10 @@ on:
         description: "Sync even if upstream is ahead of the provider repo (override the preflight guard)"
         type: boolean
         default: false
+      upstream_guard_baseline:
+        description: "Immutable upstream commit whose unchanged provider blobs are acknowledged"
+        type: string
+        default: ""
     secrets:
       FORK_SYNC_PAT:
         required: true
@@ -119,6 +123,7 @@ jobs:
         if: ${{ !inputs.ack_upstream_ahead }}
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+          UPSTREAM_GUARD_BASELINE: ${{ inputs.upstream_guard_baseline }}
         run: |
           set -euo pipefail
           DOMAIN=$(python3 -c "import json; print(json.load(open('provider-repo/${{ inputs.manifest_path }}'))['domain'])")
@@ -126,10 +131,15 @@ jobs:
             echo "::error::Could not determine provider domain from manifest — refusing to sync (fail-closed)." >&2
             exit 1
           fi
+          BASELINE_ARGS=()
+          if [[ -n "$UPSTREAM_GUARD_BASELINE" ]]; then
+            BASELINE_ARGS+=(--acknowledged-upstream-ref "$UPSTREAM_GUARD_BASELINE")
+          fi
           if ! python3 tools-hub/scripts/check_upstream_ahead.py \
                 --domain "$DOMAIN" \
                 --provider-path "${{ inputs.provider_path }}" \
-                --provider-dir provider-repo; then
+                --provider-dir provider-repo \
+                "${BASELINE_ARGS[@]}"; then
             echo "::error::Upstream music-assistant/server is ahead of this provider repo for '${DOMAIN}'." \
                  "A contributor's change would be reverted by this sync." \
                  "Run a reverse-sync first, or re-dispatch with ack_upstream_ahead=true to override." >&2
