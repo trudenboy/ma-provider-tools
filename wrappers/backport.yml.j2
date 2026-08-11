@@ -18,6 +18,9 @@ jobs:
     with:
       manifest_path: {{ manifest_path }}
       provider_path: {{ provider_path }}
+{%- if upstream_guard_baseline %}
+      upstream_guard_baseline: {{ upstream_guard_baseline }}
+{%- endif %}
 {%- raw %}
       target_branch: stable
       version: ${{ inputs.version }}
