@@ -330,7 +330,11 @@ def drop_acknowledged_baseline(
     remaining: list[str] = []
     for rel in sorted(ahead):
         up_path = t.forward_path(rel, domain, provider_path)
-        if up_path is None or upstream_files.get(up_path) != baseline.get(up_path):
+        if (
+            up_path is None
+            or up_path not in baseline
+            or upstream_files.get(up_path) != baseline[up_path]
+        ):
             remaining.append(rel)
             continue
         print(
