@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 REPO = Path(__file__).resolve().parent.parent
 
 
-def _render_workflow_script() -> str:
+def _render_workflow() -> dict:
     registry = yaml.safe_load((REPO / "providers.yml").read_text(encoding="utf-8"))
     providers = [
         provider
@@ -45,8 +45,18 @@ def _render_workflow_script() -> str:
         related_providers=base.get("related_providers", []),
         all_providers=providers,
     )
-    workflow = yaml.safe_load(rendered)
-    return workflow["jobs"]["create-upstream-pr"]["steps"][2]["run"]
+    return yaml.safe_load(rendered)
+
+
+def _render_workflow_script() -> str:
+    workflow = _render_workflow()
+    steps = workflow["jobs"]["create-upstream-pr"]["steps"]
+    return next(
+        step["run"]
+        for step in steps
+        if step.get("name")
+        == "Prepare upstream/<domain> branch and create/update draft PR"
+    )
 
 
 def _fragment(script: str, start: str, end: str) -> str:
@@ -126,3 +136,12 @@ def test_method_order_baseline_is_refreshed_before_staging() -> None:
     staging = script.index("git add -A")
 
     assert baseline_update < staging
+
+
+def test_workflow_uses_upstream_python_version_for_metadata_tools() -> None:
+    """Python syntax newer than the runner default must not be skipped by baseline tools."""
+    steps = _render_workflow()["jobs"]["create-upstream-pr"]["steps"]
+
+    setup = next(step for step in steps if step.get("name") == "Set up Python")
+    assert setup["uses"].startswith("actions/setup-python@")
+    assert setup["with"]["python-version-file"] == ".python-version"
