@@ -5,12 +5,15 @@ import sys
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import check_upstream_ahead as g  # noqa: E402
 
 DOMAIN = "yandex_music"
 PP = "provider/"
 ROOT = f"music_assistant/providers/{DOMAIN}/"
+ACK_REF = "a91504084610a817212c17174662cf73a4829bd9"
 
 
 def test_identical_not_ahead():
@@ -547,3 +550,153 @@ def test_ported_counts_catch_partial_deletion(tmp_path: Path) -> None:
     up = {ROOT + "api.py": _blob(up_text)}
     blobs = {ROOT + "api.py": up_text.encode()}
     assert _ported(tmp_path, ["provider/api.py"], up, blobs) == ["provider/api.py"]
+
+
+# ── immutable acknowledged upstream baseline ───────────────────────────────
+
+
+def _acknowledged(
+    ahead: list[str], current: dict[str, str], baseline: dict[str, str]
+) -> list[str]:
+    return g.drop_acknowledged_baseline(
+        ahead,
+        current,
+        DOMAIN,
+        PP,
+        ACK_REF,
+        lambda _domain, _ref: baseline,
+    )
+
+
+def test_baseline_drops_only_unchanged_current_blob() -> None:
+    current = {ROOT + "legacy.py": "same", ROOT + "changed.py": "new"}
+    baseline = {ROOT + "legacy.py": "same", ROOT + "changed.py": "old"}
+    assert _acknowledged(
+        ["provider/legacy.py", "provider/changed.py"], current, baseline
+    ) == ["provider/changed.py"]
+
+
+def test_baseline_keeps_current_path_absent_from_baseline() -> None:
+    current = {ROOT + "new.py": "new"}
+    assert _acknowledged(["provider/new.py"], current, {}) == ["provider/new.py"]
+
+
+def test_baseline_handles_source_and_test_paths() -> None:
+    test_path = f"tests/providers/{DOMAIN}/test_legacy.py"
+    current = {ROOT + "legacy.py": "src", test_path: "test"}
+    assert _acknowledged(
+        ["provider/legacy.py", "tests/test_legacy.py"], current, current
+    ) == []
+
+
+def test_baseline_lookup_failure_stays_fail_closed() -> None:
+    current = {ROOT + "legacy.py": "same"}
+
+    def fail(_domain: str, _ref: str) -> dict[str, str]:
+        raise RuntimeError("unavailable")
+
+    assert g.drop_acknowledged_baseline(
+        ["provider/legacy.py"], current, DOMAIN, PP, ACK_REF, fail
+    ) == ["provider/legacy.py"]
+
+
+def test_main_applies_acknowledged_baseline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current = {ROOT + "legacy.py": "same"}
+    refs: list[str] = []
+
+    def list_tree(_domain: str, ref: str) -> dict[str, str]:
+        refs.append(ref)
+        return current
+
+    def offline(_ref: str) -> str:
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(g, "_list_upstream_tree", list_tree)
+    monkeypatch.setattr(g, "transformed_hashes", lambda *_args: {})
+    monkeypatch.setattr(g, "drop_provider_ahead", lambda ahead, *_args: ahead)
+    monkeypatch.setattr(g, "drop_already_ported", lambda ahead, *_args: ahead)
+    monkeypatch.setattr(g, "_fetch_upstream_pyproject", offline)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_upstream_ahead.py",
+            "--domain",
+            DOMAIN,
+            "--provider-path",
+            PP,
+            "--provider-dir",
+            ".",
+            "--acknowledged-upstream-ref",
+            ACK_REF,
+        ],
+    )
+
+    assert g.main() == 0
+    assert refs == ["HEAD", ACK_REF]
+
+
+@pytest.mark.parametrize("invalid", ["main", "a915040", ACK_REF.upper()])
+def test_main_rejects_nonimmutable_acknowledged_ref_before_lookup(
+    monkeypatch: pytest.MonkeyPatch,
+    invalid: str,
+) -> None:
+    def unexpected_lookup(_domain: str, _ref: str) -> dict[str, str]:
+        raise AssertionError("upstream lookup must not run for an invalid baseline")
+
+    monkeypatch.setattr(g, "_list_upstream_tree", unexpected_lookup)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_upstream_ahead.py",
+            "--domain",
+            DOMAIN,
+            "--provider-path",
+            PP,
+            "--provider-dir",
+            ".",
+            "--acknowledged-upstream-ref",
+            invalid,
+        ],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        g.main()
+
+    assert exc.value.code == 2
+
+
+def test_main_without_acknowledged_ref_keeps_normal_guard_flow(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    refs: list[str] = []
+
+    def list_tree(_domain: str, ref: str) -> dict[str, str]:
+        refs.append(ref)
+        return {}
+
+    def offline(_ref: str) -> str:
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(g, "_list_upstream_tree", list_tree)
+    monkeypatch.setattr(g, "transformed_hashes", lambda *_args: {})
+    monkeypatch.setattr(g, "_fetch_upstream_pyproject", offline)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_upstream_ahead.py",
+            "--domain",
+            DOMAIN,
+            "--provider-path",
+            PP,
+            "--provider-dir",
+            ".",
+        ],
+    )
+
+    assert g.main() == 0
+    assert refs == ["HEAD"]

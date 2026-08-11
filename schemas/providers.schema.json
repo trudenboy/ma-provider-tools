@@ -92,6 +92,11 @@
           "type": "boolean",
           "description": "Mount a neighbouring MA checkout and provider tests in the Docker dev environment."
         },
+        "upstream_guard_baseline": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Immutable music-assistant/server commit whose unchanged provider blobs are acknowledged by the forward-sync guard."
+        },
         "codespell_ignore_words": {
           "type": "string"
         },

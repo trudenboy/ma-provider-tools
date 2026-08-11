@@ -423,6 +423,7 @@ providers:
     extra_test_dependencies:
       - "pytest-asyncio>=0.24"
     ma_source_overlay: true
+    upstream_guard_baseline: a91504084610a817212c17174662cf73a4829bd9
     codespell_ignore_words: "hass,"
     service_url: https://github.com/trudenboy/ma-provider-mcp
     auth_method: "MA token (Bearer)"

@@ -113,6 +113,9 @@ jobs:
     with:
       manifest_path: {{ manifest_path }}
       provider_path: {{ provider_path }}
+{%- if upstream_guard_baseline %}
+      upstream_guard_baseline: {{ upstream_guard_baseline }}
+{%- endif %}
       target_branch: integration/dev
 {% raw %}
       version: ${{ needs.prepare.outputs.version_changed == 'true' && format('v{0}', needs.prepare.outputs.version) || '' }}
@@ -131,6 +134,9 @@ jobs:
     with:
       manifest_path: {{ manifest_path }}
       provider_path: {{ provider_path }}
+{%- if upstream_guard_baseline %}
+      upstream_guard_baseline: {{ upstream_guard_baseline }}
+{%- endif %}
 {% raw %}
       target_branch: upstream/${{ needs.prepare.outputs.domain }}
       version: ${{ format('v{0}', needs.prepare.outputs.version) }}

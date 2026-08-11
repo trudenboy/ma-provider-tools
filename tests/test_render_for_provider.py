@@ -12,6 +12,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "render_for_provider.py"
+BASELINE = "a91504084610a817212c17174662cf73a4829bd9"
 
 
 def _run(domain: str, out_dir: Path, *templates: str) -> subprocess.CompletedProcess[str]:
@@ -105,3 +106,33 @@ def test_ordinary_provider_init_keeps_symlink_mode(tmp_path: Path) -> None:
 
     assert "ln -s /tmp/provider" in script
     assert "export PYTHONPATH=\"/ma-server" not in script
+
+
+def _rendered_pipeline(domain: str, tmp_path: Path) -> dict:
+    result = _run(domain, tmp_path, "pipeline.yml.j2")
+    assert result.returncode == 0, result.stderr
+    return yaml.safe_load((tmp_path / "pipeline.yml").read_text())
+
+
+def test_fastmcp_pipeline_passes_upstream_guard_baseline(tmp_path: Path) -> None:
+    jobs = _rendered_pipeline("fastmcp_server", tmp_path)["jobs"]
+    assert jobs["sync-integration"]["with"]["upstream_guard_baseline"] == BASELINE
+    assert jobs["sync-upstream"]["with"]["upstream_guard_baseline"] == BASELINE
+
+
+def test_ordinary_pipeline_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
+    jobs = _rendered_pipeline("yandex_music", tmp_path)["jobs"]
+    assert "upstream_guard_baseline" not in jobs["sync-integration"]["with"]
+    assert "upstream_guard_baseline" not in jobs["sync-upstream"]["with"]
+
+
+def test_distributor_renders_fastmcp_pipeline_with_baseline() -> None:
+    from scripts.distribute import render_wrappers
+
+    registry = yaml.safe_load((REPO_ROOT / "providers.yml").read_text())
+    provider = next(
+        p for p in registry["providers"] if p["domain"] == "fastmcp_server"
+    )
+    rendered = render_wrappers(provider, registry["providers"])
+    jobs = yaml.safe_load(rendered[".github/workflows/pipeline.yml"])["jobs"]
+    assert jobs["sync-integration"]["with"]["upstream_guard_baseline"] == BASELINE
