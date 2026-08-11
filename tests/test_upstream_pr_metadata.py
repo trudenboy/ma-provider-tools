@@ -114,3 +114,15 @@ def test_body_selects_one_type_and_confirms_completed_checks() -> None:
     assert "- [x] `pre-commit run --all-files` passes." in result.stdout
     assert "- [x] `pytest` passes" in result.stdout
     assert "- [x] I have read and complied with the project's [AI Policy]" in result.stdout
+
+
+def test_method_order_baseline_is_refreshed_before_staging() -> None:
+    """A provider cleanup must not leave upstream's lint baseline stale."""
+    script = _render_workflow_script()
+
+    baseline_update = script.index(
+        "python3 -m scripts.check_method_order --update-baseline"
+    )
+    staging = script.index("git add -A")
+
+    assert baseline_update < staging
