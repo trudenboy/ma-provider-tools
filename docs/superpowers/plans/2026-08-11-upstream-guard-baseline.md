@@ -13,6 +13,7 @@
 - The FastMCP baseline is exactly `a91504084610a817212c17174662cf73a4829bd9`.
 - `music-assistant/*` remains read-only; only Git tree reads are allowed.
 - A missing, malformed, inaccessible, absent, added, or changed baseline path must remain blocking.
+- Direct reusable-workflow callers cannot bypass immutability: the guard CLI rejects every baseline except a full 40-character lowercase SHA before upstream lookup.
 - Providers without `upstream_guard_baseline` retain byte-for-byte equivalent workflow behavior.
 - Do not use `ack_upstream_ahead=true` for this rollout.
 - Follow strict RED-GREEN-REFACTOR: every production behavior change begins with a test observed failing for the intended reason.
@@ -231,7 +232,7 @@ git commit -m "feat: configure immutable upstream guard baseline"
 **Interfaces:**
 - Consumes: residual provider-relative paths, current upstream tree map, provider domain/path, and optional acknowledged ref.
 - Produces: `drop_acknowledged_baseline(...) -> list[str]`, preserving a sorted residual list and never dropping on lookup failure.
-- CLI: optional `--acknowledged-upstream-ref REF`.
+- CLI: optional `--acknowledged-upstream-ref REF`, validated as a full 40-character lowercase commit SHA before upstream lookup.
 
 - [ ] **Step 1: Write failing exact-blob tests**
 
@@ -406,12 +407,25 @@ Expected: argparse rejects the unknown option.
 
 - [ ] **Step 7: Wire the CLI after existing automatic proofs**
 
-Add:
+Add a parser type that rejects mutable or noncanonical refs before the first
+upstream tree lookup:
+
+```python
+def _immutable_commit_sha(value: str) -> str:
+    if re.fullmatch(r"[0-9a-f]{40}", value):
+        return value
+    raise argparse.ArgumentTypeError(
+        "acknowledged upstream ref must be a full 40-character lowercase commit SHA"
+    )
+```
+
+Add the argument with that type:
 
 ```python
 ap.add_argument(
     "--acknowledged-upstream-ref",
     default="",
+    type=_immutable_commit_sha,
     help="immutable upstream commit whose unchanged residual blobs are reviewed",
 )
 ```
@@ -518,6 +532,26 @@ def test_preflight_passes_configured_baseline_as_one_argument(tmp_path: Path) ->
 def test_preflight_omits_empty_baseline(tmp_path: Path) -> None:
     args = _run_preflight(tmp_path, "")
     assert "--acknowledged-upstream-ref" not in args
+
+
+def test_workflow_declares_and_maps_upstream_guard_baseline() -> None:
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/reusable-sync-to-fork.yml").read_text()
+    )
+    trigger = workflow.get("on", workflow.get(True))
+    declared = trigger["workflow_call"]["inputs"]["upstream_guard_baseline"]
+    assert declared["type"] == "string"
+    assert declared["default"] == ""
+
+    steps = workflow["jobs"]["sync"]["steps"]
+    preflight = next(
+        step
+        for step in steps
+        if step.get("name") == "Preflight — block if upstream is ahead"
+    )
+    assert preflight["env"]["UPSTREAM_GUARD_BASELINE"] == (
+        "${{ inputs.upstream_guard_baseline }}"
+    )
 ```
 
 The mutations caught are unconditional empty arguments, incorrect option names, lost values, or shell word splitting.

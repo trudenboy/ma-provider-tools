@@ -75,6 +75,10 @@ input named `upstream_guard_baseline`. The preflight command appends
 existing one-run `ack_upstream_ahead` override remains available for manual
 emergencies but is not used by this rollout.
 
+The Python CLI independently requires a full 40-character lowercase commit
+SHA before making any upstream query. This protects direct callers of the
+reusable workflow instead of relying only on registry validation.
+
 ### Guard implementation
 
 `scripts/check_upstream_ahead.py` adds the optional
@@ -90,7 +94,8 @@ unchanged.
 ## Error Handling and Safety
 
 - Empty baseline: preserve current behavior exactly.
-- Malformed registry SHA: reject in registry validation before distribution.
+- Malformed registry or direct-workflow SHA: reject before distribution or any
+  upstream query, respectively.
 - Unresolvable baseline or GitHub API failure: warn and block the sync.
 - Current upstream path missing from baseline: block the sync.
 - Current blob differs from baseline: block the sync.
@@ -113,8 +118,8 @@ Tests will prove:
 4. A baseline lookup failure remains fail-closed.
 5. The FastMCP pipeline renders the exact SHA into both sync jobs.
 6. A provider without a baseline renders neither input, preserving its wrapper.
-7. Schema validation accepts a full SHA and rejects branches, short SHAs, and
-   uppercase SHAs.
+7. Schema and CLI validation accept a full SHA and reject branches, short
+   SHAs, and uppercase SHAs before upstream lookup.
 8. Existing guard, template, registry, and full repository tests stay green.
 
 ## Rollout and Success Criteria

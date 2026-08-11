@@ -60,3 +60,23 @@ def test_preflight_passes_configured_baseline_as_one_argument(
 def test_preflight_omits_empty_baseline(tmp_path: Path) -> None:
     args = _run_preflight(tmp_path, "")
     assert "--acknowledged-upstream-ref" not in args
+
+
+def test_workflow_declares_and_maps_upstream_guard_baseline() -> None:
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/reusable-sync-to-fork.yml").read_text()
+    )
+    trigger = workflow.get("on", workflow.get(True))
+    declared = trigger["workflow_call"]["inputs"]["upstream_guard_baseline"]
+    assert declared["type"] == "string"
+    assert declared["default"] == ""
+
+    steps = workflow["jobs"]["sync"]["steps"]
+    preflight = next(
+        step
+        for step in steps
+        if step.get("name") == "Preflight — block if upstream is ahead"
+    )
+    assert preflight["env"]["UPSTREAM_GUARD_BASELINE"] == (
+        "${{ inputs.upstream_guard_baseline }}"
+    )

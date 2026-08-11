@@ -636,3 +636,34 @@ def test_main_applies_acknowledged_baseline(
 
     assert g.main() == 0
     assert refs == ["HEAD", ACK_REF]
+
+
+@pytest.mark.parametrize("invalid", ["main", "a915040", ACK_REF.upper()])
+def test_main_rejects_nonimmutable_acknowledged_ref_before_lookup(
+    monkeypatch: pytest.MonkeyPatch,
+    invalid: str,
+) -> None:
+    def unexpected_lookup(_domain: str, _ref: str) -> dict[str, str]:
+        raise AssertionError("upstream lookup must not run for an invalid baseline")
+
+    monkeypatch.setattr(g, "_list_upstream_tree", unexpected_lookup)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_upstream_ahead.py",
+            "--domain",
+            DOMAIN,
+            "--provider-path",
+            PP,
+            "--provider-dir",
+            ".",
+            "--acknowledged-upstream-ref",
+            invalid,
+        ],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        g.main()
+
+    assert exc.value.code == 2

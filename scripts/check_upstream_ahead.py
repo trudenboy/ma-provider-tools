@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -541,6 +542,15 @@ def drop_acknowledged_baseline(
     return remaining
 
 
+def _immutable_commit_sha(value: str) -> str:
+    """Require an immutable, canonical Git commit id at the safety boundary."""
+    if re.fullmatch(r"[0-9a-f]{40}", value):
+        return value
+    raise argparse.ArgumentTypeError(
+        "acknowledged upstream ref must be a full 40-character lowercase commit SHA"
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--domain", required=True)
@@ -575,6 +585,7 @@ def main() -> int:
     ap.add_argument(
         "--acknowledged-upstream-ref",
         default="",
+        type=_immutable_commit_sha,
         help="immutable upstream commit whose unchanged residual blobs are reviewed",
     )
     args = ap.parse_args()
