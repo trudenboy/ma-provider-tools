@@ -584,7 +584,7 @@ def main() -> int:
     )
     ap.add_argument(
         "--acknowledged-upstream-ref",
-        default="",
+        default=None,
         type=_immutable_commit_sha,
         help="immutable upstream commit whose unchanged residual blobs are reviewed",
     )

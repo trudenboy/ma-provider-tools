@@ -667,3 +667,36 @@ def test_main_rejects_nonimmutable_acknowledged_ref_before_lookup(
         g.main()
 
     assert exc.value.code == 2
+
+
+def test_main_without_acknowledged_ref_keeps_normal_guard_flow(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    refs: list[str] = []
+
+    def list_tree(_domain: str, ref: str) -> dict[str, str]:
+        refs.append(ref)
+        return {}
+
+    def offline(_ref: str) -> str:
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(g, "_list_upstream_tree", list_tree)
+    monkeypatch.setattr(g, "transformed_hashes", lambda *_args: {})
+    monkeypatch.setattr(g, "_fetch_upstream_pyproject", offline)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "check_upstream_ahead.py",
+            "--domain",
+            DOMAIN,
+            "--provider-path",
+            PP,
+            "--provider-dir",
+            ".",
+        ],
+    )
+
+    assert g.main() == 0
+    assert refs == ["HEAD"]
