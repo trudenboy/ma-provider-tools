@@ -88,6 +88,10 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
+        "ma_source_overlay": {
+          "type": "boolean",
+          "description": "Mount a neighbouring MA checkout and provider tests in the Docker dev environment."
+        },
         "codespell_ignore_words": {
           "type": "string"
         },

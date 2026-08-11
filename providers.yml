@@ -418,9 +418,11 @@ providers:
     locale: en
     python_version: "3.14"
     runtime_dependencies:
-      - "fastmcp>=3.2,<4.0"
+      - "fastmcp==3.4.6"
+      - "prefab-ui==0.20.2"
     extra_test_dependencies:
       - "pytest-asyncio>=0.24"
+    ma_source_overlay: true
     codespell_ignore_words: "hass,"
     service_url: https://github.com/trudenboy/ma-provider-mcp
     auth_method: "MA token (Bearer)"
