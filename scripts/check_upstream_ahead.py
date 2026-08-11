@@ -37,6 +37,7 @@ UPSTREAM = "music-assistant/server"
 IGNORE_SUFFIXES = ("VERSION", "translations/en.json")
 
 RuffRunner = Callable[[str, list[str]], None]
+UpstreamTreeLister = Callable[[str, str], dict[str, str]]
 
 
 def _ignored(provider_rel: str) -> bool:
@@ -501,6 +502,45 @@ def drop_already_ported(
     return sorted(remaining)
 
 
+def drop_acknowledged_baseline(
+    ahead: list[str],
+    upstream_files: dict[str, str],
+    domain: str,
+    provider_path: str,
+    acknowledged_ref: str,
+    list_upstream_tree: UpstreamTreeLister,
+) -> list[str]:
+    """Drop residual paths unchanged since an explicitly reviewed tree."""
+    if not ahead or not acknowledged_ref:
+        return sorted(ahead)
+    try:
+        baseline = list_upstream_tree(domain, acknowledged_ref)
+    except Exception as exc:  # noqa: BLE001 -- fail-closed guard boundary
+        print(
+            "::warning::could not resolve acknowledged upstream baseline "
+            f"{acknowledged_ref} ({exc}); keeping all differences flagged.",
+            file=sys.stderr,
+        )
+        return sorted(ahead)
+
+    remaining: list[str] = []
+    for rel in sorted(ahead):
+        up_path = t.forward_path(rel, domain, provider_path)
+        if (
+            up_path is None
+            or up_path not in baseline
+            or upstream_files.get(up_path) != baseline[up_path]
+        ):
+            remaining.append(rel)
+            continue
+        print(
+            f"::notice::{rel}: current upstream blob matches acknowledged "
+            f"baseline {acknowledged_ref} (reviewed divergence — not blocking).",
+            file=sys.stderr,
+        )
+    return remaining
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--domain", required=True)
@@ -531,6 +571,11 @@ def main() -> int:
         action="store_true",
         help="keep a file flagged even when the upstream edit is already "
         "reflected in provider HEAD (skip the already-ported pass)",
+    )
+    ap.add_argument(
+        "--acknowledged-upstream-ref",
+        default="",
+        help="immutable upstream commit whose unchanged residual blobs are reviewed",
     )
     args = ap.parse_args()
 
@@ -581,6 +626,15 @@ def main() -> int:
                 up_path, args.upstream_ref, upstream[up_path]
             ),
             args.max_baseline_tags,
+        )
+    if ahead and args.acknowledged_upstream_ref:
+        ahead = drop_acknowledged_baseline(
+            ahead,
+            upstream,
+            args.domain,
+            args.provider_path,
+            args.acknowledged_upstream_ref,
+            _list_upstream_tree,
         )
     if ahead:
         print("::warning::Upstream is ahead of the provider repo on:", file=sys.stderr)
