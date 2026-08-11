@@ -285,6 +285,7 @@ def render_wrappers(provider: dict, all_providers: list[dict]) -> dict[str, str]
         "runtime_dependencies": provider.get("runtime_dependencies", []),
         "extra_test_dependencies": provider.get("extra_test_dependencies", []),
         "ma_source_overlay": provider.get("ma_source_overlay", False),
+        "upstream_guard_baseline": provider.get("upstream_guard_baseline", ""),
         "github_description": provider.get("github_description", ""),
         "github_topics": provider.get("github_topics", []),
         "github_homepage": provider.get(
