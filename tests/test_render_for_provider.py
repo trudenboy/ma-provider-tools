@@ -136,3 +136,35 @@ def test_distributor_renders_fastmcp_pipeline_with_baseline() -> None:
     rendered = render_wrappers(provider, registry["providers"])
     jobs = yaml.safe_load(rendered[".github/workflows/pipeline.yml"])["jobs"]
     assert jobs["sync-integration"]["with"]["upstream_guard_baseline"] == BASELINE
+
+
+def _rendered_manual_sync(domain: str, tmp_path: Path) -> dict:
+    result = _run(domain, tmp_path, "sync-to-fork.yml.j2")
+    assert result.returncode == 0, result.stderr
+    return yaml.safe_load((tmp_path / "sync-to-fork.yml").read_text())
+
+
+def test_fastmcp_manual_sync_passes_upstream_guard_baseline(tmp_path: Path) -> None:
+    job = _rendered_manual_sync("fastmcp_server", tmp_path)["jobs"]["sync"]
+    assert job["with"]["upstream_guard_baseline"] == BASELINE
+
+
+def test_ordinary_manual_sync_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
+    job = _rendered_manual_sync("yandex_music", tmp_path)["jobs"]["sync"]
+    assert "upstream_guard_baseline" not in job["with"]
+
+
+def _rendered_backport(domain: str, tmp_path: Path) -> dict:
+    result = _run(domain, tmp_path, "backport.yml.j2")
+    assert result.returncode == 0, result.stderr
+    return yaml.safe_load((tmp_path / "backport.yml").read_text())
+
+
+def test_fastmcp_backport_passes_upstream_guard_baseline(tmp_path: Path) -> None:
+    job = _rendered_backport("fastmcp_server", tmp_path)["jobs"]["backport"]
+    assert job["with"]["upstream_guard_baseline"] == BASELINE
+
+
+def test_ordinary_backport_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
+    job = _rendered_backport("yandex_music", tmp_path)["jobs"]["backport"]
+    assert "upstream_guard_baseline" not in job["with"]
