@@ -53,7 +53,7 @@ def test_fastmcp_runtime_dependencies_match_its_manifest(tmp_path: Path) -> None
     project = tomllib.loads((tmp_path / "pyproject.toml").read_text())
 
     assert project["project"]["dependencies"] == [
-        "fastmcp==3.4.6",
+        "fastmcp==3.4.7",
         "prefab-ui==0.20.2",
     ]
 
