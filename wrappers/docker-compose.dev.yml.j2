@@ -20,9 +20,17 @@ services:
       - "8927:8927"
     privileged: true
     restart: "no"
+{%- if ma_source_overlay %}
+    environment:
+      PYTHONPATH: /ma-server
+    volumes:
+      - ${MA_DATA_DIR:-./.ma-data}:/data
+      - ${MA_SERVER_ROOT:-../ma-server}:/ma-server:ro
+      - ./{{ provider_path }}:/ma-server/music_assistant/providers/{{ domain }}:ro
+      - ./tests/:/tmp/provider-tests:ro{% else %}
     volumes:
       - ./.ma-data:/data
-      - ./{{ provider_path }}:/tmp/provider:ro
+      - ./{{ provider_path }}:/tmp/provider:ro{% endif %}
       - ./pyproject.toml:/tmp/pyproject.toml:ro
       - ./scripts/docker-init.sh:/init.sh:ro
     entrypoint: ["/bin/sh", "/init.sh"]

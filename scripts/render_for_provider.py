@@ -54,6 +54,7 @@ def build_context(domain: str) -> dict:
         "python_version": provider.get("python_version", "3.12"),
         "runtime_dependencies": provider.get("runtime_dependencies", []),
         "extra_test_dependencies": provider.get("extra_test_dependencies", []),
+        "ma_source_overlay": provider.get("ma_source_overlay", False),
         "all_providers": [
             p for p in providers if p.get("provider_type") != "server_fork"
         ],

@@ -50,6 +50,7 @@ def main() -> int:
         "max_quality": base.get("max_quality", ""),
         "features": base.get("features", []),
         "codespell_ignore_words": base.get("codespell_ignore_words", ""),
+        "ma_source_overlay": base.get("ma_source_overlay", False),
         "github_description": base.get("github_description", ""),
         "github_topics": base.get("github_topics", []),
         "github_homepage": base.get(
