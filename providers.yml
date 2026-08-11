@@ -11,6 +11,7 @@ providers:
     runtime_dependencies:
       - "ya-passport-auth[ma]==1.7.0"
       - "yandex-music==3.0.0"
+      - "segno==1.6.6"
     codespell_ignore_words: "provid,hass,followings,childs,explict,additionals,commitish,nam,"
     service_url: https://music.yandex.ru
     auth_method: "Токен (X-Auth-Token)"
