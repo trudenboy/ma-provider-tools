@@ -1087,10 +1087,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -2180,10 +2184,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "334f41b1ae3b6c1b98ca4143ab934b51a57e672b",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -3845,10 +3853,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -4938,10 +4950,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "e7d50f8e11dd7d006e11dd82862a7bf4c11f445b",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -6031,10 +6047,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -7124,10 +7144,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "a85f72ab193c3dc93aed9038f9758a835b742d2b",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -8217,10 +8241,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -9310,10 +9338,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "b7304ae3169f33a09751a53df9dc7723ed3988d0",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -10403,10 +10435,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "e73399fd81ee13b717e960f30390cc1c30963fae",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -11496,10 +11532,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "bc5bd97ea49d61552d863b3ae6673fdeb14c7b2f",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -12589,10 +12629,14 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "90be63b9e8630ec131fa6aef2017bd5eb0628b9b",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -13682,9 +13726,13 @@
       5636,
       5635,
       5639,
-      5638
+      5638,
+      5643,
+      5644,
+      5646,
+      5645
     ],
     "last_synced_sha": "24e692fbe8a4e273489fdb3ed042490a668b79de",
-    "pulls_cursor": "2026-08-13T19:48:38Z"
+    "pulls_cursor": "2026-08-14T00:06:28Z"
   }
 }
