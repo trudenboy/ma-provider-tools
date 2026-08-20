@@ -6,13 +6,13 @@ title: {% if locale == 'ru' %}Тестирование{% else %}Testing{% endif 
 ## Быстрый старт
 
 ```bash
-uv run pytest {{ provider_path }}tests/ -v
+uv run pytest tests/ -v
 ```
 
 С отчётом о покрытии:
 
 ```bash
-uv run pytest {{ provider_path }}tests/ -v --cov={{ provider_path }} --cov-report=term-missing
+uv run pytest tests/ -v --cov={{ provider_path }} --cov-report=term-missing
 ```
 
 ## CI-пайплайн
@@ -35,7 +35,7 @@ uv run pytest {{ provider_path }}tests/ -v --cov={{ provider_path }} --cov-repor
 | Инструмент | Назначение |
 |-----------|-----------|
 | `uv` | Управление виртуальным окружением и зависимостями |
-| `Python 3.12` | Целевая версия языка |
+| `Python {{ python_version }}` | Целевая версия языка |
 | `pytest` | Фреймворк для тестов |
 | `pytest-cov` | Сбор данных о покрытии |
 | `Codecov` | Загрузка отчётов о покрытии (автоматически в CI) |
@@ -71,7 +71,7 @@ uv run ruff format --check {{ provider_path }}
 Локально просмотреть покрытие:
 
 ```bash
-uv run pytest {{ provider_path }}tests/ --cov={{ provider_path }} --cov-report=html
+uv run pytest tests/ --cov={{ provider_path }} --cov-report=html
 open htmlcov/index.html
 ```
 
@@ -87,13 +87,13 @@ open htmlcov/index.html
 ## Quick Start
 
 ```bash
-uv run pytest {{ provider_path }}tests/ -v
+uv run pytest tests/ -v
 ```
 
 With coverage report:
 
 ```bash
-uv run pytest {{ provider_path }}tests/ -v --cov={{ provider_path }} --cov-report=term-missing
+uv run pytest tests/ -v --cov={{ provider_path }} --cov-report=term-missing
 ```
 
 ## CI Pipeline
@@ -116,7 +116,7 @@ Tests run against `trudenboy/ma-server@dev` (plugin-enabled fork — full CI wit
 | Tool | Purpose |
 |------|---------|
 | `uv` | Virtual environment and dependency management |
-| `Python 3.12` | Target Python version |
+| `Python {{ python_version }}` | Target Python version |
 | `pytest` | Test framework |
 | `pytest-cov` | Coverage collection |
 | `Codecov` | Coverage report upload (automatic in CI) |
@@ -152,7 +152,7 @@ Coverage reports are automatically uploaded to Codecov on every CI push.
 To view coverage locally:
 
 ```bash
-uv run pytest {{ provider_path }}tests/ --cov={{ provider_path }} --cov-report=html
+uv run pytest tests/ --cov={{ provider_path }} --cov-report=html
 open htmlcov/index.html
 ```
 

@@ -46,6 +46,43 @@ def test_skip_wrappers_template_not_rendered(tmp_path: Path) -> None:
     assert not (tmp_path / "scripts" / "check_method_order.py").exists()
 
 
+def test_msx_codeowners_protects_root_version_file(tmp_path: Path) -> None:
+    result = _run("msx_bridge", tmp_path, "CODEOWNERS.j2")
+    assert result.returncode == 0, result.stderr
+    codeowners = (tmp_path / "CODEOWNERS").read_text()
+
+    assert "/VERSION @trudenboy" in codeowners
+    assert "/provider/VERSION" not in codeowners
+
+
+def test_msx_agent_guide_uses_root_tests_directory(tmp_path: Path) -> None:
+    result = _run("msx_bridge", tmp_path, "CLAUDE.md.j2")
+    assert result.returncode == 0, result.stderr
+    guide = (tmp_path / "CLAUDE.md").read_text()
+
+    assert "uv run pytest tests/<file>.py" in guide
+    assert "provider/tests/" not in guide
+
+
+def test_msx_docs_use_configured_python_and_root_tests(tmp_path: Path) -> None:
+    result = _run(
+        "msx_bridge",
+        tmp_path,
+        "docs/development.md.j2",
+        "docs/testing.md.j2",
+    )
+    assert result.returncode == 0, result.stderr
+    development = (tmp_path / "docs" / "development.md").read_text()
+    testing = (tmp_path / "docs" / "testing.md").read_text()
+
+    assert "Python 3.14" in development
+    assert "Python 3.14" in testing
+    assert "uv run pytest tests/" in development
+    assert "uv run pytest tests/" in testing
+    assert "provider/tests/" not in development
+    assert "provider/tests/" not in testing
+
+
 def test_fastmcp_runtime_dependencies_match_its_manifest(tmp_path: Path) -> None:
     """A clean FastMCP environment installs every provider runtime dependency."""
     result = _run("fastmcp_server", tmp_path, "pyproject.toml.j2")
