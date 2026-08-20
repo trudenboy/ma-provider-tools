@@ -161,7 +161,7 @@ providers:
   - domain: msx_bridge
     display_name: MSX Bridge
     repo: trudenboy/ma-provider-msx-bridge
-    default_branch: feat/msx-bridge-player-provider
+    default_branch: dev
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
