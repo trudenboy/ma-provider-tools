@@ -8,7 +8,7 @@ description: Setting up the development environment for {{ display_name }} provi
 {% if locale == 'ru' %}
 ## Требования
 
-- Python 3.12+
+- Python {{ python_version }}+
 - [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - ffmpeg 6.1+ (для интеграционных тестов MA)
   - macOS: `brew install ffmpeg`
@@ -27,13 +27,13 @@ description: Setting up the development environment for {{ display_name }} provi
 
 ```bash
 # Unit-тесты (без MA-сервера)
-uv run pytest {{ provider_path }}tests/ -m "not integration"
+uv run pytest tests/ -m "not integration"
 
 # Полный набор тестов
-uv run pytest {{ provider_path }}tests/
+uv run pytest tests/
 
 # С отчётом покрытия
-uv run pytest {{ provider_path }}tests/ --cov={{ provider_path }} --cov-report=html
+uv run pytest tests/ --cov={{ provider_path }} --cov-report=html
 ```
 
 ## Именование веток
@@ -53,7 +53,7 @@ git checkout dev && git pull
 git checkout -b feature/my-feature
 
 # разработка + тесты
-uv run pytest {{ provider_path }}tests/
+uv run pytest tests/
 pre-commit run --all-files
 
 # PR: feature/* → dev
@@ -106,13 +106,13 @@ python3 scripts/dev-workspace.py run --dir ~/ma-workspace
 python3 scripts/dev-workspace.py status --dir ~/ma-workspace
 ```
 
-Workspace использует один `trudenboy/ma-server` fork и общий `.venv` (Python 3.12).
+Workspace использует один `trudenboy/ma-server` fork и общий `.venv`.
 Каждый провайдер подключается через симлинк в `ma-server/music_assistant/providers/`.
 
 {%- else %}
 ## Requirements
 
-- Python 3.12+
+- Python {{ python_version }}+
 - [uv](https://docs.astral.sh/uv/) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - ffmpeg 6.1+ (for MA integration tests)
   - macOS: `brew install ffmpeg`
@@ -131,13 +131,13 @@ Re-run after `git pull` — MA model versions may change.
 
 ```bash
 # Unit tests only (no MA server needed)
-uv run pytest {{ provider_path }}tests/ -m "not integration"
+uv run pytest tests/ -m "not integration"
 
 # Full test suite
-uv run pytest {{ provider_path }}tests/
+uv run pytest tests/
 
 # With coverage report
-uv run pytest {{ provider_path }}tests/ --cov={{ provider_path }} --cov-report=html
+uv run pytest tests/ --cov={{ provider_path }} --cov-report=html
 ```
 
 ## Branch Naming
@@ -155,7 +155,7 @@ git checkout dev && git pull
 git checkout -b feature/my-feature
 
 # develop + test
-uv run pytest {{ provider_path }}tests/
+uv run pytest tests/
 pre-commit run --all-files
 
 # PR: feature/* → dev
@@ -209,6 +209,6 @@ python3 scripts/dev-workspace.py run --dir ~/ma-workspace
 python3 scripts/dev-workspace.py status --dir ~/ma-workspace
 ```
 
-The workspace uses a single `trudenboy/ma-server` fork and shared `.venv` (Python 3.12).
+The workspace uses a single `trudenboy/ma-server` fork and shared `.venv`.
 Each provider is connected via symlink into `ma-server/music_assistant/providers/`.
 {%- endif %}
