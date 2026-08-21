@@ -1318,10 +1318,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -2642,10 +2647,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
-    "last_synced_sha": "612940ca34b26d68db0f2003b1055e4c83571803",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "last_synced_sha": "f84a9dbc3ae1f622e8beedd21984df8a37d3f9c1",
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -4538,10 +4548,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -5862,10 +5877,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": "ca57548a642057321ec4c0f6a7cbe35be33d1019",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -7186,10 +7206,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -8510,10 +8535,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": "16d565de8b336ad58f0357544d7237813c7a1b97",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -9834,10 +9864,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -11158,10 +11193,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": "ca57548a642057321ec4c0f6a7cbe35be33d1019",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -12482,10 +12522,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": "e73399fd81ee13b717e960f30390cc1c30963fae",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -13806,10 +13851,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": "bc5bd97ea49d61552d863b3ae6673fdeb14c7b2f",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -15130,10 +15180,15 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
-    "last_synced_sha": "dde9e0c2a0cd90fe35e1384072b98248f6a95d18",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "last_synced_sha": "f84a9dbc3ae1f622e8beedd21984df8a37d3f9c1",
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -16454,9 +16509,14 @@
       5890,
       5877,
       5886,
-      5864
+      5864,
+      5896,
+      5894,
+      5880,
+      5875,
+      5888
     ],
     "last_synced_sha": "ca57548a642057321ec4c0f6a7cbe35be33d1019",
-    "pulls_cursor": "2026-08-21T08:06:19Z"
+    "pulls_cursor": "2026-08-21T09:37:12Z"
   }
 }
