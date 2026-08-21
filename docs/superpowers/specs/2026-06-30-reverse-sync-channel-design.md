@@ -154,9 +154,10 @@ PR number + domain.
    ```
    `OURS == HEAD` is already present; `OURS == BASE` takes the normalized head;
    other text edits use a real diff3 merge. Structural text conflicts such as
-   modify/delete are rendered with markers. A touched file absent from the
-   provider is materialized from the normalized head snapshot (the `#5782`
-   case). Divergent binary/symlink states, ambiguous renames, missing snapshots,
+   modify/delete are rendered with markers. In particular, a file that existed
+   in `BASE`, is absent from the provider, and changed in upstream `HEAD` is a
+   modify/delete conflict (the `#5782` case), not a clean materialization.
+   Divergent binary/symlink states, ambiguous renames, missing snapshots,
    incomplete classification, or unexpected paths abort before scaffold/push/PR.
    The algorithm does not depend on patch index SHAs, `git apply`, or `.rej`.
 4. **Scaffold (issue P1):** `specs/inprogress/reverse-sync-pr<n>.md`

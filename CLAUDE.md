@@ -145,9 +145,10 @@ in `music-assistant/server`; the radar detects merged ones and auto-opens a
    (current provider), and `THEIRS` (upstream after the PR). `OURS == THEIRS`
    is deduplicated; `OURS == BASE` takes `THEIRS`; other text changes use
    `git merge-file --diff3`. Real overlaps and structural modify/delete or
-   add/add conflicts are written as `<<<<<<<` markers. A touched file missing
-   from the provider is materialized directly from the normalized head snapshot
-   (the `#5782` case). Binary/symlink conflicts, ambiguous renames, missing
+   add/add conflicts are written as `<<<<<<<` markers. If a file existed in
+   `BASE`, is absent from the provider, and changed in upstream `HEAD`, that is
+   a structural modify/delete conflict (the `#5782` case), never a clean
+   materialization. Binary/symlink conflicts, ambiguous renames, missing
    snapshots, incomplete classification, or unexpected changed paths are fatal
    before scaffold, commit, push, or PR creation. No `git apply`, patch-index
    SHA, or `.rej` heuristic participates in correctness. If all normalized head
