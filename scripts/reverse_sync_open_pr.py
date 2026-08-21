@@ -978,22 +978,6 @@ def _merge_snapshot_sections(
                 )
             )
             continue
-        if (
-            current is None
-            and section.base is not None
-            and section.incoming is not None
-        ):
-            _write_file_snapshot(provider_dir, section.target_path, section.incoming)
-            results.append(
-                FileApplyResult(
-                    section.target_path,
-                    "applied",
-                    "three_way",
-                    (),
-                    "provider file was absent; materialized upstream head snapshot",
-                )
-            )
-            continue
         if current != section.base:
             if current is None or section.base is None or section.incoming is None:
                 merged = _structural_conflict_snapshot(

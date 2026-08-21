@@ -854,8 +854,8 @@ def test_snapshot_merge_accepts_multiple_diff3_conflict_regions(tmp_path):
     assert (tmp_path / "provider/api.py").read_text().count("<<<<<<< provider") == 2
 
 
-def test_snapshot_merge_materializes_touched_file_missing_from_provider(tmp_path):
-    """Regression for #5782: an unsynced test still receives the head snapshot."""
+def test_snapshot_merge_marks_missing_modified_file_as_structural_conflict(tmp_path):
+    """Regression for #5782: provider deletion must win over clean materialization."""
     repo = _init_provider_repo(tmp_path, {"README.md": "provider\n"})
     section = o.SnapshotSection(
         source_path="tests/test_debug.py",
@@ -866,8 +866,14 @@ def test_snapshot_merge_materializes_touched_file_missing_from_provider(tmp_path
 
     result = o._merge_snapshot_sections((section,), repo)
 
-    assert result.applied_paths == ["tests/test_debug.py"]
-    assert (tmp_path / "tests/test_debug.py").read_text() == "for _ in range(10):\n"
+    assert result.applied_paths == []
+    assert result.conflicted_paths == ["tests/test_debug.py"]
+    assert result.files[0].artifacts == ("tests/test_debug.py",)
+    merged = (tmp_path / "tests/test_debug.py").read_text()
+    assert "<<<<<<< provider\n<absent in provider>\n" in merged
+    assert "||||||| upstream-base\nfor i in range(10):\n" in merged
+    assert "=======\nfor _ in range(10):\n" in merged
+    assert ">>>>>>> upstream-head\n" in merged
 
 
 def test_snapshot_sections_load_and_reverse_transform_base_and_head(tmp_path):
