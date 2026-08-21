@@ -53,6 +53,26 @@ def test_touches_provider_test_files():
     assert r.touches_provider(["music_assistant/server.py"], "yandex_music") is False
 
 
+def test_pr_files_includes_previous_filename_for_rename_out(monkeypatch):
+    captured: list[list[str]] = []
+
+    def fake_gh(args):
+        captured.append(args)
+        return json.dumps(
+            [
+                "music_assistant/helpers/api.py",
+                "music_assistant/providers/yandex_music/api.py",
+            ]
+        )
+
+    monkeypatch.setattr(r, "_gh", fake_gh)
+
+    files = r._pr_files(123)
+
+    assert r.touches_provider(files, "yandex_music") is True
+    assert "previous_filename" in captured[0][-1]
+
+
 def test_select_unhandled_filters_handled_and_cursor():
     data = {}
     st.mark_handled(data, "d", 100)
@@ -238,3 +258,242 @@ def test_merged_prs_stops_at_max_pages(monkeypatch, capsys):
     # Warning must be emitted to stderr
     captured = capsys.readouterr()
     assert "WARNING" in captured.err
+
+
+def _write_radar_inputs(tmp_path: Path, *, handled: bool = True) -> tuple[Path, Path]:
+    providers = tmp_path / "providers.yml"
+    providers.write_text(
+        "providers:\n"
+        "  - domain: fastmcp_server\n"
+        "    repo: trudenboy/ma-provider-mcp\n"
+        "    default_branch: dev\n"
+        "    provider_path: provider/\n"
+    )
+    state = tmp_path / "reverse-sync.json"
+    state.write_text(
+        json.dumps(
+            {
+                "fastmcp_server": {
+                    "last_synced_sha": "anchor",
+                    "handled_prs": [5782] if handled else [],
+                    "pulls_cursor": "2026-08-19T12:00:00Z",
+                    "digest_issue": None,
+                }
+            }
+        )
+    )
+    return providers, state
+
+
+def _merged_target_pr() -> dict:
+    return {
+        "number": 5782,
+        "updated_at": "2026-08-01T00:00:00Z",
+        "merged_at": "2026-08-01T01:00:00Z",
+        "user": {"login": "alice"},
+    }
+
+
+def _configure_targeted(monkeypatch, tmp_path: Path, *, handled: bool = True):
+    providers, state = _write_radar_inputs(tmp_path, handled=handled)
+    monkeypatch.setattr(r, "PROVIDERS_PATH", str(providers))
+    monkeypatch.setattr(r, "STATE_PATH", str(state))
+    monkeypatch.setattr(r, "_upstream_pr", lambda number: _merged_target_pr())
+    monkeypatch.setattr(
+        r,
+        "_pr_files",
+        lambda number: ["tests/providers/fastmcp_server/test_debug.py"],
+    )
+    monkeypatch.setattr(r, "_clone_provider", lambda *args: None)
+    return state
+
+
+def test_targeted_retry_bypasses_handled_and_cursor_for_only_selected_pair(
+    monkeypatch, tmp_path
+):
+    state = _configure_targeted(monkeypatch, tmp_path, handled=True)
+    opened: list[tuple[str, int]] = []
+
+    def fake_open(**kwargs):
+        opened.append((kwargs["domain"], kwargs["pr_number"]))
+        return {
+            "skipped": False,
+            "reason": None,
+            "pr_url": "https://github.com/trudenboy/ma-provider-mcp/pull/278",
+            "conflicts": False,
+            "reused": True,
+            "applied_paths": ["tests/test_debug.py"],
+            "conflicted_paths": [],
+            "label_failures": [],
+        }
+
+    monkeypatch.setattr(r.opener, "open_reverse_pr", fake_open)
+
+    assert r.run(retry_domain="fastmcp_server", retry_pr="5782") == 0
+    assert opened == [("fastmcp_server", 5782)]
+    saved = json.loads(state.read_text())["fastmcp_server"]
+    assert saved["handled_prs"] == [5782]
+    assert saved["pulls_cursor"] == "2026-08-19T12:00:00Z"
+
+
+@pytest.mark.parametrize(
+    ("domain", "number", "merged"),
+    [
+        ("fastmcp_server", None, True),
+        (None, "5782", True),
+        ("missing", "5782", True),
+        ("fastmcp_server", "0", True),
+        ("fastmcp_server", "not-a-number", True),
+        ("fastmcp_server", "5782", False),
+    ],
+)
+def test_invalid_targeted_retry_fails_before_state_access(
+    monkeypatch, tmp_path, domain, number, merged
+):
+    providers, _ = _write_radar_inputs(tmp_path)
+    monkeypatch.setattr(r, "PROVIDERS_PATH", str(providers))
+    monkeypatch.setattr(
+        r,
+        "_upstream_pr",
+        lambda pr_number: (
+            _merged_target_pr() | ({"merged_at": None} if not merged else {})
+        ),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        r.st,
+        "load",
+        lambda path: (_ for _ in ()).throw(AssertionError("state loaded")),
+    )
+    monkeypatch.setattr(
+        r.st,
+        "save",
+        lambda path, data: (_ for _ in ()).throw(AssertionError("state saved")),
+    )
+
+    with pytest.raises((ValueError, RuntimeError)):
+        r.run(retry_domain=domain, retry_pr=number)
+
+
+def test_targeted_apply_failure_stays_retryable_and_creates_incident(
+    monkeypatch, tmp_path
+):
+    state = _configure_targeted(monkeypatch, tmp_path, handled=False)
+    incidents: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        r.opener,
+        "open_reverse_pr",
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("no apply outcome")),
+    )
+    monkeypatch.setattr(
+        r.reverse_sync_notify,
+        "upsert_issue",
+        lambda repo, label, title, body: incidents.append((title, body)) or 1,
+    )
+
+    assert r.run(retry_domain="fastmcp_server", retry_pr="5782") == 1
+    saved = json.loads(state.read_text())["fastmcp_server"]
+    assert 5782 not in saved["handled_prs"]
+    assert saved["pulls_cursor"] == "2026-08-19T12:00:00Z"
+    assert incidents == [
+        (
+            "reverse-sync failed — fastmcp_server PR#5782",
+            "reverse_sync_radar failed to open reverse PR for `fastmcp_server` "
+            "upstream PR#5782:\n\n```\nno apply outcome\n```",
+        )
+    ]
+
+
+def test_targeted_non_durable_opener_result_stays_retryable(monkeypatch, tmp_path):
+    state = _configure_targeted(monkeypatch, tmp_path, handled=False)
+    incidents: list[str] = []
+    monkeypatch.setattr(
+        r.opener,
+        "open_reverse_pr",
+        lambda **kwargs: {
+            "skipped": False,
+            "reason": None,
+            "pr_url": None,
+            "conflicts": False,
+            "reused": False,
+            "applied_paths": ["provider/api.py"],
+            "conflicted_paths": [],
+            "label_failures": [],
+        },
+    )
+    monkeypatch.setattr(
+        r.reverse_sync_notify,
+        "upsert_issue",
+        lambda repo, label, title, body: incidents.append(body) or 1,
+    )
+
+    assert r.run(retry_domain="fastmcp_server", retry_pr="5782") == 1
+    assert 5782 not in json.loads(state.read_text())["fastmcp_server"]["handled_prs"]
+    assert "non-durable" in incidents[0]
+
+
+def test_targeted_label_failure_creates_incident_but_remains_handled(
+    monkeypatch, tmp_path
+):
+    state = _configure_targeted(monkeypatch, tmp_path, handled=False)
+    incidents: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        r.opener,
+        "open_reverse_pr",
+        lambda **kwargs: {
+            "skipped": False,
+            "reason": None,
+            "pr_url": "https://github.com/trudenboy/ma-provider-mcp/pull/278",
+            "conflicts": True,
+            "reused": True,
+            "applied_paths": ["tests/test_debug.py"],
+            "conflicted_paths": [],
+            "label_failures": [
+                {"label": "needs-human", "diagnostic": "HTTP 422 missing label"}
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        r.reverse_sync_notify,
+        "upsert_issue",
+        lambda repo, label, title, body: incidents.append((title, body)) or 1,
+    )
+
+    assert r.run(retry_domain="fastmcp_server", retry_pr="5782") == 0
+    saved = json.loads(state.read_text())["fastmcp_server"]
+    assert saved["handled_prs"] == [5782]
+    assert saved["pulls_cursor"] == "2026-08-19T12:00:00Z"
+    assert incidents[0][0] == "reverse-sync labels failed — fastmcp_server PR#5782"
+    assert "pull/278" in incidents[0][1]
+    assert "needs-human" in incidents[0][1]
+    assert "HTTP 422 missing label" in incidents[0][1]
+
+
+def test_scheduled_run_keeps_cursor_semantics(monkeypatch, tmp_path):
+    state = _configure_targeted(monkeypatch, tmp_path, handled=False)
+    entry = json.loads(state.read_text())
+    entry["fastmcp_server"]["pulls_cursor"] = "2026-07-01T00:00:00Z"
+    state.write_text(json.dumps(entry))
+    monkeypatch.setattr(r, "_upstream_default_branch", lambda: "dev")
+    monkeypatch.setattr(r, "_anchor", lambda domain, branch: "new-anchor")
+    monkeypatch.setattr(r, "_merged_prs", lambda branch, cursor: [_merged_target_pr()])
+    monkeypatch.setattr(
+        r.opener,
+        "open_reverse_pr",
+        lambda **kwargs: {
+            "skipped": True,
+            "reason": "already present",
+            "pr_url": None,
+            "conflicts": False,
+            "reused": False,
+            "applied_paths": [],
+            "conflicted_paths": [],
+            "label_failures": [],
+        },
+    )
+
+    assert r.run() == 0
+    saved = json.loads(state.read_text())["fastmcp_server"]
+    assert saved["last_synced_sha"] == "new-anchor"
+    assert saved["handled_prs"] == [5782]
+    assert saved["pulls_cursor"] == "2026-08-01T00:00:00Z"

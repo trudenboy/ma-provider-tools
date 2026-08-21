@@ -106,6 +106,40 @@ def test_reverse_diff_drops_foreign_files():
     assert t.reverse_diff(patch, DOMAIN, PP).strip() == ""
 
 
+def test_reverse_diff_normalizes_rename_into_provider_as_add():
+    patch = (
+        "diff --git a/music_assistant/helpers/shared.py "
+        "b/music_assistant/providers/yandex_music/shared.py\n"
+        "similarity index 100%\n"
+        "rename from music_assistant/helpers/shared.py\n"
+        "rename to music_assistant/providers/yandex_music/shared.py\n"
+    )
+
+    out = t.reverse_diff(patch, DOMAIN, PP)
+
+    assert out == (
+        "diff --git a/provider/shared.py b/provider/shared.py\n"
+        "new file mode 100644\n"
+    )
+
+
+def test_reverse_diff_normalizes_rename_out_of_provider_as_delete():
+    patch = (
+        "diff --git a/music_assistant/providers/yandex_music/shared.py "
+        "b/music_assistant/helpers/shared.py\n"
+        "similarity index 100%\n"
+        "rename from music_assistant/providers/yandex_music/shared.py\n"
+        "rename to music_assistant/helpers/shared.py\n"
+    )
+
+    out = t.reverse_diff(patch, DOMAIN, PP)
+
+    assert out == (
+        "diff --git a/provider/shared.py b/provider/shared.py\n"
+        "deleted file mode 100644\n"
+    )
+
+
 # Issue #99: unified import transform — all forms round-trip, no over-match.
 
 

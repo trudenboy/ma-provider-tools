@@ -131,28 +131,47 @@ in `music-assistant/server`; the radar detects merged ones and auto-opens a
 1. **Fetch diff via REST, not `gh pr diff`** — `_fetch_pr_diff` uses
    `gh api repos/.../pulls/<n>` with `Accept: application/vnd.github.diff`.
    `gh pr diff` emits a *per-commit* patch (a file appears once per commit),
-   which breaks reverse-apply on multi-commit PRs.
+   while snapshot merge needs one deterministic touched-path manifest.
 2. **Reverse the transform** (`_transform.reverse_diff`), then **strip
    maintainer-owned files** (`_drop_maintainer_owned`: `VERSION`,
    `translations/en.json`) — the PR body promises these are untouched.
-3. **Dedup** — skip if already ported: a fast `git apply --check --reverse`
-   probe, then `_already_present`, which checks every **added line** is present
-   in the provider file (NOT whole-file equality — the SoT advances past a
-   merged PR's base, so whole-file compare never matches).
+3. **Snapshot manifest** — split the combined diff once only to identify the
+   provider/test paths touched by the PR. Fetch the immutable upstream PR base
+   and head commits and reverse-transform both snapshots into provider layout.
 4. **Committer identity** — the opener sets a bot `user.name`/`user.email` on
    the clone; CI clones have none and `git commit` would fail rc=128.
-5. **Apply** — `git apply --3way` **alone** (NOT `--3way --reject`; git rejects
-   that combination). `_fetch_upstream_base` first fetches the upstream PR's
-   base commit into the (shallow) clone so `--3way` has the pre-image blobs —
-   without them it reports "lacks the necessary blob" and rejects whole files,
-   producing a scaffold-only PR. Conflicts → `<<<<<<<` markers left in-tree.
-6. **Push** with plain `--force` (not `--force-with-lease`: a fresh
-   `--branch dev` clone has no remote-tracking ref for the bot-owned
-   `reverse-sync/*` branch to lease against).
-7. **Open draft PR** (`_create_draft_pr`) with the upstream contributor as
-   `Co-authored-by`, labels `reverse-sync` + (`needs-human` if conflicts).
-   Retries **without labels** if they don't exist in the provider repo (labels
-   are distributed via `labels.yml.j2`, but the PR matters more).
+5. **Snapshot three-way merge** — begin from a clean provider checkout. For
+   each touched path compare normalized `BASE` (upstream before the PR), `OURS`
+   (current provider), and `THEIRS` (upstream after the PR). `OURS == THEIRS`
+   is deduplicated; `OURS == BASE` takes `THEIRS`; other text changes use
+   `git merge-file --diff3`. Real overlaps and structural modify/delete or
+   add/add conflicts are written as `<<<<<<<` markers. A touched file missing
+   from the provider is materialized directly from the normalized head snapshot
+   (the `#5782` case). Binary/symlink conflicts, ambiguous renames, missing
+   snapshots, incomplete classification, or unexpected changed paths are fatal
+   before scaffold, commit, push, or PR creation. No `git apply`, patch-index
+   SHA, or `.rej` heuristic participates in correctness. If all normalized head
+   states are already present, skip; scaffold-only PRs are forbidden.
+6. **Safe deterministic-branch reuse** — before `checkout -B` or force-push,
+   look for the exact open head branch. It may be overwritten only when exactly
+   one matching PR is still draft, has the expected base/head, contains exactly
+   one bot commit with the deterministic reverse-sync headline, and changes
+   only `CHANGELOG.md` plus its scaffold spec. Any human commit or provider/test
+   change fails closed.
+7. **Race-safe push** — a new branch uses a normal create-only push. A verified
+   existing draft uses an explicit
+   `--force-with-lease=refs/heads/<branch>:<verified-head-sha>`; an orphan branch
+   or any movement after ownership validation fails closed. A safe existing
+   draft is updated in place through the provider REST API, preserving its
+   number, URL, comments, and review history.
+8. **Open/update draft PR** with the upstream contributor as `Co-authored-by`.
+   The body lists the actual conflicted files and their real marker artifacts.
+   A conflict title is always exactly
+   `[needs-human] reverse-sync: <title> (#<n>)`, providing a durable signal even
+   if labels fail. Labels are applied only through provider REST endpoints:
+   mandatory `reverse-sync`, plus `needs-human` for verified conflicts. Missing
+   labels are created and retried once; residual label failures raise a hub
+   incident but do not discard or un-handle a useful provider PR.
 
 ### Other behavior
 
@@ -163,9 +182,15 @@ in `music-assistant/server`; the radar detects merged ones and auto-opens a
   failure doesn't abort the run; a failed port is NOT marked handled (stays
   re-discoverable; cursor held below the earliest failure) and raises an
   incident issue (`incident:reverse-sync`).
+- **Targeted retry:** manual dispatch accepts `retry_domain` + positive
+  `retry_pr` together. It validates the domain and merged upstream PR before
+  reading state, bypasses cursor/`handled_prs` only for that pair, runs the same
+  opener and incident path, idempotently marks a durable result handled, and
+  never changes `pulls_cursor` manually.
 - **State** `state/reverse-sync.json`: `{ "<domain>": { last_synced_sha,
   handled_prs:[], pulls_cursor, digest_issue } }`. To re-process a PR, remove it
-  from `handled_prs` and set `pulls_cursor` below its `updated_at`.
+  from `handled_prs` and set `pulls_cursor` below its `updated_at`, or use the
+  targeted retry inputs without editing state.
 - **AI-Policy rule 2:** no reverse-sync script ever opens/comments/pushes/closes
   in `music-assistant/*` — only read-only `gh api` GET / `gh pr view`/`diff` and
   read-only `git fetch`. Enforced by `tests/test_ai_policy_readonly.py`.

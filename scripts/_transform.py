@@ -175,21 +175,35 @@ def reverse_diff(patch_text: str, domain: str, provider_path: str) -> str:
         sections.append(cur)
 
     for sec in sections:
-        # Identify the upstream path from the diff --git header.
+        # Identify both upstream paths from the diff --git header.  A rename
+        # can cross the provider boundary, which is an add/delete from the
+        # provider repository's point of view.
         header = sec[0]
         parts = header.split()
         # parts: ["diff", "--git", "a/<path>", "b/<path>"]
-        up_path = _strip_ab(parts[3]) if len(parts) >= 4 else _strip_ab(parts[-1])
-        new_path = reverse_path(up_path, domain, provider_path)
-        if new_path is None:
+        upstream_a = _strip_ab(parts[2])
+        upstream_b = _strip_ab(parts[3])
+        mapped_a = reverse_path(upstream_a, domain, provider_path)
+        mapped_b = reverse_path(upstream_b, domain, provider_path)
+        is_rename = any(ln.startswith("rename from ") for ln in sec)
+        is_copy = any(ln.startswith("copy from ") for ln in sec)
+        if mapped_a is None and mapped_b is not None and (is_rename or is_copy):
+            out_sections.append(
+                f"diff --git a/{mapped_b} b/{mapped_b}\nnew file mode 100644\n"
+            )
+            continue
+        if mapped_a is not None and mapped_b is None and is_rename:
+            out_sections.append(
+                f"diff --git a/{mapped_a} b/{mapped_a}\ndeleted file mode 100644\n"
+            )
+            continue
+        if mapped_b is None:
             continue  # foreign file -> drop
-        test_file = new_path.startswith("tests/") and new_path.endswith(".py")
+        test_file = mapped_b.startswith("tests/") and mapped_b.endswith(".py")
         new_sec: list[str] = []
         for ln in sec:
             if ln.startswith("diff --git "):
-                a = reverse_path(_strip_ab(parts[2]), domain, provider_path)
-                b = reverse_path(_strip_ab(parts[3]), domain, provider_path)
-                new_sec.append(f"diff --git a/{a} b/{b}\n")
+                new_sec.append(f"diff --git a/{mapped_a} b/{mapped_b}\n")
             elif ln.startswith("--- "):
                 tail = ln[4:].rstrip("\n")
                 mapped = (

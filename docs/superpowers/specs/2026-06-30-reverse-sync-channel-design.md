@@ -45,7 +45,7 @@ Two failures result:
 | # | Decision |
 |---|---|
 | 1 | **Trigger model = hybrid.** `commit-on-default` (path-filtered) → `last_synced_sha` anchor for the P0 guard + backstop detector. `merged-PR` → primary reverse-sync trigger (native author credit, 1:1 logical change, idempotency by handled-PR set). One cron, two passes, shared committed state. |
-| 2 | **Apply/conflict = best-effort → always draft.** `gh pr diff` → invert transform → `git apply --3way`; commit what applied, leave `.rej`/markers, **always** open a draft PR, mark `needs-human` on conflict. Guarantees the reverse-PR always races ahead of the next forward-sync. |
+| 2 | **Apply/conflict = snapshot three-way with verified outcomes.** The combined REST diff identifies touched paths; normalized upstream base/head snapshots are compared with the current provider tree. Open a draft only when it contains applied changes or real diff3 markers; skip full dedup and fail closed on incomplete or unsafe structural outcomes. Verified conflicts get `[needs-human]` in the title plus the advisory label. |
 | 3 | **Scope = P0 guard + P1 reverse-sync together** (they share the anchor and state). |
 | 4 | **Shared transform module** `scripts/_transform.py` is the single source of truth for path + import mapping. Forward-sync (`reusable-sync-to-fork.yml` and `upstream-pr.yml.j2`) is refactored to call it `forward`; reverse calls it `reverse`. |
 | 5 | **P0-guard ack = `workflow_dispatch` input** `ack_upstream_ahead` (default `false`). `true` → guard logs a warning and proceeds. |
@@ -59,7 +59,7 @@ All in the hub (`ma-provider-tools`).
 |---|---|---|
 | Radar (cron + dispatch) | `.github/workflows/reverse-sync-radar.yml` | Cron every 2h + manual. Drives `reverse_sync_radar.py`. |
 | Radar logic | `scripts/reverse_sync_radar.py` | Iterates `providers.yml`, read-only polls upstream, two passes, updates state, dispatches the opener. |
-| Reverse-PR opener | `scripts/reverse_sync_open_pr.py` | Invert transform, `git apply --3way`, open draft PR in the provider repo. |
+| Reverse-PR opener | `scripts/reverse_sync_open_pr.py` | Normalize upstream base/head snapshots, three-way merge touched files, open a draft PR in the provider repo. |
 | Transform module | `scripts/_transform.py` | Single source of truth for path + import mapping (`forward` / `reverse`). |
 | State | `state/reverse-sync.json` | `{ "<domain>": { last_synced_sha, handled_prs: [], pulls_cursor, digest_issue } }`. Committed. |
 | P0 preflight guard | edit in `.github/workflows/reusable-sync-to-fork.yml` + input in `wrappers/sync-to-fork.yml.j2` | Block `rsync --delete` when upstream is ahead of the provider repo. |
@@ -120,38 +120,65 @@ GET /repos/music-assistant/server/pulls?state=closed&base=<default>&sort=updated
 
 **Echo filter is double** (our own upstream-PRs merge into the same path):
 (1) PR author (our bot / `upstream-pr` is recognizable), (2) backstop —
-no-op apply against the provider repo. Either is sufficient to skip.
+the normalized snapshot merge produces only `already_present` outcomes.
+Either is sufficient to skip.
 
 **State commit:** at the end of the run, `git add state/ && commit && push`
 (like badges). `concurrency` group prevents overlapping cron runs.
+
+**Targeted retry:** `workflow_dispatch` accepts `retry_domain` and positive
+`retry_pr` together. The radar validates the registry domain and confirms that
+the upstream PR exists and is merged before reading state. It then bypasses
+cursor/handled filtering only for that pair, uses the ordinary processing path,
+idempotently marks a durable result handled, and leaves `pulls_cursor` unchanged.
 
 ## Reverse-PR opener (`reverse_sync_open_pr.py`)
 
 Runs in a checkout of the provider repo (`default_branch`). Input: one inbound
 PR number + domain.
 
-1. **Fetch patch (read-only upstream):** `gh pr diff <n> --repo music-assistant/server --patch`; capture `PR.user.login` for credit.
-2. **Invert transform** via `scripts/_transform.py reverse` (paths + content + tests).
-3. **Apply best-effort:**
+1. **Fetch manifest and snapshots (read-only upstream):** request the PR's
+   combined REST diff (`Accept: application/vnd.github.diff`) to identify its
+   touched paths, then fetch the immutable base and head commits. Capture
+   `PR.user.login` for credit.
+2. **Normalize snapshots** via `scripts/_transform.py`: map base/head source and
+   test paths into provider layout and reverse test imports in both snapshots.
+3. **Merge best-effort with verified outcomes:**
    ```
    git checkout -b reverse-sync/<domain>-pr<n>
-   git apply --3way reversed.patch || CONFLICTS=1
+   # For every touched file compare BASE / current provider / upstream HEAD.
+   # Clean drift is merged with git merge-file --diff3; overlaps leave markers.
    git add -A
    git commit -m "reverse-sync: port music-assistant/server#<n>" \
      --trailer "Co-authored-by: <author> <id+login@users.noreply.github.com>"
    ```
-   `.rej`/conflict markers stay in the tree on conflict.
-4. **Scaffold (issue P1):** `specs/inprogress/NNNN-reverse-sync-pr<n>.md`
+   `OURS == HEAD` is already present; `OURS == BASE` takes the normalized head;
+   other text edits use a real diff3 merge. Structural text conflicts such as
+   modify/delete are rendered with markers. A touched file absent from the
+   provider is materialized from the normalized head snapshot (the `#5782`
+   case). Divergent binary/symlink states, ambiguous renames, missing snapshots,
+   incomplete classification, or unexpected paths abort before scaffold/push/PR.
+   The algorithm does not depend on patch index SHAs, `git apply`, or `.rej`.
+4. **Scaffold (issue P1):** `specs/inprogress/reverse-sync-pr<n>.md`
    (WIP=1) + a `CHANGELOG` stub. **VERSION and `translations/en.json` are NOT
    committed** (maintainer-owned); if the contributor changed them upstream,
    note it in the PR body for manual review.
-5. **Open draft PR in the provider repo:**
+5. **Open or safely update a draft PR in the provider repo:** before resetting
+   the deterministic branch, an existing PR must be an untouched draft with one
+   bot-generated reverse-sync commit and scaffold-only files. Human commits or
+   provider/test changes are never overwritten. Safe retries preserve the PR
+   number, URL, comments, and review history.
    ```
    gh pr create --repo <repo> --base <default_branch> --draft
-     --title "reverse-sync: <upstream PR title> (#<n>)"
+     --title "[needs-human] reverse-sync: <upstream PR title> (#<n>)"  # conflict
      --body <upstream link + credit + checklist>
-     --label "reverse-sync" [--label "needs-human" if CONFLICTS]
    ```
+   The body lists actual conflict files and only artifacts that exist. Labels
+   are applied through provider REST endpoints after PR creation/update;
+   `reverse-sync` is mandatory and `needs-human` is added for verified
+   conflicts. The title prefix is the durable fallback when label application
+   fails; a deduped hub incident records failed labels without discarding the
+   useful provider PR.
 
 ## P0 preflight guard (`reusable-sync-to-fork.yml`)
 
@@ -190,15 +217,16 @@ label+title).
 | Merged inbound PR → reverse-sync opened | the draft PR in the provider repo **is** the notice; plus a line in the digest issue |
 | Conflict reverse-PR (`needs-human`) | same draft PR + flagged ⚠ in the digest |
 | P0-guard blocked a forward-sync | fail job + open/update incident issue (label `incident:reverse-sync`) with run link + instruction (do a reverse-sync **or** rerun with `ack_upstream_ahead=true`) |
-| Radar failed to open a PR (apply/auth) | incident issue, same label |
+| Radar failed to open a PR (merge/auth) | incident issue, same label |
 
 Digest issue is a single updatable hub issue (`state[domain].digest_issue`
 holds its number) — no spam. Zero writes to `music-assistant/*`.
 
 ## Edge cases
 
-- **Forward-sync echo** → double filter (PR author + no-op apply).
-- **Squash-merge upstream** → use `gh pr diff` (PR-level), never map commits.
+- **Forward-sync echo** → double filter (PR author + snapshot dedup).
+- **Squash-merge upstream** → use the combined REST diff as a PR-level path
+  manifest and fetch the recorded base/head commits; never map merge commits.
 - **PR touches multiple providers** → process per `domain`, one reverse-PR each.
 - **PR touches provider path + shared upstream code** (`tools/_common.py`) →
   port only the slice under `music_assistant/providers/<domain>/`; prefix-filter
@@ -240,25 +268,27 @@ the repo `CLAUDE.md` so future edits don't regress them.
 
 - **Diff source:** the opener fetches the combined diff via
   `gh api .../pulls/<n>` with `Accept: application/vnd.github.diff`, NOT
-  `gh pr diff` (which emits a per-commit patch that breaks reverse-apply on
-  multi-commit PRs).
-- **Maintainer-owned strip:** `VERSION` / `translations/en.json` are stripped
-  from the reversed patch *before apply* (`_drop_maintainer_owned`), not just
-  omitted from the scaffold — otherwise `git apply` would modify them.
-- **Dedup is added-line presence, not whole-file equality:** the SoT advances
-  past a merged PR's base, so whole-file comparison never matches an
-  already-ported PR. `_already_present` checks that every added line exists in
-  the provider file.
+  `gh pr diff` (which emits a per-commit series instead of one deterministic
+  touched-path manifest).
+- **Maintainer-owned strip:** `VERSION` / `translations/en.json` are removed
+  from the touched-path manifest before snapshot merge, not merely omitted from
+  scaffold generation.
+- **Dedup is a three-way outcome:** normalized upstream base/head snapshots are
+  compared with the provider tree. This preserves independent provider changes
+  while recognizing an already-landed upstream change.
 - **Committer identity:** the opener sets a bot `user.name`/`user.email` on the
   clone (CI clones have none; `git commit` fails rc=128 otherwise).
-- **Real `--3way`:** use `git apply --3way` ALONE (`--3way --reject` is an
-  invalid combination). `_fetch_upstream_base` fetches the upstream PR base
-  commit into the shallow clone so `--3way` has the pre-image blobs and produces
-  real conflict markers instead of rejecting whole files (scaffold-only PRs).
-- **Push:** plain `--force` (a fresh `--branch dev` clone has no remote-tracking
-  ref to lease for `--force-with-lease`).
-- **Label fallback:** `_create_draft_pr` retries without labels if the provider
-  repo lacks `reverse-sync`/`needs-human` (also added to `labels.yml.j2`).
+- **Verified snapshot merge:** each touched path has one immutable normalized
+  base/head pair and exactly one outcome: already present, applied, or conflict
+  with real diff3 markers. Missing/incomplete outcomes and unexpected paths are
+  fatal before scaffold/push/PR, preventing scaffold-only PRs.
+- **Push:** new branches use a normal create-only push; verified retries use an
+  explicit expected-head `--force-with-lease`, so races fail without overwriting
+  human work.
+- **PR/label durability:** an untouched bot scaffold draft can be safely updated
+  in place; any human change fails closed before force-push. Labels use provider
+  REST endpoints, missing labels are created and retried once, and residual
+  failures produce a deduped hub incident while the useful PR remains handled.
 - **Pagination:** `_merged_prs` pages until the cursor (`MAX_PAGES=10`) so PRs
   buried past page 1 on the high-traffic upstream aren't missed.
 
