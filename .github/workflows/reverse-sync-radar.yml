@@ -5,6 +5,15 @@ on:
     # Every 2h — close the revert window before the next manual forward-sync.
     - cron: "0 */2 * * *"
   workflow_dispatch:
+    inputs:
+      retry_domain:
+        description: "Provider domain for one targeted reverse-sync retry"
+        required: false
+        type: string
+      retry_pr:
+        description: "Positive merged upstream PR number for the targeted retry"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -31,7 +40,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
           FORK_SYNC_PAT: ${{ secrets.FORK_SYNC_PAT }}
-        run: python3 scripts/reverse_sync_radar.py
+          RETRY_DOMAIN: ${{ inputs.retry_domain }}
+          RETRY_PR: ${{ inputs.retry_pr }}
+        run: |
+          args=()
+          if [[ -n "$RETRY_DOMAIN" ]]; then
+            args+=(--retry-domain "$RETRY_DOMAIN")
+          fi
+          if [[ -n "$RETRY_PR" ]]; then
+            args+=(--retry-pr "$RETRY_PR")
+          fi
+          python3 scripts/reverse_sync_radar.py "${args[@]}"
 
       - name: Commit state if changed
         env:
