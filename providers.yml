@@ -198,6 +198,45 @@ providers:
       - sync-kion-from-yandex.yml.j2
       - docs/configuration.md.j2
 
+  - domain: web_kiosk
+    display_name: Web Kiosk
+    repo: trudenboy/ma-provider-web-kiosk
+    default_branch: dev
+    manifest_path: provider/manifest.json
+    provider_path: provider/
+    provider_type: player_provider
+    locale: en
+    python_version: "3.14"
+    service_url: https://github.com/trudenboy/ma-provider-web-kiosk
+    auth_method: "None"
+    max_quality: "Source quality (passthrough)"
+    features:
+      - label: "Web kiosk (browser) playback"
+      - label: "HTML5 audio streaming"
+      - label: "Library browsing and search"
+      - label: "Party mode QR overlay"
+      - label: "Sendspin multiroom sync"
+      - label: "Volume control"
+    github_description: "Web Kiosk player for Music Assistant — turn any browser into a fullscreen kiosk player with Sendspin multiroom sync"
+    github_topics:
+      - music-assistant
+      - home-assistant
+      - python
+      - player-provider
+      - web-kiosk
+      - kiosk
+      - sendspin
+      - multiroom
+      - browser-player
+    related_providers:
+      - msx_bridge
+    skip_wrappers:
+      - sync-from-upstream.yml.j2
+      - upstream-pr.yml.j2
+      - rebuild-integration.yml.j2
+      - sync-kion-from-yandex.yml.j2
+      - docs/configuration.md.j2
+
   - domain: yandex_station
     display_name: Yandex Station
     repo: trudenboy/ma-provider-yandex-station
