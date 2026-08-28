@@ -59,6 +59,8 @@ jobs:
       - name: Install pip-audit
         run: uv pip install pip-audit
       - name: Run pip-audit against requirements_all.txt
+        env:
+          PIP_IGNORE_REQUIRES_PYTHON: "1"
         run: pip-audit --requirement ma-server/requirements_all.txt
 
   # ─── Guard: reject unknown provider_type ─────────────────────────────────────
