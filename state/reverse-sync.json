@@ -1675,10 +1675,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -3356,10 +3359,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "53aed3a737aec8f39b613caf585c621009b9c794",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -5608,10 +5614,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -7289,10 +7298,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "ca57548a642057321ec4c0f6a7cbe35be33d1019",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -8970,10 +8982,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -10651,10 +10666,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "2deb8cc4b15c21aa9ba3c119ecaf8c211f828310",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -11874,10 +11892,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -13555,10 +13576,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -15236,10 +15260,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "be338c5ac96c008e8386b52be0efb0d622e474a5",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -16917,10 +16944,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "be338c5ac96c008e8386b52be0efb0d622e474a5",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -18598,10 +18628,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "e86d797a84c174df92470ade86e07039c467f035",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -20279,10 +20312,13 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "0b9c6ca565ad8371f0c860f2d9d2b58b25d77ed5",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -21960,9 +21996,12 @@
       6255,
       6266,
       6265,
-      6269
+      6269,
+      6260,
+      6202,
+      6267
     ],
     "last_synced_sha": "ca57548a642057321ec4c0f6a7cbe35be33d1019",
-    "pulls_cursor": "2026-09-11T02:32:13Z"
+    "pulls_cursor": "2026-09-11T08:02:55Z"
   }
 }
