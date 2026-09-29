@@ -241,6 +241,8 @@ providers:
     display_name: Yandex Station
     repo: trudenboy/ma-provider-yandex-station
     default_branch: dev
+    # Apply only after provider reverse-sync PRs #160 and #163 land.
+    upstream_guard_baseline: cbafce38deec943b204ff8c36158c1c756f0ec51
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
