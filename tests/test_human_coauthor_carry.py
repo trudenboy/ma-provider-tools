@@ -20,7 +20,7 @@ WRAPPER = REPO / "wrappers/upstream-pr.yml.j2"
 NORMALIZE_SED = r"s/^[Cc]o-[Aa]uthored-[Bb]y:[[:space:]]*/Co-authored-by: /"
 AGENT_FILTER = (
     r"@anthropic\.com|@cursor\.com|@openai\.com|\[bot\]|github-actions"
-    r"|copilot|claude|opencode|aider|devin"
+    r"|copilot|claude|opencode|aider|devin|@example\.(com|org|net)>"
 )
 DEDUPE_AWK = "!seen[$0]++"
 
@@ -80,3 +80,17 @@ def test_all_agent_sample_yields_empty() -> None:
         ]
     )
     assert _run_pipeline(agents_only) == []
+
+
+def test_placeholder_identities_are_dropped() -> None:
+    """Unconfigured local git identities (RFC 2606 example domains) never cross as credit."""
+    sample = "\n".join(
+        [
+            "Co-authored-by: Administrator <admin@example.com>",
+            "Co-authored-by: Someone <dev@example.org>",
+            "Co-authored-by: Marcel van der Veldt <m.vanderveldt@outlook.com>",
+        ]
+    )
+    assert _run_pipeline(sample) == [
+        "Co-authored-by: Marcel van der Veldt <m.vanderveldt@outlook.com>",
+    ]
