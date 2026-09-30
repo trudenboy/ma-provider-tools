@@ -465,7 +465,10 @@ providers:
     extra_test_dependencies:
       - "pytest-asyncio>=0.24"
     ma_source_overlay: true
-    upstream_guard_baseline: a91504084610a817212c17174662cf73a4829bd9
+    # Reviewed 2026-09-30 at v2.1.16: every upstream fastmcp_server change up
+    # to this commit is ported (#6136 -> PR #317, #6333 -> PR #321) or targets
+    # code removed in v2 (tools/queue.py, test_debug_inspect_serializer.py).
+    upstream_guard_baseline: f80e6abaad97ca75fd8bb8b5eadf8ae88ada9cea
     codespell_ignore_words: "hass,"
     service_url: https://github.com/trudenboy/ma-provider-mcp
     auth_method: "MA token (Bearer)"

@@ -12,7 +12,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "render_for_provider.py"
-BASELINE = "a91504084610a817212c17174662cf73a4829bd9"
+BASELINE = "f80e6abaad97ca75fd8bb8b5eadf8ae88ada9cea"
 
 
 def _run(domain: str, out_dir: Path, *templates: str) -> subprocess.CompletedProcess[str]:
