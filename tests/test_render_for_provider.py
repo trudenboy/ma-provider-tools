@@ -175,6 +175,37 @@ def test_distributor_renders_fastmcp_pipeline_with_baseline() -> None:
     assert jobs["sync-integration"]["with"]["upstream_guard_baseline"] == BASELINE
 
 
+def test_ynison_distribution_preserves_guard_for_all_sync_entrypoints() -> None:
+    """The reviewed Ynison tree reaches both automatic jobs and manual recovery."""
+    from scripts.distribute import render_wrappers
+
+    registry = yaml.safe_load((REPO_ROOT / "providers.yml").read_text())
+    provider = next(p for p in registry["providers"] if p["domain"] == "yandex_ynison")
+    rendered = render_wrappers(provider, registry["providers"])
+    pipeline = yaml.safe_load(rendered[".github/workflows/pipeline.yml"])
+    manual = yaml.safe_load(rendered[".github/workflows/sync-to-fork.yml"])
+
+    for job in (
+        pipeline["jobs"]["sync-integration"],
+        pipeline["jobs"]["sync-upstream"],
+        manual["jobs"]["sync"],
+    ):
+        assert job["with"]["upstream_guard_baseline"] == (
+            "ef4ba48c30edc6225a820b7a581966a775108d99"
+        )
+
+    # PyYAML's YAML 1.1 parser represents the workflow's `on` key as True.
+    inputs = manual[True]["workflow_dispatch"]["inputs"]
+    assert inputs["ack_upstream_ahead"]["default"] is False
+    assert manual["jobs"]["sync"]["with"]["ack_upstream_ahead"] == (
+        "${{ inputs.ack_upstream_ahead }}"
+    )
+    assert all(
+        "ack_upstream_ahead" not in pipeline["jobs"][name]["with"]
+        for name in ("sync-integration", "sync-upstream")
+    )
+
+
 def _rendered_manual_sync(domain: str, tmp_path: Path) -> dict:
     result = _run(domain, tmp_path, "sync-to-fork.yml.j2")
     assert result.returncode == 0, result.stderr
