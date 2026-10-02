@@ -19,7 +19,7 @@ the newest commit touching either Ynison root is upstream PR #6526.
 | --- | --- | --- |
 | [#6255](https://github.com/music-assistant/server/pull/6255) | [#165](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/165) | Enumerate `mass.providers`, including internal instances; bind credentials and audio to the exact selected account. |
 | [#6382](https://github.com/music-assistant/server/pull/6382) | [#167](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/167) | Preserve the complete `SetupFlowError`, translation metadata and collected selections on retry. |
-| [#6595](https://github.com/music-assistant/server/pull/6595) | [#172](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/172) | HIGH request priority covers stream resolution, radio prefetch and feedback; retain the required Music Assistant API compatibility updates. |
+| [#6595](https://github.com/music-assistant/server/pull/6595) | [#172](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/172) | Stream resolution uses HIGH request priority; radio prefetch and feedback retain caller priority. Required Music Assistant API compatibility updates are retained. |
 | [#6526](https://github.com/music-assistant/server/pull/6526) | [#171](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/171) | Real `MusicAssistant.create_task` receives the radio prefetch task name. |
 
 Earlier upstream ports are recorded in the provider's completed specs:
