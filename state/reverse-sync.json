@@ -2013,10 +2013,13 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-02T10:14:28Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -4032,10 +4035,13 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652
     ],
     "last_synced_sha": "16e0a9b341b364b9508d4954a197f3aaba2ecc35",
-    "pulls_cursor": "2026-10-02T10:14:28Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -6622,10 +6628,13 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-02T10:14:28Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -8639,10 +8648,15 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657,
+      6556
     ],
     "last_synced_sha": "49524ff719aeec041cdc3cf41746af2d784a29b5",
-    "pulls_cursor": "2026-10-02T09:41:48Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -10658,10 +10672,13 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-02T10:14:28Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -12676,10 +12693,14 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": "a7be41529c48f51046ef08868fc9be2875a2bb3c",
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -14236,10 +14257,14 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -16254,10 +16279,14 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -18271,10 +18300,15 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657,
+      6556
     ],
     "last_synced_sha": "49524ff719aeec041cdc3cf41746af2d784a29b5",
-    "pulls_cursor": "2026-10-02T09:41:48Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -20289,10 +20323,14 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": "ac0917a244a0469028057f51713105f574972e6d",
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -22307,10 +22345,14 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": "ac0917a244a0469028057f51713105f574972e6d",
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -24325,10 +24367,14 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": "e63eee30aa64597b8c06ae2e07817b0d1845b52e",
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -26343,9 +26389,13 @@
       6593,
       6540,
       6348,
-      6588
+      6588,
+      6554,
+      6488,
+      6652,
+      6657
     ],
     "last_synced_sha": "ac0917a244a0469028057f51713105f574972e6d",
-    "pulls_cursor": "2026-10-02T10:10:19Z"
+    "pulls_cursor": "2026-10-02T11:40:51Z"
   }
 }
