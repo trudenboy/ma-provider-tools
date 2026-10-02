@@ -184,11 +184,13 @@ def test_ynison_distribution_preserves_guard_for_all_sync_entrypoints() -> None:
     rendered = render_wrappers(provider, registry["providers"])
     pipeline = yaml.safe_load(rendered[".github/workflows/pipeline.yml"])
     manual = yaml.safe_load(rendered[".github/workflows/sync-to-fork.yml"])
+    backport = yaml.safe_load(rendered[".github/workflows/backport.yml"])
 
     for job in (
         pipeline["jobs"]["sync-integration"],
         pipeline["jobs"]["sync-upstream"],
         manual["jobs"]["sync"],
+        backport["jobs"]["backport"],
     ):
         assert job["with"]["upstream_guard_baseline"] == (
             "ef4ba48c30edc6225a820b7a581966a775108d99"
@@ -204,6 +206,9 @@ def test_ynison_distribution_preserves_guard_for_all_sync_entrypoints() -> None:
         "ack_upstream_ahead" not in pipeline["jobs"][name]["with"]
         for name in ("sync-integration", "sync-upstream")
     )
+    # Wrapper recovery must preserve the core import dependency added in v4.3.4.
+    project = tomllib.loads(rendered["pyproject.toml"])
+    assert "hass-client==1.3.1" in project["project"]["optional-dependencies"]["test"]
 
 
 def _rendered_manual_sync(domain: str, tmp_path: Path) -> dict:

@@ -56,10 +56,16 @@ cannot prove all the replacements, so an explicit reviewed baseline is needed.
 
 ## Fix and protection
 
-Set only the Ynison registry entry's `upstream_guard_baseline` to the reviewed
+Set the Ynison registry entry's `upstream_guard_baseline` to the reviewed
 full upstream SHA. Existing templates propagate it to both pipeline sync jobs
-and the manual sync wrapper. No guard algorithm, source code, version or global
+and the manual sync and stable backport wrappers. No guard algorithm, source code, version or global
 override changes are required.
+
+Also mirror Ynison's existing `hass-client==1.3.1` test extra into the registry.
+Without it, distribution would remove the dependency added in v4.3.4 for the
+core's unconditional import. With the registry aligned, the generated
+`pyproject.toml` remains byte-identical and only the three workflow wrappers
+change, each receiving the baseline.
 
 The existing baseline filter permits a residual path only if its current
 upstream blob is exactly the same as the reviewed blob. A new path, a modified
@@ -83,8 +89,9 @@ must exit 0 against the same source and upstream snapshots.
 
 `test_ynison_distribution_preserves_guard_for_all_sync_entrypoints` exercises
 the real distributor with the registry. It fails before the registry fix and
-checks the precise SHA in all three sync entrypoints plus preservation of the
-manual override's false default. Existing guard tests cover changed/new blobs,
+checks the precise SHA in all four sync jobs plus preservation of the
+manual override's false default and the existing core import test dependency.
+Existing guard tests cover changed/new blobs,
 source and test paths, lookup failure and invalid SHA rejection. Run the full
 tools test suite, template/schema validation and pre-commit checks before
 distribution, then verify fresh forward syncs and the resulting fork artifacts.
