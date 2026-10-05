@@ -60,12 +60,13 @@ jobs:
           GH_TOKEN: {% raw %}${{ secrets.FORK_SYNC_PAT }}{% endraw %}
         run: |
           case "{% raw %}${{ inputs.domain }}{% endraw %}" in{% for p in all_providers %}
-            {{ p.domain }}) PROVIDER_REPO="{{ p.repo }}"; PROVIDER_PATH="{{ p.provider_path }}"; DISPLAY_NAME="{{ p.display_name }}" ;;{% endfor %}
+            {{ p.domain }}) PROVIDER_REPO="{{ p.repo }}"; PROVIDER_PATH="{{ p.provider_path }}"; DISPLAY_NAME="{{ p.display_name }}"; UPSTREAM_SHIP_VERSION="{{ 'false' if p.get('upstream_exclude_version') else 'true' }}" ;;{% endfor %}
             *) echo "Unknown domain: {% raw %}${{ inputs.domain }}{% endraw %}"; exit 1 ;;
           esac
           echo "PROVIDER_REPO=$PROVIDER_REPO" >> $GITHUB_ENV
           echo "PROVIDER_PATH=$PROVIDER_PATH" >> $GITHUB_ENV
           echo "DISPLAY_NAME=$DISPLAY_NAME" >> $GITHUB_ENV
+          echo "UPSTREAM_SHIP_VERSION=$UPSTREAM_SHIP_VERSION" >> $GITHUB_ENV
 
           gh repo clone "$PROVIDER_REPO" provider-repo -- \
             --depth 1 --branch "v{% raw %}${{ inputs.version }}{% endraw %}"
@@ -168,9 +169,11 @@ jobs:
 
           # Copy VERSION file alongside manifest so the badge cron can read it
           # from this branch / from the upstream tree after the PR merges.
-          # Built-in MA providers don't ship one; if an upstream reviewer
-          # objects, add --exclude=VERSION to the rsync above (escape hatch).
-          if [ -f provider-repo/VERSION ]; then
+          # Built-in MA providers don't ship one; a provider whose upstream
+          # reviewers object sets `upstream_exclude_version: true` in
+          # providers.yml. The rsync --delete above already dropped any copy
+          # an earlier submission shipped.
+          if [ "${UPSTREAM_SHIP_VERSION:-true}" = "true" ] && [ -f provider-repo/VERSION ]; then
             cp provider-repo/VERSION "music_assistant/providers/${DOMAIN}/VERSION"
           fi
 

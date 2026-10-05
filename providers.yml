@@ -574,6 +574,8 @@ providers:
     python_version: "3.14"
     runtime_dependencies:
       - "yadisk==3.4.1"
+    # upstream reviewers asked for no VERSION file in the inlined provider
+    upstream_exclude_version: true
     codespell_ignore_words: "provid,hass,nam,"
     service_url: https://360.yandex.ru/disk/
     auth_method: "OAuth своё приложение Яндекс (код подтверждения, cloud_api:disk.read, авто-refresh)"
