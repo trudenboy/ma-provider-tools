@@ -154,11 +154,15 @@ jobs:
             provider-repo/${{ inputs.provider_path }} \
             ma-server/music_assistant/providers/${DOMAIN}/
           if [ -d "provider-repo/tests" ]; then
-            # Skip doc-pinning tests that reference provider-local docs
-            # (e.g. `CLAUDE.local.md`) which intentionally do not sync to
-            # the integration fork or upstream — the test would FileNotFoundError
-            # in the synced layout and is provider-private by design.
-            rsync -av --delete --exclude='test_docs.py' \
+            # Skip standalone-only tests: doc-pinning tests that reference
+            # provider-local docs (e.g. `CLAUDE.local.md`) and anything under
+            # tests/standalone/ (project metadata, setup scripts). They do not
+            # sync to the integration fork or upstream — they would only fail
+            # or skip in the synced layout. Because the excluded paths are
+            # absent from the source top level, --delete also removes copies
+            # an older sync exported. Keep in lockstep with upstream-pr.yml.j2
+            # (tests/test_test_export_excludes.py).
+            rsync -av --delete --exclude='test_docs.py' --exclude='standalone/' \
               provider-repo/tests/ \
               ma-server/tests/providers/${DOMAIN}/
             # Rewrite every `provider`-as-import shape the provider tests use.
