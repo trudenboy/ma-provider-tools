@@ -145,3 +145,47 @@ def test_workflow_uses_upstream_python_version_for_metadata_tools() -> None:
     setup = next(step for step in steps if step.get("name") == "Set up Python")
     assert setup["uses"].startswith("actions/setup-python@")
     assert setup["with"]["python-version-file"] == ".python-version"
+
+
+def _resolve_script() -> str:
+    steps = _render_workflow()["jobs"]["create-upstream-pr"]["steps"]
+    return next(
+        step["run"] for step in steps if step.get("name") == "Resolve domain and clone provider release"
+    )
+
+
+def test_version_file_shipping_is_opt_out_per_provider() -> None:
+    """Providers flagged upstream_exclude_version never ship VERSION upstream."""
+    resolve = _resolve_script()
+    registry = yaml.safe_load((REPO / "providers.yml").read_text(encoding="utf-8"))
+    for provider in registry["providers"]:
+        if provider.get("provider_type") == "server_fork":
+            continue
+        expected = "false" if provider.get("upstream_exclude_version") else "true"
+        case_line = next(
+            line for line in resolve.splitlines() if line.strip().startswith(f"{provider['domain']})")
+        )
+        assert f'UPSTREAM_SHIP_VERSION="{expected}"' in case_line, provider["domain"]
+    assert 'echo "UPSTREAM_SHIP_VERSION=$UPSTREAM_SHIP_VERSION" >> $GITHUB_ENV' in resolve
+
+
+def test_version_copy_respects_opt_out(tmp_path: Path) -> None:
+    """The VERSION copy step is skipped when the provider opted out."""
+    script = _render_workflow_script()
+    fragment = _fragment(script, "# Copy VERSION file alongside manifest", "# Regenerate requirements_all.txt")
+    (tmp_path / "provider-repo").mkdir()
+    (tmp_path / "provider-repo" / "VERSION").write_text("1.0.0\n")
+    dest = tmp_path / "music_assistant" / "providers" / "demo"
+    dest.mkdir(parents=True)
+
+    for ship, exists in (("false", False), ("true", True)):
+        result = subprocess.run(
+            ["bash", "-euo", "pipefail", "-c", "#" + fragment],
+            env={**os.environ, "DOMAIN": "demo", "UPSTREAM_SHIP_VERSION": ship},
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
+        assert (dest / "VERSION").exists() is exists, ship

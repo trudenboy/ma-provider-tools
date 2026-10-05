@@ -108,6 +108,10 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
+        "upstream_exclude_version": {
+          "type": "boolean",
+          "description": "Do not copy the provider's VERSION file into the upstream music-assistant/server PR."
+        },
         "skip_wrappers": {
           "type": "array",
           "items": {
