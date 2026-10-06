@@ -127,9 +127,28 @@ jobs:
             exit 0
           fi
           if ! git merge --no-edit -m "Merge music-assistant/server dev into ${TARGET_BRANCH}" upstream-ma/dev; then
-            git merge --abort || true
-            echo "::error::${TARGET_BRANCH} conflicts with music-assistant/server dev. Update the upstream PR branch manually (resolve the conflict), then re-run this sync."
-            exit 1
+            # Conflicts inside this provider's own paths are resolved to the
+            # branch side: the sync below overwrites those paths from the
+            # provider repo anyway, and the upstream-ahead preflight guards
+            # contributor changes there. Anything else needs a human.
+            DOMAIN_DIR="${TARGET_BRANCH#upstream/}"
+            CONFLICTS="$(git diff --name-only --diff-filter=U)"
+            FOREIGN="$(grep -vE "^(music_assistant/providers|tests/providers)/${DOMAIN_DIR}/" <<<"$CONFLICTS" || true)"
+            if [[ -n "$FOREIGN" ]]; then
+              git merge --abort || true
+              echo "::error::${TARGET_BRANCH} conflicts with music-assistant/server dev outside the provider's own paths: $(tr '\n' ' ' <<<"$FOREIGN"). Update the upstream PR branch manually (resolve the conflict), then re-run this sync."
+              exit 1
+            fi
+            while IFS= read -r path; do
+              if git checkout --ours -- "$path" 2>/dev/null; then
+                git add -- "$path"
+              else
+                # Deleted on the branch side (modify/delete conflict).
+                git rm --quiet -- "$path"
+              fi
+            done <<<"$CONFLICTS"
+            git commit --no-edit --quiet
+            echo "Resolved provider-owned conflicts to the branch side: $(tr '\n' ' ' <<<"$CONFLICTS")"
           fi
           echo "Merged music-assistant/server dev into ${TARGET_BRANCH}."
 
