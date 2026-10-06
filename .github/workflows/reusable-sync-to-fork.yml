@@ -104,15 +104,32 @@ jobs:
           token: ${{ secrets.FORK_SYNC_PAT }}
           ref: ${{ inputs.target_branch || 'dev' }}
 
-      - name: Merge latest upstream dev into existing upstream branch
-        # An upstream/<domain> branch is bootstrapped from dev once and then
-        # reused, so it falls behind music-assistant/server dev. A sibling
-        # change there (e.g. a shared dependency bump) then fails the
-        # requirements_all.txt pin guard below. Merge dev first; on a conflict
-        # stop instead of guessing a resolution.
-        if: ${{ steps.branch-check.outputs.exists == 'true' && startsWith(inputs.target_branch, 'upstream/') }}
+      - name: Bootstrap target branch from dev
+        if: steps.branch-check.outputs.exists == 'false'
         env:
+          FORK_SYNC_PAT: ${{ secrets.FORK_SYNC_PAT }}
+          FORK_REPO: ${{ inputs.fork_repo }}
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+        run: |
+          git clone --depth 1 --branch dev \
+            "https://x-access-token:${FORK_SYNC_PAT}@github.com/${FORK_REPO}.git" ma-server
+          cd ma-server
+          git checkout -b "${TARGET_BRANCH}"
+
+      - name: Prepare upstream branch from music-assistant/server dev
+        # An upstream/<domain> branch must be based on music-assistant/server
+        # dev: the fork's own dev carries fork-only commits. A new branch, or
+        # one whose upstream PR is no longer open (merged long ago), starts
+        # fresh from upstream dev. A branch with an open PR gets the latest
+        # upstream dev merged in, so sibling changes (e.g. a shared dependency
+        # bump) do not trip the requirements_all.txt pin guard below.
+        if: ${{ startsWith(inputs.target_branch, 'upstream/') }}
+        env:
+          GH_TOKEN: ${{ secrets.FORK_SYNC_PAT }}
+          UPSTREAM_REPO: music-assistant/server
           UPSTREAM_REPO_URL: https://github.com/music-assistant/server.git
+          FORK_REPO: ${{ inputs.fork_repo }}
+          BRANCH_EXISTS: ${{ steps.branch-check.outputs.exists }}
           TARGET_BRANCH: ${{ inputs.target_branch }}
         run: |
           cd ma-server
@@ -122,6 +139,18 @@ jobs:
             git fetch --quiet --unshallow origin
           fi
           git fetch --quiet "$UPSTREAM_REPO_URL" "+refs/heads/dev:refs/remotes/upstream-ma/dev"
+          if [[ "$BRANCH_EXISTS" != "true" ]]; then
+            git checkout --quiet -B "$TARGET_BRANCH" upstream-ma/dev
+            echo "Created ${TARGET_BRANCH} from music-assistant/server dev."
+            exit 0
+          fi
+          OPEN_PRS="$(gh api "repos/${UPSTREAM_REPO}/pulls?head=${FORK_REPO%%/*}:${TARGET_BRANCH}&state=open" --jq length)"
+          if [[ "$OPEN_PRS" == "0" ]]; then
+            git checkout --quiet -B "$TARGET_BRANCH" upstream-ma/dev
+            echo "UPSTREAM_BRANCH_RESET=true" >> "$GITHUB_ENV"
+            echo "No open upstream PR for ${TARGET_BRANCH}; reset it to music-assistant/server dev."
+            exit 0
+          fi
           if git merge-base --is-ancestor upstream-ma/dev HEAD; then
             echo "${TARGET_BRANCH} already contains the latest upstream dev."
             exit 0
@@ -151,18 +180,6 @@ jobs:
             echo "Resolved provider-owned conflicts to the branch side: $(tr '\n' ' ' <<<"$CONFLICTS")"
           fi
           echo "Merged music-assistant/server dev into ${TARGET_BRANCH}."
-
-      - name: Bootstrap target branch from dev
-        if: steps.branch-check.outputs.exists == 'false'
-        env:
-          FORK_SYNC_PAT: ${{ secrets.FORK_SYNC_PAT }}
-          FORK_REPO: ${{ inputs.fork_repo }}
-          TARGET_BRANCH: ${{ inputs.target_branch }}
-        run: |
-          git clone --depth 1 --branch dev \
-            "https://x-access-token:${FORK_SYNC_PAT}@github.com/${FORK_REPO}.git" ma-server
-          cd ma-server
-          git checkout -b "${TARGET_BRANCH}"
 
       - name: Checkout tools hub (for preflight scripts)
         uses: actions/checkout@v4
@@ -335,11 +352,16 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           TARGET="${{ inputs.target_branch || 'integration/dev' }}"
+          PUSH_FLAGS=()
+          if [[ "${UPSTREAM_BRANCH_RESET:-}" == "true" ]]; then
+            # The branch was rebuilt from upstream dev; replace the stale one.
+            PUSH_FLAGS=(--force-with-lease)
+          fi
           if git diff --cached --quiet; then
             # A merge of upstream dev into an existing branch may still need pushing.
             REMOTE_HEAD="$(git rev-parse --verify --quiet "origin/${TARGET}" || true)"
             if [[ -n "$REMOTE_HEAD" && "$(git rev-parse HEAD)" != "$REMOTE_HEAD" ]]; then
-              git push -u origin "HEAD:${TARGET}"
+              git push "${PUSH_FLAGS[@]}" -u origin "HEAD:${TARGET}"
             else
               echo "No changes to push"
             fi
@@ -347,7 +369,7 @@ jobs:
           fi
           git commit -m "feat(${{ env.DOMAIN }}): sync provider from ${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}"
           # Use -u for new branches that don't exist on remote yet
-          git push -u origin "HEAD:${TARGET}"
+          git push "${PUSH_FLAGS[@]}" -u origin "HEAD:${TARGET}"
 
       - name: Create backport PR in fork
         if: ${{ inputs.create_pr }}
