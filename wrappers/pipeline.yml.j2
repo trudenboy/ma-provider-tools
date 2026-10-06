@@ -137,6 +137,9 @@ jobs:
 {%- if upstream_guard_baseline %}
       upstream_guard_baseline: {{ upstream_guard_baseline }}
 {%- endif %}
+{%- if upstream_exclude_version %}
+      upstream_exclude_version: true
+{%- endif %}
 {% raw %}
       target_branch: upstream/${{ needs.prepare.outputs.domain }}
       version: ${{ format('v{0}', needs.prepare.outputs.version) }}

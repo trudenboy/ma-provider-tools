@@ -241,3 +241,17 @@ def test_fastmcp_backport_passes_upstream_guard_baseline(tmp_path: Path) -> None
 def test_ordinary_backport_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
     job = _rendered_backport("yandex_music", tmp_path)["jobs"]["backport"]
     assert "upstream_guard_baseline" not in job["with"]
+
+
+def test_yandex_disk_upstream_sync_drops_version(tmp_path: Path) -> None:
+    """Only the upstream/<domain> sync of an opted-out provider skips VERSION."""
+    jobs = _rendered_pipeline("filesystem_yandex_disk", tmp_path)["jobs"]
+    assert jobs["sync-upstream"]["with"]["upstream_exclude_version"] is True
+    assert "upstream_exclude_version" not in jobs["sync-integration"]["with"]
+    manual = _rendered_manual_sync("filesystem_yandex_disk", tmp_path)
+    assert manual["jobs"]["sync"]["with"]["upstream_exclude_version"] is True
+
+
+def test_ordinary_pipeline_keeps_version_upstream(tmp_path: Path) -> None:
+    jobs = _rendered_pipeline("yandex_music", tmp_path)["jobs"]
+    assert "upstream_exclude_version" not in jobs["sync-upstream"]["with"]

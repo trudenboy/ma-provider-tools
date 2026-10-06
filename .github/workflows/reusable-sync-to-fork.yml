@@ -35,6 +35,10 @@ on:
         description: "Immutable upstream commit whose unchanged provider blobs are acknowledged"
         type: string
         default: ""
+      upstream_exclude_version:
+        description: "Skip the VERSION file when syncing to an upstream/<domain> branch"
+        type: boolean
+        default: false
     secrets:
       FORK_SYNC_PAT:
         required: true
@@ -224,8 +228,15 @@ jobs:
           fi
 
       - name: Sync VERSION file alongside manifest
+        env:
+          UPSTREAM_EXCLUDE_VERSION: ${{ inputs.upstream_exclude_version }}
+          TARGET_BRANCH: ${{ inputs.target_branch }}
         run: |
-          if [ -f provider-repo/VERSION ]; then
+          # upstream reviewers may reject the file for an inlined provider; the
+          # rsync --delete of provider/ above already removed any earlier copy
+          if [ "$UPSTREAM_EXCLUDE_VERSION" = "true" ] && [[ "$TARGET_BRANCH" == upstream/* ]]; then
+            echo "VERSION excluded for ${TARGET_BRANCH} (upstream_exclude_version)"
+          elif [ -f provider-repo/VERSION ]; then
             cp provider-repo/VERSION "ma-server/music_assistant/providers/${DOMAIN}/VERSION"
             echo "Synced VERSION file: $(cat "ma-server/music_assistant/providers/${DOMAIN}/VERSION")"
           else
