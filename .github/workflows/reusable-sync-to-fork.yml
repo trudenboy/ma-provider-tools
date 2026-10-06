@@ -104,6 +104,35 @@ jobs:
           token: ${{ secrets.FORK_SYNC_PAT }}
           ref: ${{ inputs.target_branch || 'dev' }}
 
+      - name: Merge latest upstream dev into existing upstream branch
+        # An upstream/<domain> branch is bootstrapped from dev once and then
+        # reused, so it falls behind music-assistant/server dev. A sibling
+        # change there (e.g. a shared dependency bump) then fails the
+        # requirements_all.txt pin guard below. Merge dev first; on a conflict
+        # stop instead of guessing a resolution.
+        if: ${{ steps.branch-check.outputs.exists == 'true' && startsWith(inputs.target_branch, 'upstream/') }}
+        env:
+          UPSTREAM_REPO_URL: https://github.com/music-assistant/server.git
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+        run: |
+          cd ma-server
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ "$(git rev-parse --is-shallow-repository)" == "true" ]]; then
+            git fetch --quiet --unshallow origin
+          fi
+          git fetch --quiet "$UPSTREAM_REPO_URL" "+refs/heads/dev:refs/remotes/upstream-ma/dev"
+          if git merge-base --is-ancestor upstream-ma/dev HEAD; then
+            echo "${TARGET_BRANCH} already contains the latest upstream dev."
+            exit 0
+          fi
+          if ! git merge --no-edit -m "Merge music-assistant/server dev into ${TARGET_BRANCH}" upstream-ma/dev; then
+            git merge --abort || true
+            echo "::error::${TARGET_BRANCH} conflicts with music-assistant/server dev. Update the upstream PR branch manually (resolve the conflict), then re-run this sync."
+            exit 1
+          fi
+          echo "Merged music-assistant/server dev into ${TARGET_BRANCH}."
+
       - name: Bootstrap target branch from dev
         if: steps.branch-check.outputs.exists == 'false'
         env:
@@ -286,11 +315,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
+          TARGET="${{ inputs.target_branch || 'integration/dev' }}"
           if git diff --cached --quiet; then
-            echo "No changes to push"
+            # A merge of upstream dev into an existing branch may still need pushing.
+            REMOTE_HEAD="$(git rev-parse --verify --quiet "origin/${TARGET}" || true)"
+            if [[ -n "$REMOTE_HEAD" && "$(git rev-parse HEAD)" != "$REMOTE_HEAD" ]]; then
+              git push -u origin "HEAD:${TARGET}"
+            else
+              echo "No changes to push"
+            fi
             exit 0
           fi
-          TARGET="${{ inputs.target_branch || 'integration/dev' }}"
           git commit -m "feat(${{ env.DOMAIN }}): sync provider from ${{ github.event.repository.name }} ${{ steps.tag.outputs.version }}"
           # Use -u for new branches that don't exist on remote yet
           git push -u origin "HEAD:${TARGET}"
