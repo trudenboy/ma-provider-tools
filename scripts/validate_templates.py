@@ -53,6 +53,7 @@ def main() -> int:
         "python_version": base.get("python_version", "3.12"),
         "ma_source_overlay": base.get("ma_source_overlay", False),
         "upstream_guard_baseline": base.get("upstream_guard_baseline", ""),
+        "upstream_exclude_version": base.get("upstream_exclude_version", False),
         "github_description": base.get("github_description", ""),
         "github_topics": base.get("github_topics", []),
         "github_homepage": base.get(

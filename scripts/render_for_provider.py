@@ -56,6 +56,7 @@ def build_context(domain: str) -> dict:
         "extra_test_dependencies": provider.get("extra_test_dependencies", []),
         "ma_source_overlay": provider.get("ma_source_overlay", False),
         "upstream_guard_baseline": provider.get("upstream_guard_baseline", ""),
+        "upstream_exclude_version": provider.get("upstream_exclude_version", False),
         "all_providers": [
             p for p in providers if p.get("provider_type") != "server_fork"
         ],
