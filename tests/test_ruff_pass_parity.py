@@ -56,3 +56,20 @@ def test_sync_to_fork_gates_fix_pass_on_upstream_branches() -> None:
     assert gate < fix < fallback, (
         "fix pass must be inside the upstream/* gate, before the fallback"
     )
+
+
+def test_sync_to_fork_builds_translations_for_every_target() -> None:
+    """translations/en.json is regenerated for integration/dev too.
+
+    A provider that is not upstream yet has no strings in the fork's en.json,
+    so without the rebuild its setup-flow text (e.g. the device-login code)
+    and config labels are missing from the integration image.
+    """
+    text = (REPO / ".github/workflows/reusable-sync-to-fork.yml").read_text(
+        encoding="utf-8"
+    )
+    gate = 'if [[ "${{ inputs.target_branch }}" == upstream/* ]]'
+    assert text.count(gate) == 1, "only the ruff fix pass may be gated on upstream/*"
+    build = text.index("if [ -f scripts/build_translations.py ]; then")
+    gate_end = text.index("\n          fi\n", text.index(gate))
+    assert build > gate_end, "translations build must sit outside the upstream/* gate"
