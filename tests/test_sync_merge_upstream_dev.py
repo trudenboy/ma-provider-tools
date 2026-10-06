@@ -151,3 +151,28 @@ def test_merge_commit_is_pushed_without_provider_changes(tmp_path: Path) -> None
     pushed = _git(remote, "rev-parse", "refs/heads/upstream/demo")
     assert pushed == _git(fork, "rev-parse", "HEAD")
     _git(remote, "merge-base", "--is-ancestor", new_dev, pushed)
+
+
+def test_conflict_only_in_provider_owned_paths_is_resolved(tmp_path: Path) -> None:
+    upstream = tmp_path / "upstream"
+    upstream.mkdir()
+    _git(upstream, "init", "-q", "-b", "dev")
+    manifest = Path("music_assistant/providers/demo/manifest.json")
+    (upstream / manifest.parent).mkdir(parents=True)
+    _commit(upstream, str(manifest), '{"req": "lib==2.0.1"}\n', "base")
+
+    fork = tmp_path / "ma-server"
+    _git(tmp_path, "clone", "-q", str(upstream), str(fork))
+    _git(fork, "checkout", "-q", "-b", "upstream/demo")
+    _commit(fork, str(manifest), '{"req": "lib==2.0.1", "v": "4.3.5"}\n', "provider sync")
+    new_dev = _commit(upstream, str(manifest), '{"req": "lib==2.1.0"}\n', "bump lib")
+    _commit(upstream, "requirements_all.txt", "lib==2.1.0\n", "bump requirements")
+
+    result = _run(tmp_path, upstream)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    _git(fork, "merge-base", "--is-ancestor", new_dev, "HEAD")
+    assert _git(fork, "status", "--porcelain") == ""
+    assert (fork / "requirements_all.txt").read_text() == "lib==2.1.0\n"
+    # The sync overwrites provider-owned files right after; keep the branch side.
+    assert "4.3.5" in (fork / manifest).read_text()
