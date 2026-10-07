@@ -2093,10 +2093,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -4192,10 +4194,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
-    "last_synced_sha": "2a673e92b7ac6b18e90f7df92ab13ef3460f80c8",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "last_synced_sha": "08a94e4e841a8dfd19b3a95549474516322cd3b2",
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -6862,10 +6866,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "3426a71346f4cd9d38555afa42ea40f546de625f",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -8961,10 +8967,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "49524ff719aeec041cdc3cf41746af2d784a29b5",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -11060,10 +11068,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -13159,10 +13169,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "a7be41529c48f51046ef08868fc9be2875a2bb3c",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -14800,10 +14812,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -16899,10 +16913,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -18998,10 +19014,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "7fd937b5824ebb9f6f9c8977431fdfe4baa47338",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -21097,10 +21115,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "7fd937b5824ebb9f6f9c8977431fdfe4baa47338",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -23196,10 +23216,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "7fd937b5824ebb9f6f9c8977431fdfe4baa47338",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -25295,10 +25317,12 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "7fd937b5824ebb9f6f9c8977431fdfe4baa47338",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -27394,9 +27418,11 @@
       6754,
       6750,
       6751,
-      6747
+      6747,
+      6755,
+      6763
     ],
     "last_synced_sha": "ac0917a244a0469028057f51713105f574972e6d",
-    "pulls_cursor": "2026-10-07T17:37:24Z"
+    "pulls_cursor": "2026-10-07T21:00:56Z"
   }
 }
