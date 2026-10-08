@@ -165,6 +165,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
+    upstream_guard_baseline: 73257004745c8b44be6ef43f0001d6230098020d
     locale: en
     python_version: "3.14"
     service_url: https://getmsx.net
