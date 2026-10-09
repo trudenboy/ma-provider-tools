@@ -158,7 +158,7 @@ def test_fastmcp_pipeline_passes_upstream_guard_baseline(tmp_path: Path) -> None
 
 
 def test_ordinary_pipeline_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
-    jobs = _rendered_pipeline("yandex_music", tmp_path)["jobs"]
+    jobs = _rendered_pipeline("kion_music", tmp_path)["jobs"]
     assert "upstream_guard_baseline" not in jobs["sync-integration"]["with"]
     assert "upstream_guard_baseline" not in jobs["sync-upstream"]["with"]
 
@@ -223,7 +223,7 @@ def test_fastmcp_manual_sync_passes_upstream_guard_baseline(tmp_path: Path) -> N
 
 
 def test_ordinary_manual_sync_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
-    job = _rendered_manual_sync("yandex_music", tmp_path)["jobs"]["sync"]
+    job = _rendered_manual_sync("kion_music", tmp_path)["jobs"]["sync"]
     assert "upstream_guard_baseline" not in job["with"]
 
 
@@ -239,7 +239,7 @@ def test_fastmcp_backport_passes_upstream_guard_baseline(tmp_path: Path) -> None
 
 
 def test_ordinary_backport_has_no_upstream_guard_baseline(tmp_path: Path) -> None:
-    job = _rendered_backport("yandex_music", tmp_path)["jobs"]["backport"]
+    job = _rendered_backport("kion_music", tmp_path)["jobs"]["backport"]
     assert "upstream_guard_baseline" not in job["with"]
 
 
@@ -272,3 +272,29 @@ def test_music_providers_render_shared_async_dependency(tmp_path: Path) -> None:
         rendered = render_wrappers(provider, registry["providers"])
         distributed = tomllib.loads(rendered["pyproject.toml"])
         assert distributed["project"]["dependencies"] == project["project"]["dependencies"]
+
+
+def test_yandex_music_distribution_preserves_reviewed_sync_baseline() -> None:
+    """All Music sync entrypoints use the reviewed tree and retain the guard."""
+    from scripts.distribute import render_wrappers
+
+    registry = yaml.safe_load((REPO_ROOT / "providers.yml").read_text())
+    provider = next(p for p in registry["providers"] if p["domain"] == "yandex_music")
+    rendered = render_wrappers(provider, registry["providers"])
+    pipeline = yaml.safe_load(rendered[".github/workflows/pipeline.yml"])
+    manual = yaml.safe_load(rendered[".github/workflows/sync-to-fork.yml"])
+    backport = yaml.safe_load(rendered[".github/workflows/backport.yml"])
+    for job in (
+        pipeline["jobs"]["sync-integration"],
+        pipeline["jobs"]["sync-upstream"],
+        manual["jobs"]["sync"],
+        backport["jobs"]["backport"],
+    ):
+        assert job["with"]["upstream_guard_baseline"] == (
+            "d22d28c087ded4289c67c8121c7697f02d9f6e62"
+        )
+    assert manual[True]["workflow_dispatch"]["inputs"]["ack_upstream_ahead"]["default"] is False
+    assert all(
+        "ack_upstream_ahead" not in pipeline["jobs"][name]["with"]
+        for name in ("sync-integration", "sync-upstream")
+    )
