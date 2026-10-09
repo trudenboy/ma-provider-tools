@@ -1,5 +1,7 @@
 providers:
   - domain: yandex_music
+    # Reviewed against v3.8.15; see docs/yandex-music-upstream-baseline-2026-10-09.md.
+    upstream_guard_baseline: d22d28c087ded4289c67c8121c7697f02d9f6e62
     display_name: Yandex Music
     repo: trudenboy/ma-provider-yandex-music
     default_branch: dev
