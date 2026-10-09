@@ -65,6 +65,8 @@ providers:
       - docs/configuration.md.j2
 
   - domain: kion_music
+    # Reviewed against v3.0.12; see docs/kion-music-upstream-baseline-2026-10-09.md.
+    upstream_guard_baseline: d22d28c087ded4289c67c8121c7697f02d9f6e62
     display_name: KION Music
     repo: trudenboy/ma-provider-kion-music
     default_branch: dev
