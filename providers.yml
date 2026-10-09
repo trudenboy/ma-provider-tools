@@ -10,7 +10,7 @@ providers:
     python_version: "3.14"
     runtime_dependencies:
       - "ya-passport-auth[ma]==2.2.0"
-      - "yandex-music[async]==3.2.0"
+      - "yandex-music[async]==3.2.1"
       - "segno==1.6.6"
     codespell_ignore_words: "provid,hass,followings,childs,explict,additionals,commitish,nam,"
     service_url: https://music.yandex.ru
@@ -71,6 +71,8 @@ providers:
     provider_type: music_provider
     locale: ru
     python_version: "3.14"
+    runtime_dependencies:
+      - "yandex-music[async]==3.2.1"
     service_url: https://kion.ru
     auth_method: "Токен (X-Auth-Token)"
     max_quality: "Lossless FLAC (с подпиской)"

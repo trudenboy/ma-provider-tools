@@ -255,3 +255,20 @@ def test_yandex_disk_upstream_sync_drops_version(tmp_path: Path) -> None:
 def test_ordinary_pipeline_keeps_version_upstream(tmp_path: Path) -> None:
     jobs = _rendered_pipeline("yandex_music", tmp_path)["jobs"]
     assert "upstream_exclude_version" not in jobs["sync-upstream"]["with"]
+
+
+def test_music_providers_render_shared_async_dependency(tmp_path: Path) -> None:
+    """Generated projects install the shared library and async transport extras."""
+    from scripts.distribute import render_wrappers
+
+    registry = yaml.safe_load((REPO_ROOT / "providers.yml").read_text())
+    for domain in ("kion_music", "yandex_music"):
+        result = _run(domain, tmp_path / domain, "pyproject.toml.j2")
+        assert result.returncode == 0, result.stderr
+        project = tomllib.loads((tmp_path / domain / "pyproject.toml").read_text())
+        assert "yandex-music[async]==3.2.1" in project["project"]["dependencies"]
+
+        provider = next(p for p in registry["providers"] if p["domain"] == domain)
+        rendered = render_wrappers(provider, registry["providers"])
+        distributed = tomllib.loads(rendered["pyproject.toml"])
+        assert distributed["project"]["dependencies"] == project["project"]["dependencies"]
