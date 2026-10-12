@@ -386,8 +386,8 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: plugin_provider
-    # Reviewed against provider dev 8e85160; see docs/ynison-upstream-baseline-2026-10-11.md.
-    upstream_guard_baseline: e5c6f36e70cf7cdd3b23b9371b209d9253a29df8
+    # Reviewed against provider dev 63a65e6; see docs/ynison-upstream-baseline-2026-10-11.md.
+    upstream_guard_baseline: 92ccd256cebc9fa2a714001856004bccb2cad995
     locale: ru
     python_version: "3.14"
     runtime_dependencies:

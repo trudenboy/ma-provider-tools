@@ -66,3 +66,19 @@ Baseline moved to upstream
 (full SHA `e5c6f36e70cf7cdd3b23b9371b209d9253a29df8`). Against provider `dev`
 `8e85160` with `ruff==0.16.5`: baseline `5456607…` exits 1 listing
 `provider/constants.py`; baseline `e5c6f36…` exits 0.
+
+## Update, 2026-10-12: upstream #6914
+
+Upstream [#6914](https://github.com/music-assistant/server/pull/6914) (TRY301) added
+`noqa: TRY301` to two raise-inside-try sites of the old upstream Ynison copy. The
+provider ported the suppressions to its own two sites in
+[#203](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/203); its
+reconnect guard raises `ResourceTemporarilyUnavailable` instead of upstream's
+`RuntimeError`, so the already-ported heuristic cannot match and the guard flags
+`provider/provider.py` and `provider/ynison_client.py`.
+
+Baseline moved to upstream
+[92ccd25](https://github.com/music-assistant/server/tree/92ccd256cebc9fa2a714001856004bccb2cad995)
+(full SHA `92ccd256cebc9fa2a714001856004bccb2cad995`). Against provider `dev`
+`63a65e6` with `ruff==0.16.5`: baseline `e5c6f36…` exits 1 listing both files;
+baseline `92ccd25…` exits 0.
