@@ -193,7 +193,7 @@ def test_ynison_distribution_preserves_guard_for_all_sync_entrypoints() -> None:
         backport["jobs"]["backport"],
     ):
         assert job["with"]["upstream_guard_baseline"] == (
-            "e5c6f36e70cf7cdd3b23b9371b209d9253a29df8"
+            "92ccd256cebc9fa2a714001856004bccb2cad995"
         )
 
     # PyYAML's YAML 1.1 parser represents the workflow's `on` key as True.
