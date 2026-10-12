@@ -50,3 +50,19 @@ python scripts/check_upstream_ahead.py \
 
 `test_ynison_distribution_preserves_guard_for_all_sync_entrypoints` fails with
 the old registry SHA and passes with the new one; the full tools suite passes.
+
+## Update, 2026-10-12: upstream #6904
+
+Upstream [#6904](https://github.com/music-assistant/server/pull/6904) (S105) edited
+`constants.py` after the `5456607` snapshot, adding `noqa: S105` to four own-mode
+constants that the provider removed in spec `0007-linked-yandex-auth-only`, and to
+`YANDEX_MUSIC_CONF_TOKEN` / `YANDEX_MUSIC_CONF_X_TOKEN`. Provider PR
+[#193](https://github.com/trudenboy/ma-provider-yandex-ynison/pull/193) ported the
+two remaining suppressions; the guard's already-ported heuristic cannot match the
+removed constants, so the release pipeline's sync failed again.
+
+Baseline moved to upstream
+[e5c6f36](https://github.com/music-assistant/server/tree/e5c6f36e70cf7cdd3b23b9371b209d9253a29df8)
+(full SHA `e5c6f36e70cf7cdd3b23b9371b209d9253a29df8`). Against provider `dev`
+`8e85160` with `ruff==0.16.5`: baseline `5456607…` exits 1 listing
+`provider/constants.py`; baseline `e5c6f36…` exits 0.
