@@ -470,7 +470,7 @@ providers:
     locale: en
     python_version: "3.14"
     runtime_dependencies:
-      - "fastmcp==3.4.7"
+      - "fastmcp==4.1.0"
       - "prefab-ui==0.20.2"
     extra_test_dependencies:
       - "pytest-asyncio>=0.24"
