@@ -73,6 +73,13 @@ def _format_value(value: Any, indent: int = 0) -> str:
     raise TypeError(f"Unsupported TOML value type: {type(value).__name__}")
 
 
+def _format_key(key: str) -> str:
+    """Format a TOML key, quoting it unless it is a valid bare key (e.g. globs)."""
+    if re.fullmatch(r"[A-Za-z0-9_-]+", key):
+        return key
+    return _format_value(key)
+
+
 def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
     """Render the upstream [tool.ruff] dict as a standalone ruff.toml file.
 
@@ -85,13 +92,13 @@ def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
     top_keys = ["fix", "show-fixes", "line-length", "target-version"]
     for key in top_keys:
         if key in ruff_cfg:
-            out.append(f"{key} = {_format_value(ruff_cfg[key])}")
+            out.append(f"{_format_key(key)} = {_format_value(ruff_cfg[key])}")
     out.append("")
 
     if "format" in ruff_cfg:
         out.append("[format]")
         for key, value in ruff_cfg["format"].items():
-            out.append(f"{key} = {_format_value(value)}")
+            out.append(f"{_format_key(key)} = {_format_value(value)}")
         out.append("")
 
     if "lint" in ruff_cfg:
@@ -106,12 +113,12 @@ def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
         emitted_lint_keys: set[str] = set()
         for key in ("select", "ignore"):
             if key in lint:
-                out.append(f"{key} = {_format_value(lint[key])}")
+                out.append(f"{_format_key(key)} = {_format_value(lint[key])}")
                 emitted_lint_keys.add(key)
         for key, value in lint.items():
             if key in emitted_lint_keys or isinstance(value, dict):
                 continue
-            out.append(f"{key} = {_format_value(value)}")
+            out.append(f"{_format_key(key)} = {_format_value(value)}")
             emitted_lint_keys.add(key)
         # Nested tables in a stable order matching the existing template.
         nested_order = [
@@ -126,7 +133,7 @@ def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
                 out.append("")
                 out.append(f"[{header}]")
                 for sub_key, sub_value in lint[inner_key].items():
-                    out.append(f"{sub_key} = {_format_value(sub_value)}")
+                    out.append(f"{_format_key(sub_key)} = {_format_value(sub_value)}")
         # Append any remaining nested tables we didn't account for, defensively.
         accounted = emitted_lint_keys | {k for k, _ in nested_order}
         for inner_key, inner_value in lint.items():
@@ -136,7 +143,7 @@ def render_ruff_toml(ruff_cfg: dict[str, Any]) -> str:
                 out.append("")
                 out.append(f"[lint.{inner_key}]")
                 for sub_key, sub_value in inner_value.items():
-                    out.append(f"{sub_key} = {_format_value(sub_value)}")
+                    out.append(f"{_format_key(sub_key)} = {_format_value(sub_value)}")
 
     return "\n".join(out).rstrip() + "\n"
 
