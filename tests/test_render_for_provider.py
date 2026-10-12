@@ -291,7 +291,7 @@ def test_yandex_music_distribution_preserves_reviewed_sync_baseline() -> None:
         backport["jobs"]["backport"],
     ):
         assert job["with"]["upstream_guard_baseline"] == (
-            "d22d28c087ded4289c67c8121c7697f02d9f6e62"
+            "406771ec9138f32954e347f8d4b2fec9ecf51005"
         )
     assert manual[True]["workflow_dispatch"]["inputs"]["ack_upstream_ahead"]["default"] is False
     assert all(
