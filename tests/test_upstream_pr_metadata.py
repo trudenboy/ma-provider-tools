@@ -126,16 +126,10 @@ def test_body_selects_one_type_and_confirms_completed_checks() -> None:
     assert "- [x] I have read and complied with the project's [AI Policy]" in result.stdout
 
 
-def test_method_order_baseline_is_refreshed_before_staging() -> None:
-    """A provider cleanup must not leave upstream's lint baseline stale."""
+def test_method_order_baseline_is_not_changed_by_provider_submission() -> None:
+    """Provider submissions must not rewrite upstream's repository-wide baseline."""
     script = _render_workflow_script()
-
-    baseline_update = script.index(
-        "python3 -m scripts.check_method_order --update-baseline"
-    )
-    staging = script.index("git add -A")
-
-    assert baseline_update < staging
+    assert "scripts.check_method_order --update-baseline" not in script
 
 
 def test_workflow_uses_upstream_python_version_for_metadata_tools() -> None:
