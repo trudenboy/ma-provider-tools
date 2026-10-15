@@ -71,8 +71,14 @@ jobs:
           gh repo clone "$PROVIDER_REPO" provider-repo -- \
             --depth 1 --branch "v{% raw %}${{ inputs.version }}{% endraw %}"
 
-          PREV_TAG=$(gh api "repos/${PROVIDER_REPO}/releases?per_page=2" \
-            --jq '.[1].tag_name // ""' 2>/dev/null || echo "")
+          # Compare base: the highest published stable release below the one
+          # being submitted. The releases listing puts drafts first and is not
+          # version-ordered, so stale drafts (e.g. an old v1.0.0) must not win.
+          CURRENT_TAG="v{% raw %}${{ inputs.version }}{% endraw %}"
+          PREV_TAG=$( { gh api --paginate "repos/${PROVIDER_REPO}/releases?per_page=100" \
+            --jq '.[] | select((.draft | not) and (.prerelease | not)) | .tag_name' 2>/dev/null || true; \
+            printf '%s\n' "$CURRENT_TAG"; } \
+            | sort -uV | grep -x -B1 -F "$CURRENT_TAG" | grep -vxF "$CURRENT_TAG" || true)
           echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
 
       - name: Prepare upstream/<domain> branch and create/update draft PR

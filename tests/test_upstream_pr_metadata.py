@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -183,3 +184,56 @@ def test_version_copy_respects_opt_out(tmp_path: Path) -> None:
         )
         assert result.returncode == 0, result.stderr
         assert (dest / "VERSION").exists() is exists, ship
+
+
+_RELEASES = [
+    # GitHub lists drafts first; stale drafts must not become the compare base.
+    {"tag_name": "v1.0.0", "draft": True, "prerelease": False},
+    {"tag_name": "v1.0.0", "draft": True, "prerelease": False},
+    {"tag_name": "v1.6.0b1", "draft": False, "prerelease": True},
+    {"tag_name": "v1.5.23", "draft": False, "prerelease": False},
+    {"tag_name": "v1.5.22", "draft": False, "prerelease": False},
+    {"tag_name": "v1.5.9", "draft": False, "prerelease": False},
+]
+
+
+def _resolve_prev_tag(tmp_path: Path, version: str, releases: list[dict]) -> str:
+    """Run the PREV_TAG lookup against a fake ``gh api`` serving ``releases``."""
+    fixture = tmp_path / "releases.json"
+    fixture.write_text(json.dumps(releases), encoding="utf-8")
+    fake_gh = tmp_path / "gh"
+    fake_gh.write_text(
+        '#!/usr/bin/env bash\n'
+        'expr=""\n'
+        'while [[ $# -gt 0 ]]; do [[ "$1" == "--jq" ]] && expr="$2"; shift; done\n'
+        'jq -r "$expr" "$RELEASES_FIXTURE"\n',
+        encoding="utf-8",
+    )
+    fake_gh.chmod(0o755)
+    fragment = "CURRENT_TAG=" + _fragment(_resolve_script(), "CURRENT_TAG=", 'echo "PREV_TAG=')
+    fragment = fragment.replace("${{ inputs.version }}", "$INPUT_VERSION")
+    result = _run_shell(
+        fragment + '\nprintf "%s" "$PREV_TAG"',
+        PATH=f"{tmp_path}:{os.environ['PATH']}",
+        RELEASES_FIXTURE=str(fixture),
+        PROVIDER_REPO="trudenboy/ma-provider-yandex-station",
+        INPUT_VERSION=version,
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout
+
+
+def test_prev_tag_skips_drafts_and_prereleases(tmp_path: Path) -> None:
+    """The compare base is the newest published stable release before VERSION."""
+    assert _resolve_prev_tag(tmp_path, "1.5.23", _RELEASES) == "v1.5.22"
+
+
+def test_prev_tag_orders_by_version_not_listing(tmp_path: Path) -> None:
+    """Re-submitting an older release compares against the release right below it."""
+    assert _resolve_prev_tag(tmp_path, "1.5.22", _RELEASES) == "v1.5.9"
+
+
+def test_prev_tag_is_empty_for_first_release(tmp_path: Path) -> None:
+    """No earlier published release means a first-time (new-provider) submission."""
+    releases = [{"tag_name": "v1.0.0", "draft": False, "prerelease": False}]
+    assert _resolve_prev_tag(tmp_path, "1.0.0", releases) == ""
