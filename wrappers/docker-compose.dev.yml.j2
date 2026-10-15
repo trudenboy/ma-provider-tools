@@ -31,6 +31,5 @@ services:
     volumes:
       - ./.ma-data:/data
       - ./{{ provider_path }}:/tmp/provider:ro{% endif %}
-      - ./pyproject.toml:/tmp/pyproject.toml:ro
       - ./scripts/docker-init.sh:/init.sh:ro
     entrypoint: ["/bin/sh", "/init.sh"]

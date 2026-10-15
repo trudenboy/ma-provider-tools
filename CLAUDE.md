@@ -292,7 +292,7 @@ provider repos) — must be set in:
 
 ## Dev Workspace
 
-`scripts/dev-workspace.py` creates a shared development workspace with one `trudenboy/ma-server` fork and a common `.venv` (Python 3.12, uv). Each provider is symlinked into the server's providers directory.
+`scripts/dev-workspace.py` creates a shared development workspace with official `music-assistant/server@dev` and a common `.venv` (Python 3.14, uv). Each provider is symlinked into the server's providers directory. Existing checkouts and virtual environments are reused; migrate older workspaces separately before relying on their compatibility results.
 
 ```bash
 # Create workspace with all providers

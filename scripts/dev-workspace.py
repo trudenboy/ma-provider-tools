@@ -35,7 +35,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PROVIDERS_FILE = REPO_ROOT / "providers.yml"
 DEFAULT_WORKSPACE = Path.home() / "ma-workspace"
-MA_SERVER_REPO = "https://github.com/trudenboy/ma-server.git"
+MA_SERVER_REPO = "https://github.com/music-assistant/server.git"
 MA_SERVER_BRANCH = "dev"
 WORKSPACE_STATE_FILE = "workspace.yml"
 
@@ -344,8 +344,8 @@ def cmd_init(args: argparse.Namespace) -> None:
         _warn(".venv already exists — skipping creation")
     else:
         _header("Creating virtual environment")
-        _run(["uv", "venv", "--python", "3.12", str(venv_dir)])
-        _ok("Created .venv (Python 3.12)")
+        _run(["uv", "venv", "--python", "3.14", str(venv_dir)])
+        _ok("Created .venv (Python 3.14)")
 
     # 3. Install MA server in editable mode
     _header("Installing Music Assistant server")

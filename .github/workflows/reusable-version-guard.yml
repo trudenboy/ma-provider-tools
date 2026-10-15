@@ -8,7 +8,7 @@ on:
   workflow_call:
     inputs:
       version_path:
-        description: "Path to the VERSION file in the provider repo (e.g. provider/VERSION)"
+        description: "Path to the VERSION file in the provider repo (normally VERSION)"
         required: true
         type: string
 
