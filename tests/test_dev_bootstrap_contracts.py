@@ -110,7 +110,9 @@ def test_player_setup_clones_official_ma_dev(tmp_path: Path) -> None:
         '#!/bin/sh\nprintf "%s\\n" "$@" > "$CLONE_ARGS"\n'
         'for target do :; done\nmkdir -p "$target/.git" "$target/music_assistant/providers"\n'
     )
-    for command in (uv, git):
+    pre_commit = commands / "pre-commit"
+    pre_commit.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$CLONE_ARGS.hooks"\n')
+    for command in (uv, git, pre_commit):
         command.chmod(0o755)
     log = tmp_path / "clone-args"
     result = subprocess.run(
@@ -125,6 +127,7 @@ def test_player_setup_clones_official_ma_dev(tmp_path: Path) -> None:
     assert "https://github.com/music-assistant/server.git" in args
     venv_args = Path(f"{log}.venv").read_text().splitlines()
     assert venv_args[venv_args.index("--python") + 1] == "3.14"
+    assert Path(f"{log}.hooks").read_text().splitlines() == ["install"]
 
 
 @pytest.mark.parametrize("domain", ["msx_bridge", "fastmcp_server"])
