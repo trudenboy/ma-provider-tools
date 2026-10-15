@@ -171,7 +171,9 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
-    upstream_guard_baseline: 73257004745c8b44be6ef43f0001d6230098020d
+    # Reviewed before cleanup: all 19 provider files matched this MA dev tree;
+    # retired library playlists and their tests are intentional removals in #296.
+    upstream_guard_baseline: 15003cae786a704959ce4f3933aea30329545cf0
     locale: en
     python_version: "3.14"
     service_url: https://getmsx.net

@@ -15,12 +15,34 @@ from scripts.distribute import render_wrappers
 
 
 ROOT = Path(__file__).resolve().parent.parent
+MSX_BASELINE = "15003cae786a704959ce4f3933aea30329545cf0"
 
 
 def _render(domain: str) -> dict[str, str]:
     registry = yaml.safe_load((ROOT / "providers.yml").read_text())
     provider = next(p for p in registry["providers"] if p["domain"] == domain)
     return render_wrappers(provider, registry["providers"])
+
+
+def test_msx_cleanup_uses_reviewed_baseline_without_disabling_sync_guard() -> None:
+    """Intentional retirements use their reviewed source snapshot in every sync entrypoint."""
+    rendered = _render("msx_bridge")
+    pipeline = yaml.safe_load(rendered[".github/workflows/pipeline.yml"])
+    manual = yaml.safe_load(rendered[".github/workflows/sync-to-fork.yml"])
+    backport = yaml.safe_load(rendered[".github/workflows/backport.yml"])
+    for job in (
+        pipeline["jobs"]["sync-integration"],
+        pipeline["jobs"]["sync-upstream"],
+        manual["jobs"]["sync"],
+        backport["jobs"]["backport"],
+    ):
+        assert job["with"]["upstream_guard_baseline"] == MSX_BASELINE
+    for job in (*pipeline["jobs"].values(), backport["jobs"]["backport"]):
+        if "with" not in job:
+            continue
+        assert "ack_upstream_ahead" not in job["with"]
+    assert manual["jobs"]["sync"]["with"]["ack_upstream_ahead"] == "${{ inputs.ack_upstream_ahead }}"
+    assert manual[True]["workflow_dispatch"]["inputs"]["ack_upstream_ahead"]["default"] is False
 
 
 @pytest.mark.parametrize(
