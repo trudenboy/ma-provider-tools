@@ -52,7 +52,7 @@ providers:
 
 `provider_type` controls CI behavior in `reusable-test.yml`:
 - `music_provider` — uses upstream `music-assistant/server` (lighter CI)
-- `player_provider` — uses `trudenboy/ma-server` fork for tests; lint always uses upstream `music-assistant/server`
+- `player_provider` — tests and lint use upstream `music-assistant/server@dev`, matching the API used by the other provider types
 - `plugin_provider` — uses upstream `music-assistant/server` (same CI as music_provider, for PluginProvider-based providers)
 
 ## Pipeline Workflow
