@@ -87,4 +87,3 @@ def test_pre_commit_ruff_hook_keeps_noqa_for_rules_not_yet_enabled(tmp_path: Pat
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert (repo / "provider" / "constants.py").read_text() == source
-
