@@ -8,6 +8,14 @@ on:
       - "providers.yml"
   workflow_dispatch:
 
+# Back-to-back merges to main start overlapping runs that force-push the same
+# chore/update-workflow-wrappers branches and race on auto-merge. Queue them;
+# a run that is still pending is replaced by the newest one, which renders
+# from the latest main anyway.
+concurrency:
+  group: distribute-wrappers
+  cancel-in-progress: false
+
 jobs:
   distribute:
     runs-on: ubuntu-latest
