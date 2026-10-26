@@ -264,8 +264,10 @@ jobs:
 
           if [[ -n "$PREV_TAG" ]]; then
             COMPARE_LABEL="vs ${PREV_TAG}"
+            # Conventional Commits allow a scope and a breaking-change marker:
+            # `fix(scope): …`, `feat!: …`, `feat(scope)!: …` (issue #182).
             WHAT_NEW=$(gh api "repos/${PROVIDER_REPO}/compare/${PREV_TAG}...${VERSION}" \
-              --jq '.commits[].commit.message | split("\n")[0] | select(test("^(feat|fix):")) | "- " + .' \
+              --jq '.commits[].commit.message | split("\n")[0] | select(test("^(feat|fix)(\\([^)]*\\))?!?:")) | "- " + .' \
               2>/dev/null || true)
             [[ -z "$WHAT_NEW" ]] && WHAT_NEW="_No feat/fix commits found_"
             FILE_ROWS=$(gh api "repos/${PROVIDER_REPO}/compare/${PREV_TAG}...${VERSION}" \
