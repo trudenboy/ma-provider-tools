@@ -353,3 +353,12 @@ def test_submit_stops_when_provider_matches_upstream_dev(tmp_path: Path) -> None
     assert result.returncode == 0, result.stderr
     assert "NEEDS_COMMIT" not in result.stdout
     assert "already matches upstream/dev" in result.stdout
+
+
+def test_provider_claude_md_requires_exactly_one_change_type() -> None:
+    """Agent guidance must match upstream's single-label rule, as the generator does."""
+    template = (REPO / "wrappers" / "CLAUDE.md.j2").read_text(encoding="utf-8")
+    section = template.split("## Upstream PR Body Format", 1)[1].split("\n## ", 1)[0]
+
+    assert "exactly one" in section
+    assert "multi-tick" not in section.lower()
