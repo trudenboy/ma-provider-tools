@@ -290,3 +290,66 @@ def test_whats_new_includes_scoped_and_breaking_commits(tmp_path: Path) -> None:
 def test_whats_new_placeholder_when_no_feat_or_fix(tmp_path: Path) -> None:
     """A range with no feat/fix commits keeps the explicit placeholder."""
     assert _whats_new(tmp_path, ["chore: bump", "docs(readme): typo"]) == "_No feat/fix commits found_"
+
+
+def _git(cwd: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(cwd), *args], check=True, capture_output=True)
+
+
+def _submit_decision(tmp_path: Path, *, branch_has_release: bool, provider_text: str):
+    """
+    Run the "anything to submit?" decision in a scratch repo.
+
+    ``upstream/dev`` carries provider v1; the branch HEAD optionally already
+    carries v2 (as the pipeline's sync-upstream job leaves it); the working
+    tree then receives ``provider_text`` as the release being submitted.
+    """
+    repo = tmp_path / "fork"
+    dest = repo / "music_assistant" / "providers" / "demo"
+    dest.mkdir(parents=True)
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "config", "user.email", "t@t")
+    _git(repo, "config", "user.name", "t")
+    (dest / "provider.py").write_text("v1\n")
+    (repo / "unrelated.txt").write_text("upstream\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "upstream dev")
+    _git(repo, "update-ref", "refs/remotes/upstream/dev", "HEAD")
+    if branch_has_release:
+        (dest / "provider.py").write_text("v2\n")
+        _git(repo, "commit", "-q", "-am", "sync provider v2")
+    (dest / "provider.py").write_text(provider_text)
+
+    script = _render_workflow_script()
+    fragment = "git add -A\n" + _fragment(script, "\ngit add -A\n", "# Generate PR title")
+    return subprocess.run(
+        ["bash", "-euo", "pipefail", "-c", fragment + '\nprintf "NEEDS_COMMIT=%s" "$NEEDS_COMMIT"'],
+        env={**os.environ, "DOMAIN": "demo", "VERSION": "v2", "BRANCH": "upstream/demo",
+             "DEST": "music_assistant/providers/demo"},
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_submit_proceeds_when_pipeline_already_synced_branch(tmp_path: Path) -> None:
+    """A branch already holding the release still opens/updates the PR (issue #181)."""
+    result = _submit_decision(tmp_path, branch_has_release=True, provider_text="v2\n")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.endswith("NEEDS_COMMIT=no")
+
+
+def test_submit_commits_new_release(tmp_path: Path) -> None:
+    """New provider changes are committed as before."""
+    result = _submit_decision(tmp_path, branch_has_release=False, provider_text="v2\n")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.endswith("NEEDS_COMMIT=yes")
+
+
+def test_submit_stops_when_provider_matches_upstream_dev(tmp_path: Path) -> None:
+    """Nothing is submitted when upstream/dev already ships this provider tree."""
+    result = _submit_decision(tmp_path, branch_has_release=False, provider_text="v1\n")
+    assert result.returncode == 0, result.stderr
+    assert "NEEDS_COMMIT" not in result.stdout
+    assert "already matches upstream/dev" in result.stdout

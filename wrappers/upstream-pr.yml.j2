@@ -241,9 +241,18 @@ jobs:
           rm -rf provider-repo
 
           git add -A
-          if git diff --cached --quiet; then
-            echo "No changes vs upstream/dev — nothing to submit"
+          # Decide against upstream/dev, not against the branch HEAD: the
+          # provider pipeline's sync-upstream job usually pushes the release to
+          # upstream/<domain> before this workflow runs, so the staged diff is
+          # empty even though upstream still needs the PR (issue #181).
+          if git diff --cached --quiet upstream/dev -- "$DEST" "tests/providers/${DOMAIN}"; then
+            echo "${DOMAIN} ${VERSION} already matches upstream/dev — nothing to submit"
             exit 0
+          fi
+          NEEDS_COMMIT="yes"
+          if git diff --cached --quiet; then
+            echo "${BRANCH} already contains ${DOMAIN} ${VERSION} — skipping commit, creating/updating the PR"
+            NEEDS_COMMIT="no"
           fi
 
           # Generate PR title
@@ -367,12 +376,14 @@ jobs:
           COMMIT_MSG="$(printf '%s\n' "$PR_TITLE" | sed -E '/^[Cc]o-[Aa]uthored-[Bb]y: .*(Claude|claude|@anthropic\.com).*$/d')"
           # Append the (pre-filtered) human co-author trailers so GitHub's
           # squash merge upstream carries the credit into server history.
-          if [[ -n "$HUMAN_COAUTHORS" ]]; then
-            git commit -m "$COMMIT_MSG" -m "$HUMAN_COAUTHORS"
-          else
-            git commit -m "$COMMIT_MSG"
+          if [[ "$NEEDS_COMMIT" == "yes" ]]; then
+            if [[ -n "$HUMAN_COAUTHORS" ]]; then
+              git commit -m "$COMMIT_MSG" -m "$HUMAN_COAUTHORS"
+            else
+              git commit -m "$COMMIT_MSG"
+            fi
+            git push origin "$BRANCH" $FORCE_PUSH
           fi
-          git push origin "$BRANCH" $FORCE_PUSH
 
           EXISTING_PR=$(gh api "repos/music-assistant/server/pulls" \
             -X GET -f state=open -f head="trudenboy:${BRANCH}" \
