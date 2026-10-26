@@ -237,3 +237,56 @@ def test_prev_tag_is_empty_for_first_release(tmp_path: Path) -> None:
     """No earlier published release means a first-time (new-provider) submission."""
     releases = [{"tag_name": "v1.0.0", "draft": False, "prerelease": False}]
     assert _resolve_prev_tag(tmp_path, "1.0.0", releases) == ""
+
+
+def _whats_new(tmp_path: Path, subjects: list[str]) -> str:
+    """Run the "What's new" lookup against a fake ``gh api`` compare response."""
+    fixture = tmp_path / "compare.json"
+    fixture.write_text(
+        json.dumps({"commits": [{"commit": {"message": s + "\n\nbody"}} for s in subjects], "files": []}),
+        encoding="utf-8",
+    )
+    fake_gh = tmp_path / "gh"
+    fake_gh.write_text(
+        '#!/usr/bin/env bash\n'
+        'expr=""\n'
+        'while [[ $# -gt 0 ]]; do [[ "$1" == "--jq" ]] && expr="$2"; shift; done\n'
+        'jq -r "$expr" "$COMPARE_FIXTURE"\n',
+        encoding="utf-8",
+    )
+    fake_gh.chmod(0o755)
+    fragment = _fragment(_render_workflow_script(), "# Get changelog data from GitHub API\n", "# Carry HUMAN co-author")
+    result = _run_shell(
+        fragment + '\nprintf "%s" "$WHAT_NEW"',
+        PATH=f"{tmp_path}:{os.environ['PATH']}",
+        COMPARE_FIXTURE=str(fixture),
+        PROVIDER_REPO="trudenboy/ma-provider-msx-bridge",
+        PREV_TAG="v1.6.2",
+        VERSION="v1.6.3",
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout
+
+
+def test_whats_new_includes_scoped_and_breaking_commits(tmp_path: Path) -> None:
+    """Scoped (`fix(scope):`) and breaking (`feat!:`) subjects are listed (issue #182)."""
+    subjects = [
+        "fix(msx): restore search controls",
+        "feat!: drop legacy playback path",
+        "feat(player)!: new queue API",
+        "fix: plain fix",
+        "chore(release): Yandex Station 1.6.3",
+        "docs(readme): explain setup",
+        "fixup: not a conventional fix",
+    ]
+    assert _whats_new(tmp_path, subjects).splitlines() == [
+        "- fix(msx): restore search controls",
+        "- feat!: drop legacy playback path",
+        "- feat(player)!: new queue API",
+        "- fix: plain fix",
+    ]
+
+
+def test_whats_new_placeholder_when_no_feat_or_fix(tmp_path: Path) -> None:
+    """A range with no feat/fix commits keeps the explicit placeholder."""
+    assert _whats_new(tmp_path, ["chore: bump", "docs(readme): typo"]) == "_No feat/fix commits found_"
