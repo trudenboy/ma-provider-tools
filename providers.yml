@@ -347,6 +347,7 @@ providers:
     runtime_dependencies:
       - "ya-passport-auth[ma]==2.2.0"
       - "ya-dialogs-api>=2.0.0"
+      - "segno==1.6.6"
     # `sting` is the singer's name (Стинг) referenced in tts_dictionary.py / CHANGELOG, not a typo of `string`.
     codespell_ignore_words: "hass,sting,"
     service_url: https://dialogs.yandex.ru/developer
