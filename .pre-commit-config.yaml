@@ -1,3 +1,6 @@
+# upstream-guidance/ is a byte-for-byte mirror pinned by lock.json sha256;
+# whitespace fixers must not touch it.
+exclude: ^upstream-guidance/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

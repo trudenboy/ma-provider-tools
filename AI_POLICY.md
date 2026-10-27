@@ -132,6 +132,6 @@ original text in a `<details>` block, both upstream and in our own repos.
 - Per-provider summary: each provider repo carries an `AI_POLICY.md` rendered
   from `wrappers/AI_POLICY.md.j2` in this repo.
 - Day-to-day operational rules for AI in a provider repo:
-  `CLAUDE.md` (rendered from `wrappers/CLAUDE.md.j2`), section *AI Policy
-  Alignment*.
+  `AGENTS.md` (rendered from `wrappers/AGENTS.md.j2`; `CLAUDE.md` is a
+  symlink to it), section *AI Policy Alignment*.
 - The upstream-boundary mechanics: `wrappers/upstream-pr.yml.j2`.

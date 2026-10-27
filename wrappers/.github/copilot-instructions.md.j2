@@ -1,0 +1,32 @@
+<!-- ma-provider-tools: rendered from wrappers/.github/copilot-instructions.md.j2 -->
+# Copilot Instructions — {{ display_name }}
+
+This repo is the source of truth for the **{{ display_name }}** Music Assistant
+provider, which is later inlined upstream into
+`music-assistant/server/music_assistant/providers/{{ domain }}/`. Review it by
+the upstream standards below (mirrored verbatim from upstream by
+`ma-provider-tools`; do not edit), with these provider-repo exceptions:
+
+- **Paths.** Upstream `music_assistant/providers/{{ domain }}/` is
+  `{{ provider_path }}` here, and `tests/providers/{{ domain }}/` is `tests/`.
+  `music_assistant/helpers/` and the demo providers come from the installed
+  `music-assistant` package.
+- **Project standards** are in `AGENTS.md` (`CLAUDE.md` is a symlink to it),
+  with provider specifics in `CLAUDE.local.md`. Deviations are at least
+  `[PROBLEM]`.
+- **PR title.** Provider-repo PRs **use** Conventional Commit prefixes
+  (`feat:`, `fix:`, …). Do not flag them. Only PRs in `music-assistant/server`
+  must not have one.
+- **PR description.** Provider-repo PRs follow this repo's
+  `.github/PULL_REQUEST_TEMPLATE.md`. The upstream PR-description rules apply
+  only to text drafted for an upstream PR body.
+- **Settled by CI.** In addition to lint and tests, `check-upstream-rules`
+  (`MA001`–`MA006`), the method-order hook and upstream's own repo checks
+  (blocking IO, icons, manifests) already run. Do not repeat their findings;
+  only question a `# ma-allow:` reason that does not hold up.
+- **Mirrored files.** `.github/instructions/*`, `.claude/skills/*`,
+  `scripts/check_*.py`, `ruff.toml` and the sync-managed workflows are
+  distributed from `ma-provider-tools`. Changes to them belong there, not in
+  this repo.
+
+{{ upstream_file('server/.github/copilot-instructions.md') | demote_headings | trim }}

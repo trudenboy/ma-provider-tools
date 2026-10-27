@@ -19,7 +19,9 @@ import sys
 from pathlib import Path
 
 import yaml
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _wrapper_env import make_env  # noqa: E402
 
 REPO_ROOT = Path(__file__).parent.parent
 WRAPPERS = REPO_ROOT / "wrappers"
@@ -77,11 +79,7 @@ def main() -> int:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    env = Environment(
-        loader=FileSystemLoader(str(WRAPPERS)),
-        undefined=StrictUndefined,
-        keep_trailing_newline=True,
-    )
+    env = make_env()
     ctx = build_context(args.domain)
     provider, _ = _provider_entry(args.domain)
     skipped = set(provider.get("skip_wrappers", []))

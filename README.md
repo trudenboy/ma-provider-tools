@@ -48,7 +48,7 @@ Files in `.github/workflows/reusable-*.yml` contain all CI logic. Provider repos
 `scripts/distribute.py` renders Jinja2 templates in `wrappers/` for each provider and creates PRs with the results.
 Triggered automatically on push to `main` when `wrappers/` or `providers.yml` changes.
 
-Distributed files include: CI workflows, issue templates, labels, docs, Docker dev environment, Starlight docs-site config, the auto-synced `CLAUDE.md` development guide, the README header (badges + locale-aware quick-links + cross-provider links via marker injection), the auto-synced `ruff.toml` / `[tool.mypy]` / `[tool.codespell].skip` blocks (kept in sync with upstream `music-assistant/server` weekly), the SDD feature-spec template, and the dynamic Music Assistant version badge JSONs.
+Distributed files include: CI workflows, issue templates, labels, docs, Docker dev environment, Starlight docs-site config, the auto-synced `AGENTS.md` agent guide (`CLAUDE.md` symlinks to it) plus upstream's Copilot instructions, review skill and architecture docs mirrored from `upstream-guidance/`, the blocking `check_upstream_rules.py` pre-commit gate, the README header (badges + locale-aware quick-links + cross-provider links via marker injection), the auto-synced `ruff.toml` / `[tool.mypy]` / `[tool.codespell].skip` blocks (kept in sync with upstream `music-assistant/server` weekly), the SDD feature-spec template, and the dynamic Music Assistant version badge JSONs.
 
 ### Repository-Level Automation
 
@@ -122,6 +122,8 @@ scripts/
   check_config_sync.py                 ← reusable-check-config-sync.yml worker
   check_feature_consistency.py         ← reusable-check-feature-consistency.yml worker
   sync_upstream_config.py              ← syncs lint/typing config from upstream MA
+  sync_upstream_guidance.py            ← mirrors upstream agent guidance into upstream-guidance/
+  _wrapper_env.py                      ← shared Jinja2 env (upstream_file + Markdown filters)
   sync_repo_settings.py                ← pushes GitHub About + topics via gh repo edit
   update_ma_version_badges.py          ← writes public/badges/<domain>-{stable,beta}.json
   dev-workspace.py                     ← shared dev workspace (multi-provider)
@@ -200,7 +202,7 @@ python3 scripts/dev-workspace.py update --dir ~/ma-workspace
 `scripts/distribute.py` рендерит Jinja2-шаблоны из `wrappers/` для каждого провайдера и создаёт PR с результатами.
 Запускается автоматически при push в `main`, если изменились `wrappers/` или `providers.yml`.
 
-Распределяемые файлы: CI workflow, шаблоны задач, метки, документация, Docker-окружение, конфигурация Starlight docs-site, авто-синкаемый гайд `CLAUDE.md`, шапка README (badges + локалезависимые quick-links + cross-link через marker injection), авто-синкаемые блоки `ruff.toml` / `[tool.mypy]` / `[tool.codespell].skip` (еженедельно подтягиваются из upstream `music-assistant/server`), SDD-шаблон спецификации фичи и JSON-файлы динамического Music Assistant бейджа.
+Распределяемые файлы: CI workflow, шаблоны задач, метки, документация, Docker-окружение, конфигурация Starlight docs-site, авто-синкаемый гайд для агентов `AGENTS.md` (`CLAUDE.md` — симлинк на него) вместе с Copilot-инструкциями, review-скиллом и архитектурной документацией upstream из зеркала `upstream-guidance/`, блокирующий pre-commit гейт `check_upstream_rules.py`, шапка README (badges + локалезависимые quick-links + cross-link через marker injection), авто-синкаемые блоки `ruff.toml` / `[tool.mypy]` / `[tool.codespell].skip` (еженедельно подтягиваются из upstream `music-assistant/server`), SDD-шаблон спецификации фичи и JSON-файлы динамического Music Assistant бейджа.
 
 ### Автоматизация уровня репозитория
 
@@ -274,6 +276,8 @@ scripts/
   check_config_sync.py                 ← worker для reusable-check-config-sync.yml
   check_feature_consistency.py         ← worker для reusable-check-feature-consistency.yml
   sync_upstream_config.py              ← подтягивает lint/typing-конфиг из upstream MA
+  sync_upstream_guidance.py            ← зеркалит agent-гайды upstream в upstream-guidance/
+  _wrapper_env.py                      ← общее Jinja2-окружение (upstream_file + Markdown-фильтры)
   sync_repo_settings.py                ← пушит GitHub About + topics через gh repo edit
   update_ma_version_badges.py          ← пишет public/badges/<domain>-{stable,beta}.json
   dev-workspace.py                     ← общее dev-окружение (мульти-провайдер)

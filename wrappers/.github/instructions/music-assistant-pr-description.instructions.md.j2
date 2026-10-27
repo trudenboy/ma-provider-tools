@@ -1,0 +1,8 @@
+{{ upstream_file('server/.github/instructions/music-assistant-pr-description.instructions.md') | frontmatter }}
+<!-- ma-provider-tools: upstream file with a provider-repo scope note; do not edit. -->
+> **Scope in provider repos.** These rules apply to text drafted for an
+> upstream `music-assistant/server` PR body. PRs in this repo follow
+> `.github/PULL_REQUEST_TEMPLATE.md`, and their extra sections are not a
+> `[PROBLEM]`.
+
+{{ upstream_file('server/.github/instructions/music-assistant-pr-description.instructions.md') | strip_frontmatter | trim }}

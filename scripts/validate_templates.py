@@ -13,13 +13,10 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from jinja2 import (
-        Environment,
-        FileSystemLoader,
-        StrictUndefined,
-        TemplateSyntaxError,
-    )
+    from _wrapper_env import make_env
+    from jinja2 import TemplateSyntaxError
 except ImportError:
     print("ERROR: jinja2 not installed. Run: pip install jinja2", file=sys.stderr)
     sys.exit(1)
@@ -65,11 +62,7 @@ def main() -> int:
         ],
     }
 
-    env = Environment(
-        loader=FileSystemLoader(str(WRAPPERS_DIR)),
-        undefined=StrictUndefined,
-        keep_trailing_newline=True,
-    )
+    env = make_env()
 
     templates = sorted(WRAPPERS_DIR.rglob("*.j2"))
     errors: list[str] = []

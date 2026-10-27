@@ -22,6 +22,11 @@ import sys
 import tomllib
 from pathlib import Path
 
+VENDORED_SCRIPTS = (
+    "scripts/check_method_order.py",
+    "scripts/check_upstream_rules.py",
+)
+
 
 def _emit_error(message: str) -> None:
     # Emit as a plain message *and* a GitHub Actions error annotation.
@@ -102,26 +107,28 @@ def main() -> int:
                 f"  local:    {local_skip!r}"
             )
 
-    # Vendored method-order hook (issue #115): must match the rendered
-    # template byte-for-byte. The expected file is absent when the provider
-    # skips the wrapper (skip_wrappers) — then there is nothing to enforce.
-    expected_cmo_path = Path("_expected/scripts/check_method_order.py")
-    local_cmo_path = Path("scripts/check_method_order.py")
-    if expected_cmo_path.is_file():
-        if not local_cmo_path.is_file():
+    # Vendored pre-commit gates (method order, issue #115; upstream review
+    # rules): each must match its rendered template byte-for-byte. The
+    # expected file is absent when the provider skips the wrapper
+    # (skip_wrappers) — then there is nothing to enforce.
+    for script in VENDORED_SCRIPTS:
+        expected_path = Path("_expected") / script
+        local_path = Path(script)
+        if not expected_path.is_file():
+            continue
+        if not local_path.is_file():
             issues.append(
-                "scripts/check_method_order.py is missing from the provider "
-                "repo. It must exist and match the distributed template."
+                f"{script} is missing from the provider repo. It must exist "
+                "and match the distributed template."
             )
-        else:
-            local_cmo = local_cmo_path.read_text()
-            expected_cmo = expected_cmo_path.read_text()
-            if local_cmo != expected_cmo:
-                issues.append(
-                    "scripts/check_method_order.py drifts from the "
-                    "distributed template:\n"
-                    + _diff(expected_cmo, local_cmo, "scripts/check_method_order.py")
-                )
+            continue
+        local_text = local_path.read_text()
+        expected_text = expected_path.read_text()
+        if local_text != expected_text:
+            issues.append(
+                f"{script} drifts from the distributed template:\n"
+                + _diff(expected_text, local_text, script)
+            )
 
     if issues:
         for issue in issues:

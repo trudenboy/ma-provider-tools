@@ -6,6 +6,7 @@ on:
     paths:
       - "wrappers/**"
       - "providers.yml"
+      - "upstream-guidance/**"
   workflow_dispatch:
 
 # Back-to-back merges to main start overlapping runs that force-push the same
