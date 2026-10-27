@@ -23,6 +23,13 @@ on:
         description: "Auto-fix ruff issues and commit back to the branch"
         default: false
         type: boolean
+      needs_ffmpeg:
+        description: >-
+          Install ffmpeg for the tests: "auto" (player and music providers, and
+          plugins with AUDIO_SOURCE), "true" or "false". Set "false" from
+          providers.yml (test_needs_ffmpeg) when the provider's tests never run it.
+        default: "auto"
+        type: string
 
 jobs:
   # ─── Music / Plugin provider: clone upstream ma-server, symlink, run pytest + codecov ───
@@ -53,8 +60,11 @@ jobs:
 
           ptype = "${{ inputs.provider_type }}"
           ppath = "${{ inputs.provider_path }}".rstrip("/")
+          ffmpeg_override = "${{ inputs.needs_ffmpeg }}".strip().lower()
 
           def emit(ffmpeg: bool, full: bool) -> None:
+              if ffmpeg_override in ("true", "false"):
+                  ffmpeg = ffmpeg_override == "true"
               with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
                   fh.write(f"needs_ffmpeg={'true' if ffmpeg else 'false'}\n")
                   fh.write(f"needs_ma_full_deps={'true' if full else 'false'}\n")
@@ -89,22 +99,52 @@ jobs:
 
           emit(has_audio, has_audio)
           PYEOF
+      # Static ffmpeg from GitHub releases, cached across runs: the Ubuntu apt
+      # mirror on the runners stalled the install for 15 minutes several times.
+      - name: Restore ffmpeg
+        if: ${{ steps.deps.outputs.needs_ffmpeg == 'true' }}
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ffmpeg-static
+          key: ffmpeg-static-${{ runner.os }}-${{ runner.arch }}-n8.1-gpl
       - name: Install ffmpeg
         if: ${{ steps.deps.outputs.needs_ffmpeg == 'true' }}
-        # A stalled apt mirror otherwise holds the job until GitHub's 6-hour limit.
         timeout-minutes: 15
+        env:
+          FFMPEG_CACHE_HIT: ${{ steps.ffmpeg-cache.outputs.cache-hit }}
         run: |
-          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
-          for attempt in 1 2 3; do
-            if timeout 180 sudo apt-get "${apt_opts[@]}" update \
-              && timeout 300 sudo apt-get "${apt_opts[@]}" install -y --no-install-recommends ffmpeg; then
+          dir="$HOME/.cache/ffmpeg-static"
+          if [ "$FFMPEG_CACHE_HIT" != "true" ] || [ ! -x "$dir/ffmpeg" ]; then
+            asset="ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz"
+            base="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest"
+            work="$(mktemp -d)"
+            ok=false
+            for attempt in 1 2 3; do
+              if curl -fsSL --retry 3 --max-time 300 -o "$work/$asset" "$base/$asset" \
+                && curl -fsSL --retry 3 --max-time 60 -o "$work/checksums.sha256" "$base/checksums.sha256" \
+                && (cd "$work" && grep " $asset\$" checksums.sha256 | sha256sum -c -); then
+                ok=true
+                break
+              fi
+              echo "::warning::static ffmpeg download attempt ${attempt} failed"
+              sleep 10
+            done
+            if [ "$ok" = true ]; then
+              mkdir -p "$dir"
+              tar -xJf "$work/$asset" -C "$work"
+              cp "$work"/ffmpeg-*/bin/ffmpeg "$work"/ffmpeg-*/bin/ffprobe "$dir/"
+            else
+              echo "::warning::static ffmpeg unavailable, falling back to apt"
+              apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+              timeout 180 sudo apt-get "${apt_opts[@]}" update \
+                && timeout 300 sudo apt-get "${apt_opts[@]}" install -y --no-install-recommends ffmpeg \
+                || { echo "::error::ffmpeg could not be installed"; exit 1; }
               exit 0
             fi
-            echo "::warning::ffmpeg install attempt ${attempt} failed or timed out"
-            sleep 15
-          done
-          echo "::error::ffmpeg could not be installed after 3 attempts"
-          exit 1
+          fi
+          echo "$dir" >> "$GITHUB_PATH"
+          "$dir/ffmpeg" -hide_banner -version | head -n 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -492,8 +532,11 @@ jobs:
 
           ptype = "${{ inputs.provider_type }}"
           ppath = "${{ inputs.provider_path }}".rstrip("/")
+          ffmpeg_override = "${{ inputs.needs_ffmpeg }}".strip().lower()
 
           def emit(ffmpeg: bool, full: bool) -> None:
+              if ffmpeg_override in ("true", "false"):
+                  ffmpeg = ffmpeg_override == "true"
               with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
                   fh.write(f"needs_ffmpeg={'true' if ffmpeg else 'false'}\n")
                   fh.write(f"needs_ma_full_deps={'true' if full else 'false'}\n")
@@ -528,22 +571,52 @@ jobs:
 
           emit(has_audio, has_audio)
           PYEOF
+      # Static ffmpeg from GitHub releases, cached across runs: the Ubuntu apt
+      # mirror on the runners stalled the install for 15 minutes several times.
+      - name: Restore ffmpeg
+        if: ${{ steps.deps.outputs.needs_ffmpeg == 'true' }}
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ffmpeg-static
+          key: ffmpeg-static-${{ runner.os }}-${{ runner.arch }}-n8.1-gpl
       - name: Install ffmpeg
         if: ${{ steps.deps.outputs.needs_ffmpeg == 'true' }}
-        # A stalled apt mirror otherwise holds the job until GitHub's 6-hour limit.
         timeout-minutes: 15
+        env:
+          FFMPEG_CACHE_HIT: ${{ steps.ffmpeg-cache.outputs.cache-hit }}
         run: |
-          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
-          for attempt in 1 2 3; do
-            if timeout 180 sudo apt-get "${apt_opts[@]}" update \
-              && timeout 300 sudo apt-get "${apt_opts[@]}" install -y --no-install-recommends ffmpeg; then
+          dir="$HOME/.cache/ffmpeg-static"
+          if [ "$FFMPEG_CACHE_HIT" != "true" ] || [ ! -x "$dir/ffmpeg" ]; then
+            asset="ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz"
+            base="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest"
+            work="$(mktemp -d)"
+            ok=false
+            for attempt in 1 2 3; do
+              if curl -fsSL --retry 3 --max-time 300 -o "$work/$asset" "$base/$asset" \
+                && curl -fsSL --retry 3 --max-time 60 -o "$work/checksums.sha256" "$base/checksums.sha256" \
+                && (cd "$work" && grep " $asset\$" checksums.sha256 | sha256sum -c -); then
+                ok=true
+                break
+              fi
+              echo "::warning::static ffmpeg download attempt ${attempt} failed"
+              sleep 10
+            done
+            if [ "$ok" = true ]; then
+              mkdir -p "$dir"
+              tar -xJf "$work/$asset" -C "$work"
+              cp "$work"/ffmpeg-*/bin/ffmpeg "$work"/ffmpeg-*/bin/ffprobe "$dir/"
+            else
+              echo "::warning::static ffmpeg unavailable, falling back to apt"
+              apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+              timeout 180 sudo apt-get "${apt_opts[@]}" update \
+                && timeout 300 sudo apt-get "${apt_opts[@]}" install -y --no-install-recommends ffmpeg \
+                || { echo "::error::ffmpeg could not be installed"; exit 1; }
               exit 0
             fi
-            echo "::warning::ffmpeg install attempt ${attempt} failed or timed out"
-            sleep 15
-          done
-          echo "::error::ffmpeg could not be installed after 3 attempts"
-          exit 1
+          fi
+          echo "$dir" >> "$GITHUB_PATH"
+          "$dir/ffmpeg" -hide_banner -version | head -n 1
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true

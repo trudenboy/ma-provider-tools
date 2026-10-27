@@ -23,3 +23,6 @@ jobs:
       provider_domain: {{ domain }}
       provider_path: {{ provider_path }}
       manifest_path: {{ manifest_path }}
+{%- if test_needs_ffmpeg is not none %}
+      needs_ffmpeg: "{{ 'true' if test_needs_ffmpeg else 'false' }}"
+{%- endif %}
