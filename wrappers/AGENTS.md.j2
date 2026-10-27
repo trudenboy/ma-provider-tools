@@ -203,7 +203,8 @@ review rules that no linter enforces: `MA001` new `ClientSession`, `MA002`
 silently swallowed broad `except`, `MA003` pre-formatted log message, `MA004`
 discarded task, `MA005` database access, `MA006` unpinned manifest
 requirement. Fix the code. When an exception is genuinely deliberate, add
-`# ma-allow: MA00X <reason>` on the reported line; the reason is mandatory
+`# ma-allow: MA00X <reason>` on the reported line (or as a comment line
+directly above it); the reason is mandatory
 and reviewers check it.
 
 ## Branching and PRs

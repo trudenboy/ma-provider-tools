@@ -97,8 +97,10 @@ Provider repos only received a hand-maintained subset through
    | MA006 | manifest requirement not pinned with `==` or a git SHA | support#2054 |
 
    A deliberate exception is allowed with `# ma-allow: MAxxx <reason>` on the
-   reported line; a missing reason is itself a violation. The script is pinned
-   byte for byte by `check_config_sync.py`, like `check_method_order.py`.
+   reported line, or as a comment-only line directly above it (formatters
+   reflow trailing comments on multi-line calls); a missing reason is itself
+   a violation. The script is pinned byte for byte by `check_config_sync.py`,
+   like `check_method_order.py`.
 
    Calibration (upstream `dev` 291ddf9 and local provider checkouts): a
    cross-provider import rule was dropped, because upstream uses 424 of them

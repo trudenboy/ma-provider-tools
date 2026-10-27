@@ -123,7 +123,8 @@ repos:
       # Upstream review rules no linter enforces (MA001-MA006: shared http
       # session, silent broad except, pre-formatted log messages, discarded
       # tasks, database access, unpinned requirements). Blocking; a deliberate
-      # exception needs `# ma-allow: <CODE> <reason>` on the reported line.
+      # exception needs `# ma-allow: <CODE> <reason>` on (or directly above)
+      # the reported line.
       - id: check-upstream-rules
         name: 🧭 Check upstream review rules (MA001-MA006)
         language: system

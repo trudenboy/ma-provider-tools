@@ -153,3 +153,23 @@ def test_manifest_requirements_pinning(run_check, requirements, ok):
     assert (res.returncode == 0) is ok, res.stdout
     if not ok:
         assert ": MA006 " in res.stdout
+
+
+def test_allow_on_comment_line_above_passes(run_check):
+    src = (
+        "import aiohttp\n"
+        "async def f():\n"
+        "    # ma-allow: MA001 standalone fallback without a mass instance\n"
+        "    s = aiohttp.ClientSession()\n"
+    )
+    assert run_check(_code(src)).returncode == 0
+
+
+def test_allow_above_only_counts_for_comment_only_lines(run_check):
+    src = (
+        "import aiohttp\n"
+        "async def f():\n"
+        "    x = 1  # ma-allow: MA001 belongs to another statement\n"
+        "    s = aiohttp.ClientSession()\n"
+    )
+    assert run_check(_code(src)).returncode == 1
