@@ -55,3 +55,15 @@ def test_no_expected_script_is_skipped(tmp_path, monkeypatch):
     _base_fixture(tmp_path)
     monkeypatch.chdir(tmp_path)
     assert ccs.main() == 0
+
+
+def test_upstream_rules_script_drift_fails(tmp_path, monkeypatch, capsys):
+    _base_fixture(tmp_path)
+    exp = tmp_path / "_expected/scripts/check_upstream_rules.py"
+    exp.parent.mkdir(parents=True)
+    exp.write_text("TEMPLATE VERSION\n")
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts/check_upstream_rules.py").write_text("LOCAL EDIT\n")
+    monkeypatch.chdir(tmp_path)
+    assert ccs.main() == 1
+    assert "check_upstream_rules" in capsys.readouterr().err

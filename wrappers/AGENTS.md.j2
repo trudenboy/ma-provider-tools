@@ -1,15 +1,33 @@
-<!-- ma-provider-tools: rendered from wrappers/CLAUDE.md.j2 -->
-# CLAUDE.md
+<!-- ma-provider-tools: rendered from wrappers/AGENTS.md.j2 -->
+# AGENTS.md
 
-This file aligns development of the **{{ display_name }}** provider with the
-upstream [`music-assistant/server`](https://github.com/music-assistant/server)
-standards. It is rendered from `wrappers/CLAUDE.md.j2` in
+The guide for every AI agent working on the **{{ display_name }}** provider
+(Claude Code, Codex, Cursor, Gemini, Copilot and others). It aligns this repo
+with the upstream [`music-assistant/server`](https://github.com/music-assistant/server)
+standards. `CLAUDE.md` is a symlink to this file, as it is upstream. The file
+is rendered from `wrappers/AGENTS.md.j2` in
 [`trudenboy/ma-provider-tools`](https://github.com/trudenboy/ma-provider-tools)
-and is kept in sync across every provider repo — **do not edit it here**.
+and is kept in sync across every provider repo, so **do not edit it here**.
 
-Provider-specific architecture, key flows, and gotchas live in
-[`CLAUDE.local.md`](./CLAUDE.local.md). Claude Code automatically picks up both
-files when working in this repository.
+Provider-specific architecture, key flows and gotchas live in
+[`CLAUDE.local.md`](./CLAUDE.local.md). Claude Code loads that file
+automatically. **Every other agent must read it before changing code.**
+
+## Where the Rules Come From
+
+| Source | Read it |
+|---|---|
+| This file | always: ecosystem rules plus the upstream MUST list and upstream's own agent guide (at the end) |
+| [`CLAUDE.local.md`](./CLAUDE.local.md) | always: this provider's architecture |
+| [`.github/instructions/music-assistant-standards.instructions.md`](./.github/instructions/music-assistant-standards.instructions.md) | before writing or reviewing non-trivial provider code: about 60 upstream review precedents, each citing the PR that set it |
+| [`.github/instructions/music-assistant-cross-repo.instructions.md`](./.github/instructions/music-assistant-cross-repo.instructions.md) | when a change touches API commands, shared models or `API_SCHEMA_VERSION` |
+| [`.claude/skills/ma-upstream-standards/`](./.claude/skills/ma-upstream-standards/SKILL.md) | on demand: upstream `DEVELOPMENT.md`, Usage Policy, AI Policy and the controller architecture READMEs (players, queues, streams, cache, …) |
+| [`.claude/skills/ma-review-pr/`](./.claude/skills/ma-review-pr/SKILL.md) | when reviewing a PR |
+| [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) | review standards used by Copilot |
+
+Everything under `.github/instructions/` and `.claude/skills/` is mirrored
+verbatim from upstream by `ma-provider-tools` (weekly sync). Do not edit it
+here.
 
 ## AI Policy Alignment
 
@@ -56,6 +74,94 @@ Operational rules for AI assistants working in this repo:
    collected from the synced commit range and appended to the sync commit,
    so contributor credit survives the squash into upstream.
 
+## Upstream vs Ecosystem Conventions
+
+Upstream text below (and in the mirrored files) is written for the
+`music-assistant/server` repo. Inside this provider repo, read it through
+this mapping. Where the two conflict, this section wins **here**. Upstream's
+rules still govern anything that lands upstream.
+
+| Upstream says | In this repo |
+|---|---|
+| `music_assistant/providers/{{ domain }}/` | `{{ provider_path }}` |
+| `tests/providers/{{ domain }}/` | `tests/` |
+| `scripts/setup.sh`, `pytest`, `pre-commit` from the server root | the commands under *Development Commands* |
+| PR titles carry no Conventional Commit prefix | **commits and provider-repo PR titles use Conventional Commits** (`feat:` drives *Feature Specification Discipline*). Upstream PR titles have no prefix, and `upstream-pr.yml` generates them that way |
+| PR bodies follow the upstream template only | provider-repo PRs follow `.github/PULL_REQUEST_TEMPLATE.md`. Only upstream PR bodies follow *Upstream PR Body Format* and `music-assistant-pr-description.instructions.md` |
+| never reply on GitHub without consent | same in `music-assistant/*` (AI Policy rule 2). In this repo, Copilot threads may get AI-drafted replies (rule 4) |
+| PRs target `dev`; backport labels | PRs target `{{ default_branch }}`. Releases and the upstream sync are automated (see *Pull Request Workflow*) |
+| check `music_assistant/helpers/` first | same: the helpers come from the installed `music-assistant` package, so import them rather than vendoring copies |
+
+## Upstream Engineering Rules (MUST)
+
+The condensed hard rules from upstream `AGENTS.md`, `DEVELOPMENT.md`, the
+[Usage Policy](https://github.com/music-assistant/.github/blob/main/USAGE_POLICY.md)
+and the mined review precedents. A deviation is at least a `[PROBLEM]` in
+upstream review. The full text, with the PR that set each rule, is in
+`.github/instructions/music-assistant-standards.instructions.md`.
+
+**Usage policy.** Breaking any of these gets an upstream PR closed, however
+useful the change is otherwise.
+- Authenticate as the user and fetch audio the way an ordinary client does.
+  Never bypass a subscription tier, regional availability, ads, DRM or
+  authentication.
+- Keep the service's audio URL inside the server: return it only in
+  `StreamDetails`, never on a media item, API result or route.
+- Never write decoded provider audio to disk, and never add download, export
+  or archive features.
+- Put a `Throttler` / `ThrottlerManager` in front of the service API, cache
+  repeated lookups with `@use_cache` (per-method TTL) and back off on 429.
+  Override `max_concurrent_streams` when the service limits concurrent streams.
+
+**Architecture.**
+- Reuse `self.mass.http_session`. Never create a `ClientSession`
+  (gate `MA001`).
+- Providers are isolated: never touch the database (`MA005`), another
+  controller's or the queue's state, or settings directly. Go through the
+  controller API, a feature flag or a config entry.
+- No N+1 API or DB calls in a listing loop. Listings return compact
+  `ItemMapping`s; only get-item endpoints return full objects.
+- Parsers are synchronous and IO-free (raw provider data in, MA models out).
+- Do auth and setup in `handle_async_init`, not `__init__`.
+- Stay event-driven: fix a missing event rather than poll. Use
+  `mass.call_later` (with a `task_id` to debounce) and the player
+  controller's wait helpers, not sleep loops.
+- `StreamDetails` codec, sample rate and bit depth must be accurate. Use
+  `ContentType.UNKNOWN` rather than guess.
+- Library identity: `item.provider == "library"` means `item_id` is the DB
+  id. Never treat `mapping.item_id` as a library id; resolve it.
+- A change to the serialized shape of an API model belongs in
+  `music-assistant/models`, not in provider code.
+- Prefer sane defaults over config options, and hide technical options under
+  `category="advanced"`.
+
+**Code quality.**
+- Catch specific exceptions. Never swallow errors silently (`MA002`). Raise
+  MA's typed exceptions (`MediaNotFoundError`, `LoginFailed`,
+  `ProviderUnavailableError`, …) with `raise … from err`, and never return
+  `None` to signal failure.
+- Use `%s` logger arguments, never pre-formatted messages (`MA003`). Never
+  log credentials. Mask secure config values.
+- Keep a reference to every background task, cancel it on unload, and run
+  teardown in `finally` (`MA004`). `self.mass.create_task` tracks tasks for
+  you.
+- Pin provider requirements exactly in `manifest.json` (`MA006`).
+- Never hardcode a limit a real user can exceed. Never depend on set
+  ordering.
+- Validate user-supplied filesystem paths with `helpers/security.py`
+  `is_safe_path`.
+
+**Data and process.**
+- Config entries and stored rows are live user data. When a change alters
+  stored data, **ask the developer how to migrate before calling the work
+  done**. A migration is idempotent, survives half-written values and never
+  raises.
+- Fix the root cause in the owning layer. Choose the simplest solution;
+  keep PRs small and single-purpose.
+- New provider structure follows upstream's `_demo_*_provider` templates:
+  `__init__.py`, `constants.py`, `helpers.py`, `provider.py` for large
+  providers.
+
 ## Development Commands
 
 - `./scripts/setup.sh` — initial setup (venv via `uv`, dependencies, pre-commit hooks). Re-run after pulling latest code.
@@ -81,35 +187,24 @@ AGENTS.md rule, enforced locally by the `check-method-order` pre-commit hook
 edit). Violations that only surface at the upstream PR are exactly what this
 hook exists to prevent.
 
-### Comments
+### Comments and Docstrings
 
-Only use comments to explain complex, multi-line blocks of code. Do not comment
-obvious operations.
+Follow upstream's *Code Style* (see *Upstream Agent Guide* below): comment
+only complex blocks, keep existing author comments, and write caller-facing
+Sphinx docstrings (`:param:`), with the summary on the line after the opening
+`"""`. AI assistants tend to generate Google-style (`Args:`) by default, so
+rewrite anything that slips through.
 
-### Docstring Format
+### Upstream Rule Gate
 
-Use Sphinx-style docstrings with `:param:` syntax. For simple functions, a
-single-line docstring is fine.
-
-Don't explain inner workings of the code in the docstrings (you can use inline
-comments for that if/when needed). The docstring should provide clarity to the
-**caller** of the function/method, not explain how it works
-technically/internally.
-
-```python
-def my_function(param1: str, param2: int, param3: bool = False) -> str:
-    """
-    Brief one-line description of the function.
-
-    :param param1: Description of what param1 is used for.
-    :param param2: Description of what param2 is used for.
-    :param param3: Description of what param3 is used for.
-    """
-```
-
-Do **not** use Google-style (`Args:`) or bullet-style (`- param:`) docstrings.
-AI assistants tend to generate Google-style by default — explicitly steer them
-to Sphinx, and rewrite anything that slips through.
+`scripts/check_upstream_rules.py` (pre-commit hook `check-upstream-rules`,
+distributed from ma-provider-tools; do not edit) **blocks** the upstream
+review rules that no linter enforces: `MA001` new `ClientSession`, `MA002`
+silently swallowed broad `except`, `MA003` pre-formatted log message, `MA004`
+discarded task, `MA005` database access, `MA006` unpinned manifest
+requirement. Fix the code. When an exception is genuinely deliberate, add
+`# ma-allow: MA00X <reason>` on the reported line; the reason is mandatory
+and reviewers check it.
 
 ## Branching and PRs
 
@@ -347,12 +442,11 @@ relax the rule.
   matching `VERSION` bump is applied by the maintainer (see *Pull Request
   Workflow* step 3).
 
-## Debugging
+## Upstream Agent Guide (verbatim)
 
-Music Assistant stores its data in `$HOME/.musicassistant/`. When debugging
-locally:
+Upstream `music-assistant/server` `AGENTS.md`, mirrored verbatim (headings
+shifted down one level). It covers behaviour, the Usage Policy, code style,
+migrations, debugging (logs and the read-only `library.db`) and provider
+mappings. Read it through *Upstream vs Ecosystem Conventions* above.
 
-- **Logs:** `$HOME/.musicassistant/musicassistant.log` (current),
-  `musicassistant.log.1`, `.log.2`, etc. for older rotated logs.
-- **Database:** `$HOME/.musicassistant/library.db` — query via `sqlite3`.
-  **Only execute SELECT queries** — never write to a live database.
+{{ upstream_file('server/AGENTS.md') | strip_title | demote_headings | trim }}

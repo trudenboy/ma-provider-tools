@@ -1,4 +1,4 @@
-name: Sync upstream lint/mypy config
+name: Sync upstream lint/mypy config and agent guidance
 
 on:
   schedule:
@@ -23,10 +23,18 @@ jobs:
       - name: Run sync
         run: python3 scripts/sync_upstream_config.py
 
+      # Mirror upstream AGENTS.md / Copilot instructions / review skill /
+      # DEVELOPMENT.md / controller READMEs / org policies into
+      # upstream-guidance/ (lock.json pins source SHAs + sha256).
+      - name: Run guidance sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/sync_upstream_guidance.py
+
       - name: Detect changes
         id: diff
         run: |
-          if git diff --quiet; then
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard upstream-guidance)" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -42,7 +50,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add wrappers/ruff.toml.j2 wrappers/pyproject.toml.j2
-          git commit -m "chore(wrappers): sync ruff/mypy/codespell from upstream music-assistant/server"
+          git add -A upstream-guidance
+          git commit -m "chore(wrappers): sync lint config and agent guidance from upstream music-assistant/server"
           git push --set-upstream origin "$BRANCH"
 
           # If a PR for this branch already exists (re-run on the same day), skip create.
@@ -53,7 +62,11 @@ jobs:
 
           PR_BODY=$(cat <<'BODY'
           Automated weekly sync from `music-assistant/server/pyproject.toml`
-          (`[tool.ruff]`, `[tool.mypy]`, and `[tool.codespell].skip`).
+          (`[tool.ruff]`, `[tool.mypy]`, and `[tool.codespell].skip`), plus the
+          upstream agent guidance mirror in `upstream-guidance/` (AGENTS.md,
+          Copilot instructions, review skill, DEVELOPMENT.md, controller READMEs,
+          org AI/Usage policies). Review the guidance diff: after merge,
+          `distribute.yml` ships it to every provider repo.
 
           Provider-specific values are preserved:
           - `python_version`
@@ -62,11 +75,12 @@ jobs:
           - `codespell.ignore-words-list`
           - provider-only `codespell.skip` patterns
 
-          Run locally with `python3 scripts/sync_upstream_config.py` to reproduce.
+          Run locally with `python3 scripts/sync_upstream_config.py` and
+          `python3 scripts/sync_upstream_guidance.py` to reproduce.
           BODY
           )
           gh pr create \
-            --title "chore(wrappers): sync ruff/mypy/codespell from upstream MA" \
+            --title "chore(wrappers): sync lint config and agent guidance from upstream MA" \
             --body "$PR_BODY" \
             --base main \
             --head "$BRANCH" \

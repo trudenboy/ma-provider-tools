@@ -19,6 +19,10 @@ Changes to `wrappers/*.j2` or `providers.yml` trigger `distribute.yml`, which au
 | `scripts/distribute.py` | Renders Jinja2 templates and creates PRs in provider repos |
 | `wrappers/*.j2` | Templates rendered once per provider; use `{% raw %}...{% endraw %}` around GitHub Actions expression syntax (`${{ }}`) to prevent Jinja2 from interpreting it |
 | `.github/workflows/reusable-*.yml` | Shared logic called by provider repos via `workflow_call` |
+| `upstream-guidance/` + `lock.json` | Byte-for-byte mirror of upstream agent guidance (server `AGENTS.md`, Copilot instructions, `review-pr` skill, `DEVELOPMENT.md`, controller READMEs; org AI/Usage policies, CONTRIBUTING), pinned by source SHA + sha256. Refreshed weekly by `scripts/sync_upstream_guidance.py` (`sync-upstream-config.yml`); never edit by hand, never let whitespace fixers touch it (excluded in `.pre-commit-config.yaml`) |
+| `wrappers/AGENTS.md.j2` | The agent guide for every provider (`CLAUDE.md` there is a symlink to `AGENTS.md`, see `SYMLINKS` in `distribute.py`): ecosystem rules, upstream-vs-ecosystem conventions, the upstream MUST list, upstream `AGENTS.md` verbatim |
+| `scripts/_wrapper_env.py` | The one Jinja2 env for `distribute.py` / `render_for_provider.py` / `validate_templates.py`: `upstream_file()` global plus `demote_headings` / `strip_title` / `strip_frontmatter` / `frontmatter` filters |
+| `wrappers/scripts/check_upstream_rules.py.j2` | Blocking pre-commit gate for upstream review rules no linter enforces (`MA001`–`MA006`; `# ma-allow: MAxxx <reason>` escape), pinned by `check_config_sync.py`. Design: `docs/superpowers/specs/2026-10-27-upstream-agent-guidance-design.md` |
 | `wrappers/scripts/check_method_order.py.j2` | Vendored mirror of upstream's method-order rule (private methods last), distributed into each provider's pre-commit gate and pinned by `check_config_sync.py` (issue #115) |
 | `.github/workflows/distribute.yml` | Runs `distribute.py` on push to `main` when wrappers or registry changes |
 | `scripts/reverse_sync_*.py`, `scripts/check_upstream_ahead.py`, `scripts/_transform.py` | Reverse-sync channel (see "Reverse-sync Channel" below) |
@@ -255,7 +259,7 @@ Use this when a provider already has a custom version of a file, or when a templ
 
 ## Template Validation
 
-`python3 scripts/validate_templates.py` — checks all top-level `wrappers/*.j2` for syntax errors, missing trailing newline, and double trailing newlines. **Does not check `wrappers/docs/*.j2` subdirectory templates.** Must be updated when new context variables are added.
+`python3 scripts/validate_templates.py` — renders every `wrappers/**/*.j2` and checks syntax errors, missing trailing newline, and double trailing newlines. Must be updated when new context variables are added. A template that ends by embedding an upstream file uses `{{ upstream_file(...) | trim }}` followed by the file's own newline, so the EOF fixer can't create a double newline.
 
 **Distribute runs immediately after merge** — `distribute.yml` triggers within seconds of a push to `main`. CI failures in provider repos appear almost immediately. Test templates locally before merging:
 
@@ -264,9 +268,9 @@ python3 scripts/validate_templates.py
 
 # Render a specific template without GitHub auth:
 python3 - <<'EOF'
-from pathlib import Path; import yaml
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
-env = Environment(loader=FileSystemLoader('wrappers'), undefined=StrictUndefined, keep_trailing_newline=True)
+import sys; from pathlib import Path; import yaml
+sys.path.insert(0, 'scripts'); from _wrapper_env import make_env
+env = make_env()  # provides upstream_file() + Markdown filters used by AGENTS.md.j2
 registry = yaml.safe_load(Path('providers.yml').read_text())
 provider = next(p for p in registry['providers'] if p['domain'] == 'kion_music')
 ctx = {k: provider.get(k, '') for k in ['domain','display_name','manifest_path','provider_path','provider_type','locale','codespell_ignore_words']}

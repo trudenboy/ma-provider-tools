@@ -567,7 +567,12 @@ providers:
       - sync-kion-from-yandex.yml.j2
       - LICENSE.j2
       - docs/configuration.md.j2
-      - CLAUDE.md.j2
+      - AGENTS.md.j2
+      - .github/copilot-instructions.md.j2
+      - .github/instructions/music-assistant-pr-description.instructions.md.j2
+      - .claude/skills/ma-review-pr/SKILL.md.j2
+      - .claude/skills/ma-upstream-standards/SKILL.md.j2
+      - scripts/check_upstream_rules.py.j2
       - check-config-sync.yml.j2
       - check-feature-consistency.yml.j2
       - feature-spec.md.j2

@@ -56,9 +56,9 @@ def test_msx_codeowners_protects_root_version_file(tmp_path: Path) -> None:
 
 
 def test_msx_agent_guide_uses_root_tests_directory(tmp_path: Path) -> None:
-    result = _run("msx_bridge", tmp_path, "CLAUDE.md.j2")
+    result = _run("msx_bridge", tmp_path, "AGENTS.md.j2")
     assert result.returncode == 0, result.stderr
-    guide = (tmp_path / "CLAUDE.md").read_text()
+    guide = (tmp_path / "AGENTS.md").read_text()
 
     assert "uv run pytest tests/<file>.py" in guide
     assert "provider/tests/" not in guide
