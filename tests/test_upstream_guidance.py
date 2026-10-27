@@ -347,3 +347,31 @@ def test_pre_commit_skips_upstream_guidance_only(rendered):
         "README.md",
     ):
         assert not pattern.match(path), path
+
+
+@pytest.mark.parametrize(
+    "plant",
+    [
+        lambda c, out: (c / "CLAUDE.local.md").symlink_to(out / "victim"),
+        lambda c, out: (c / ".github").symlink_to(out, target_is_directory=True),
+    ],
+)
+def test_migration_refuses_symlinks_out_of_the_clone(clone, rendered, tmp_path, plant):
+    outside = tmp_path.parent / f"{tmp_path.name}-outside"
+    outside.mkdir()
+    (outside / "victim").write_text("untouched\n")
+    plant(clone, outside)
+    (clone / "AGENTS.md").write_text("# hand-written\n")
+    with pytest.raises(RuntimeError, match="symlink"):
+        distribute.migrate_agent_guides(str(clone), rendered)
+    assert (outside / "victim").read_text() == "untouched\n"
+    assert sorted(p.name for p in outside.iterdir()) == ["victim"]
+
+
+def test_safe_path_rejects_escapes_and_symlinked_parents(clone, tmp_path):
+    (clone / ".claude").symlink_to(tmp_path, target_is_directory=True)
+    for rel in ("../x", "/etc/passwd", ".git/config", ".claude/skills/a/SKILL.md"):
+        with pytest.raises(RuntimeError):
+            distribute.safe_path(str(clone), rel)
+    (clone / "CLAUDE.md").symlink_to("AGENTS.md")
+    assert distribute.safe_path(str(clone), "CLAUDE.md", allow_final_symlink=True)

@@ -213,6 +213,37 @@ def run(
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
 
 
+def safe_path(tmpdir: str, rel: str, *, allow_final_symlink: bool = False) -> Path:
+    """
+    Return ``tmpdir/rel``, refusing any path a provider repo could redirect.
+
+    The clone's content is controlled by the provider repo, while distribute
+    runs with a token that can write to every provider. A committed symlink
+    (``CLAUDE.local.md`` or a ``.claude`` / ``.github`` directory pointing
+    outside the clone) would otherwise turn our writes into writes anywhere on
+    the runner.
+
+    :param tmpdir: The provider clone.
+    :param rel: Repo-relative path.
+    :param allow_final_symlink: Accept a symlink as the last component (the
+        caller replaces it rather than writing through it).
+    """
+    root = Path(tmpdir)
+    target = root / rel
+    parts = Path(rel).parts
+    if Path(rel).is_absolute() or ".." in parts or (parts and parts[0] == ".git"):
+        raise RuntimeError(f"refusing unsafe path {rel!r}")
+    current = root
+    for index, part in enumerate(parts):
+        current = current / part
+        last = index == len(parts) - 1
+        if current.is_symlink() and not (last and allow_final_symlink):
+            raise RuntimeError(
+                f"refusing to follow symlink {current.relative_to(root)}"
+            )
+    return target
+
+
 def vendored_files() -> dict[str, str]:
     """Return ``{destination path: mirror key}`` for the verbatim upstream files."""
     result: dict[str, str] = {}
@@ -263,7 +294,7 @@ def _apply_readme_header(
     """
     if provider.get("provider_type") == "server_fork":
         return False
-    readme = Path(tmpdir) / "README.md"
+    readme = safe_path(tmpdir, "README.md")
     if not readme.is_file():
         print(
             f"  Warning: README.md missing in {provider['domain']}; skipping header injection"
@@ -386,8 +417,7 @@ def migrate_agent_guides(tmpdir: str, rendered: dict[str, str]) -> bool:
 
     :return: True when a file was migrated and staged.
     """
-    root = Path(tmpdir)
-    local_claude = root / "CLAUDE.local.md"
+    local_claude = safe_path(tmpdir, "CLAUDE.local.md")
     changed = False
 
     def hand_written(path: Path) -> str | None:
@@ -402,7 +432,7 @@ def migrate_agent_guides(tmpdir: str, rendered: dict[str, str]) -> bool:
         return content
 
     if "AGENTS.md" in rendered:
-        claude = hand_written(root / "CLAUDE.md")
+        claude = hand_written(safe_path(tmpdir, "CLAUDE.md", allow_final_symlink=True))
         if claude is not None and not local_claude.exists():
             local_claude.write_text(claude)
             run(["git", "add", "CLAUDE.local.md"], cwd=tmpdir)
@@ -411,13 +441,17 @@ def migrate_agent_guides(tmpdir: str, rendered: dict[str, str]) -> bool:
         elif claude is not None:
             changed |= _append_section(local_claude, "CLAUDE.md", claude, tmpdir)
 
-        agents = hand_written(root / "AGENTS.md")
+        agents = hand_written(safe_path(tmpdir, "AGENTS.md", allow_final_symlink=True))
         if agents is not None:
             changed |= _append_section(local_claude, "AGENTS.md", agents, tmpdir)
 
     if ".github/copilot-instructions.md" in rendered:
-        copilot = hand_written(root / ".github/copilot-instructions.md")
-        target = root / PROVIDER_COPILOT_INSTRUCTIONS
+        copilot = hand_written(
+            safe_path(
+                tmpdir, ".github/copilot-instructions.md", allow_final_symlink=True
+            )
+        )
+        target = safe_path(tmpdir, PROVIDER_COPILOT_INSTRUCTIONS)
         if copilot is not None and not target.exists():
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text('---\napplyTo: "**"\n---\n\n' + copilot.lstrip("\n"))
@@ -457,7 +491,7 @@ def prune_vendored(tmpdir: str, rendered: dict[str, str]) -> bool:
 
     :return: True when a file was removed and staged.
     """
-    directory = Path(tmpdir) / UPSTREAM_STANDARDS_REFS / "controllers"
+    directory = safe_path(tmpdir, f"{UPSTREAM_STANDARDS_REFS}/controllers")
     if not directory.is_dir() or "AGENTS.md" not in rendered:
         return False
     changed = False
@@ -480,7 +514,7 @@ def apply_symlinks(tmpdir: str, rendered: dict[str, str]) -> bool:
     for link_path, target in SYMLINKS.items():
         if target not in rendered:
             continue
-        link = Path(tmpdir) / link_path
+        link = safe_path(tmpdir, link_path, allow_final_symlink=True)
         if link.is_symlink() and os.readlink(link) == target:
             print(f"  Unchanged: {link_path} -> {target}")
             continue
@@ -564,7 +598,7 @@ def create_pr_for_provider(
 
         # Write rendered wrapper files
         for dest_path, content in rendered.items():
-            dest = Path(tmpdir) / dest_path
+            dest = safe_path(tmpdir, dest_path, allow_final_symlink=True)
             dest.parent.mkdir(parents=True, exist_ok=True)
             existing = (
                 dest.read_text() if dest.is_file() and not dest.is_symlink() else None
@@ -726,6 +760,9 @@ def main() -> None:
             create_pr_for_provider(provider, providers, dry_run=dry_run)
         except subprocess.CalledProcessError as e:
             print(f"ERROR processing {provider['repo']}: {e.stderr}", file=sys.stderr)
+            errors.append(provider["repo"])
+        except RuntimeError as e:
+            print(f"ERROR processing {provider['repo']}: {e}", file=sys.stderr)
             errors.append(provider["repo"])
 
     if errors:
