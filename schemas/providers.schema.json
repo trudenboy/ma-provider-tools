@@ -88,6 +88,10 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
+        "test_needs_ffmpeg": {
+          "type": "boolean",
+          "description": "Whether the provider's tests need ffmpeg. Omit to let reusable-test.yml decide by provider type; false skips the install."
+        },
         "ma_source_overlay": {
           "type": "boolean",
           "description": "Mount a neighbouring MA checkout and provider tests in the Docker dev environment."

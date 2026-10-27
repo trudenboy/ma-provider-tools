@@ -50,6 +50,7 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: music_provider  # or player_provider or plugin_provider
+    test_needs_ffmpeg: false     # optional: skip ffmpeg in tests (default: decided by provider_type)
     legacy_files:                # optional: files to delete during distribution
       - .github/workflows/old.yml
 ```

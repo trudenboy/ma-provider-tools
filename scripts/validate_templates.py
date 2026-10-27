@@ -48,6 +48,7 @@ def main() -> int:
         "features": base.get("features", []),
         "codespell_ignore_words": base.get("codespell_ignore_words", ""),
         "python_version": base.get("python_version", "3.12"),
+        "test_needs_ffmpeg": base.get("test_needs_ffmpeg"),
         "ma_source_overlay": base.get("ma_source_overlay", False),
         "upstream_guard_baseline": base.get("upstream_guard_baseline", ""),
         "upstream_exclude_version": base.get("upstream_exclude_version", False),

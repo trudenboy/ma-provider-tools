@@ -255,6 +255,8 @@ providers:
     manifest_path: provider/manifest.json
     provider_path: provider/
     provider_type: player_provider
+    # The tests never run ffmpeg; skipping it keeps CI off the apt mirror.
+    test_needs_ffmpeg: false
     locale: ru
     python_version: "3.14"
     runtime_dependencies:
