@@ -22,10 +22,10 @@ description: {% if locale == 'ru' %}Документация провайдер�
 {% endif %}
 
 {% if locale == 'ru' %}
-Music Assistant поддерживает [{{ display_name }}]({{ service_url }}) — {% if provider_type == 'music_provider' %}музыкальный стриминговый сервис{% else %}плеер{% endif %}.
+Music Assistant поддерживает [{{ display_name }}]({{ service_url }}) — {% if provider_type == 'music_provider' %}музыкальный стриминговый сервис{% elif provider_type == 'plugin_provider' %}плагин-провайдер{% else %}плеер{% endif %}.
 Провайдер создан и поддерживается [TrudenBoy](https://github.com/TrudenBoy).
 {% else %}
-Music Assistant supports [{{ display_name }}]({{ service_url }}) {% if provider_type == 'music_provider' %}music streaming service{% else %}player{% endif %}.
+Music Assistant supports [{{ display_name }}]({{ service_url }}) {% if provider_type == 'music_provider' %}music streaming service{% elif provider_type == 'plugin_provider' %}plugin provider{% else %}player{% endif %}.
 Provider created and maintained by [TrudenBoy](https://github.com/TrudenBoy).
 {% endif %}
 
