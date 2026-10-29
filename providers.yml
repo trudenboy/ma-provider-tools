@@ -462,10 +462,15 @@ providers:
       - sync-from-upstream.yml.j2
       - rebuild-integration.yml.j2
       - sync-kion-from-yandex.yml.j2
-      # The generic OAuth/account known-issues and connection-parameter pages do
-      # not apply to a local UPnP renderer; this provider maintains real pages.
+      # Generic OAuth/account, Codecov and dev-server pages do not apply to a
+      # local UPnP renderer; this provider maintains these pages itself.
       - docs/known-issues.md.j2
       - docs/configuration.md.j2
+      - docs/dev-docker.md.j2
+      - docs/development.md.j2
+      - docs/index.md.j2
+      - docs/promotion.md.j2
+      - docs/testing.md.j2
 
 
   - domain: fastmcp_server
