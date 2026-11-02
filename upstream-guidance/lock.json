@@ -16,11 +16,11 @@
     "server/music_assistant/controllers/discovery/README.md": "14b3cc7b169207f375bf6b3f11ec94810bf479e79e5895f76d3647c6b7adf179",
     "server/music_assistant/controllers/metadata/README.md": "c5788a525a84bb1b9ed10199d8c0f7eda1b1505e56045db5637623db2778120a",
     "server/music_assistant/controllers/music/README.md": "ec5b273fb41614105363622a9809bc460cdf72f186ad5d9539bb3b474bfea7a8",
-    "server/music_assistant/controllers/player_queues/README.md": "debf09024219b2a005968f963285899951432c87dd9212231056ac12f2feaad2",
+    "server/music_assistant/controllers/player_queues/README.md": "e1841b1791be6f8c363c06293ef078fd1c49d5e6eb5f8a95d638bc4fedc53d59",
     "server/music_assistant/controllers/players/README.md": "ce9cefe93a2366d2ac18a70f7c4d97e6956043131ab9882040a4a29fdc76736a",
     "server/music_assistant/controllers/streams/README.md": "7bafe644d33711ed24c50bcde4fabbae5c5a77b1feafd62ff93924cbbf660a25",
     "server/music_assistant/controllers/tasks/README.md": "c76c00fa89b367a19026fc6be77f13fd96b7b7020d33966f1b8cbbe6715f5b7b",
-    "server/music_assistant/controllers/webserver/README.md": "94cfff329c93d4e7df39a0e26be054baba89a6147301ef437d23974cf4c35640"
+    "server/music_assistant/controllers/webserver/README.md": "b946ce9f65149da664032e3d5717334e4255376271f4c6ead0db07bec70a62ab"
   },
   "sources": {
     "org": {
@@ -31,7 +31,7 @@
     "server": {
       "ref": "dev",
       "repo": "music-assistant/server",
-      "sha": "291ddf9198ff21217f88b82b13ff9b6c984342eb"
+      "sha": "d962105316011151fb822144e584f2ee069d9e5d"
     }
   }
 }
