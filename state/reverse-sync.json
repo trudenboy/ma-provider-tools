@@ -2654,10 +2654,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -5314,10 +5316,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "337e7cfffd5e3844f91943a1886d864ec54ee46a",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -8545,10 +8549,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -11205,10 +11211,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -13865,10 +13873,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -16525,10 +16535,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -18729,10 +18741,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -21389,10 +21403,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -24049,10 +24065,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -26709,10 +26727,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -29369,10 +29389,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -32029,10 +32051,12 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -34689,9 +34713,11 @@
       7414,
       7417,
       7338,
-      7418
+      7418,
+      7424,
+      7409
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-07T01:27:55Z"
+    "pulls_cursor": "2026-11-07T03:29:52Z"
   }
 }
