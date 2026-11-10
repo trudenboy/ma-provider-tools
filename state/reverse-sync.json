@@ -2725,10 +2725,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -5456,10 +5457,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "3771dc7aa345d44cf01258f6527c9df2294ce9f9",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -8758,10 +8760,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -11489,10 +11492,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -14220,10 +14224,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -16951,10 +16956,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -19226,10 +19232,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -21957,10 +21964,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -24688,10 +24696,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -27419,10 +27428,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -30150,10 +30160,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -32881,10 +32892,11 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -35612,9 +35624,10 @@
       7493,
       7447,
       7492,
-      7476
+      7476,
+      7496
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-10T03:40:15Z"
+    "pulls_cursor": "2026-11-10T07:59:56Z"
   }
 }
