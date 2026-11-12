@@ -2779,10 +2779,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -5564,10 +5567,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "3771dc7aa345d44cf01258f6527c9df2294ce9f9",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "filesystem_yandex_disk": {
     "digest_issue": null,
@@ -8920,10 +8926,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -11705,10 +11714,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -14490,10 +14502,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -17275,10 +17290,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -19604,10 +19622,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -22389,10 +22410,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -25174,10 +25198,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -27959,10 +27986,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -30744,10 +30774,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -33529,10 +33562,13 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -36314,9 +36350,12 @@
       7507,
       7553,
       7554,
-      7555
+      7555,
+      7572,
+      7564,
+      7567
     ],
     "last_synced_sha": "478ca9356914e01154366697a888dc13465417e3",
-    "pulls_cursor": "2026-11-12T17:43:33Z"
+    "pulls_cursor": "2026-11-12T21:58:12Z"
   }
 }
