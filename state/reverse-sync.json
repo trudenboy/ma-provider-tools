@@ -2920,10 +2920,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -5845,7 +5850,12 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "56c91bfd438ac78e916c57ed6797e9ab201886e2",
     "pulls_cursor": "2026-11-15T00:19:01Z"
@@ -9342,10 +9352,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "44e320cd8b7b721eab020eaed5b259cf6380cecb",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -12268,10 +12283,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "ac7e116c41e4129c705858da4f4d1c1497969d9d",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -15194,10 +15214,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -18120,10 +18145,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "db2862ca17f6d2bc041afb31ba35f9251f073525",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -20590,10 +20620,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -23516,10 +23551,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -26442,10 +26482,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "ac7e116c41e4129c705858da4f4d1c1497969d9d",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -29368,10 +29413,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -32294,10 +32344,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -35220,10 +35275,15 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -38146,9 +38206,14 @@
       7676,
       7679,
       7766,
-      7763
+      7763,
+      7735,
+      7734,
+      7731,
+      7730,
+      7455
     ],
     "last_synced_sha": "44e320cd8b7b721eab020eaed5b259cf6380cecb",
-    "pulls_cursor": "2026-11-16T06:02:38Z"
+    "pulls_cursor": "2026-11-16T07:57:48Z"
   }
 }
