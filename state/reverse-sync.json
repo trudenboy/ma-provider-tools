@@ -2954,10 +2954,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -5913,7 +5916,10 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "56c91bfd438ac78e916c57ed6797e9ab201886e2",
     "pulls_cursor": "2026-11-15T00:19:01Z"
@@ -9444,10 +9450,14 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7797,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "44e320cd8b7b721eab020eaed5b259cf6380cecb",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T22:03:17Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -12404,10 +12414,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "ac7e116c41e4129c705858da4f4d1c1497969d9d",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -15364,10 +15377,14 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7797,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T22:03:16Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -18324,10 +18341,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "db2862ca17f6d2bc041afb31ba35f9251f073525",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -20828,10 +20848,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -23788,10 +23811,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -26748,10 +26774,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "ac7e116c41e4129c705858da4f4d1c1497969d9d",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -29708,10 +29737,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -32668,10 +32700,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -35628,10 +35663,13 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -38588,9 +38626,12 @@
       7732,
       7733,
       7761,
-      7795
+      7795,
+      7794,
+      7790,
+      7787
     ],
     "last_synced_sha": "44e320cd8b7b721eab020eaed5b259cf6380cecb",
-    "pulls_cursor": "2026-11-16T19:59:52Z"
+    "pulls_cursor": "2026-11-16T20:52:24Z"
   }
 }
