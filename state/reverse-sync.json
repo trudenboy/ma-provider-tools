@@ -3089,10 +3089,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -6183,7 +6187,11 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": "a08480e16226fa8f3944777d87b436a4a9d85ccd",
     "pulls_cursor": "2026-11-15T00:19:01Z"
@@ -9847,10 +9855,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": "44e320cd8b7b721eab020eaed5b259cf6380cecb",
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -12941,10 +12953,15 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929,
+      7924
     ],
     "last_synced_sha": "451ff4883141af652101160ae62672ed5d3a8028",
-    "pulls_cursor": "2026-11-19T07:46:07Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -16036,10 +16053,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -19130,10 +19151,15 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929,
+      7924
     ],
     "last_synced_sha": "db2862ca17f6d2bc041afb31ba35f9251f073525",
-    "pulls_cursor": "2026-11-19T07:46:07Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -21768,10 +21794,15 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929,
+      7924
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-19T07:46:07Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -24863,10 +24894,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -27957,10 +27992,15 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929,
+      7924
     ],
     "last_synced_sha": "451ff4883141af652101160ae62672ed5d3a8028",
-    "pulls_cursor": "2026-11-19T07:46:07Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -31052,10 +31092,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -34147,10 +34191,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -37242,10 +37290,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929
     ],
     "last_synced_sha": "451ff4883141af652101160ae62672ed5d3a8028",
-    "pulls_cursor": "2026-11-19T08:03:38Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -40336,9 +40388,14 @@
       7914,
       7849,
       7898,
-      7921
+      7921,
+      7952,
+      7933,
+      7852,
+      7929,
+      7924
     ],
     "last_synced_sha": "451ff4883141af652101160ae62672ed5d3a8028",
-    "pulls_cursor": "2026-11-19T07:46:07Z"
+    "pulls_cursor": "2026-11-19T09:17:19Z"
   }
 }
