@@ -11,11 +11,11 @@
     "server/.github/instructions/music-assistant-pr-description.instructions.md": "f651574acc1b76904d6eedce6d8111e1259308bf4ec01f2a7cc50d2ff194b6d4",
     "server/.github/instructions/music-assistant-standards.instructions.md": "bdc8a58d71369dc9c7f81cbe7433a02d903b919b3ed405c56042b0ea0f89c702",
     "server/AGENTS.md": "9a5eb949ffb29efd1b487250e94b94a0923b00c7c100025df08c4de5bc7328b0",
-    "server/DEVELOPMENT.md": "08d6a62bfb7fce9c0a44216d446a7a7cb5c9e3f89c46b1ef67068d718b636c0c",
+    "server/DEVELOPMENT.md": "7f604d3b2ded227d4be21f24279b606ad5f09f6d036cf0a086a32d08f43a257a",
     "server/music_assistant/controllers/cache/README.md": "a23b74f61cc242be7a08e7dd699b3fa5b9828091a1ce87a40188dc2def51590e",
     "server/music_assistant/controllers/discovery/README.md": "14b3cc7b169207f375bf6b3f11ec94810bf479e79e5895f76d3647c6b7adf179",
     "server/music_assistant/controllers/metadata/README.md": "c5788a525a84bb1b9ed10199d8c0f7eda1b1505e56045db5637623db2778120a",
-    "server/music_assistant/controllers/music/README.md": "ec5b273fb41614105363622a9809bc460cdf72f186ad5d9539bb3b474bfea7a8",
+    "server/music_assistant/controllers/music/README.md": "d676f6b622b0be47ce518347280dafb44b1293c0095518578d849bde168c5a58",
     "server/music_assistant/controllers/player_queues/README.md": "e1841b1791be6f8c363c06293ef078fd1c49d5e6eb5f8a95d638bc4fedc53d59",
     "server/music_assistant/controllers/players/README.md": "ce9cefe93a2366d2ac18a70f7c4d97e6956043131ab9882040a4a29fdc76736a",
     "server/music_assistant/controllers/streams/README.md": "7bafe644d33711ed24c50bcde4fabbae5c5a77b1feafd62ff93924cbbf660a25",
@@ -31,7 +31,7 @@
     "server": {
       "ref": "dev",
       "repo": "music-assistant/server",
-      "sha": "d962105316011151fb822144e584f2ee069d9e5d"
+      "sha": "66be6d494f1e0797132ed0f6bccbd4d9e00fe7a9"
     }
   }
 }
