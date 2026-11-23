@@ -42,7 +42,6 @@ ignore = [
   "CPY001",
   "LOG004",
   "FURB110",
-  "BLE001",
   "FBT001",
   "FBT002",
   "FBT003",
@@ -51,7 +50,6 @@ ignore = [
   "PTH118",
   "PTH120",
   "PTH123",
-  "G004",
   "S106",
   "SLF001",
   "SIM102",
@@ -90,3 +88,31 @@ known-first-party = ["music_assistant"]
 [lint.per-file-ignores]
 "tests/**" = ["S104", "S105"]
 "music_assistant/providers/_demo_*/**" = ["ERA001"]
+"music_assistant/providers/ai_radio/**" = ["BLE001"]
+"music_assistant/providers/ard_audiothek/**" = ["BLE001"]
+"music_assistant/providers/fastmcp_server/**" = ["BLE001"]
+"music_assistant/providers/filesystem_local/**" = ["BLE001"]
+"music_assistant/providers/hass/**" = ["BLE001"]
+"music_assistant/providers/hue_entertainment/**" = ["BLE001"]
+"music_assistant/providers/internet_archive/**" = ["BLE001"]
+"music_assistant/providers/kion_music/**" = ["BLE001"]
+"music_assistant/providers/milkdrop_visualizer/**" = ["BLE001"]
+"music_assistant/providers/music_quiz/**" = ["BLE001"]
+"music_assistant/providers/musicbrainz/**" = ["BLE001"]
+"music_assistant/providers/nicovideo/**" = ["BLE001"]
+"music_assistant/providers/openai_tts/**" = ["BLE001"]
+"music_assistant/providers/podcast_index/**" = ["BLE001"]
+"music_assistant/providers/profiler/**" = ["BLE001"]
+"music_assistant/providers/roku_media_assistant/**" = ["BLE001"]
+"music_assistant/providers/samsung_wam/**" = ["BLE001"]
+"music_assistant/providers/sonic_analysis/**" = ["BLE001"]
+"music_assistant/providers/sonic_similarity/**" = ["BLE001"]
+"music_assistant/providers/spotify/**" = ["BLE001"]
+"music_assistant/providers/spotify_connect/**" = ["BLE001"]
+"music_assistant/providers/yandex_music/**" = ["BLE001"]
+"music_assistant/providers/yandex_smarthome/**" = ["BLE001"]
+"music_assistant/providers/yandex_station/**" = ["BLE001"]
+"music_assistant/providers/zvuk_music/**" = ["BLE001"]
+"tests/core/test_diagnostics.py" = ["BLE001"]
+"tests/providers/msx_bridge/**" = ["BLE001"]
+"tests/providers/nicovideo/**" = ["BLE001"]
