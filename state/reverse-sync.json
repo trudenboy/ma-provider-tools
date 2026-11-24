@@ -3233,10 +3233,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "fastmcp_server": {
     "digest_issue": null,
@@ -6471,7 +6475,11 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "d7578ea6bd63878f28b33bc219cfc6d5ea5734e9",
     "pulls_cursor": "2026-11-15T00:19:01Z"
@@ -10279,10 +10287,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "44e320cd8b7b721eab020eaed5b259cf6380cecb",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "kion_music": {
     "digest_issue": null,
@@ -13518,10 +13530,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "ab5531a84f10718e641daa0b00580c025fbbd369",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "ma_server": {
     "digest_issue": null,
@@ -16757,10 +16773,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "msx_bridge": {
     "digest_issue": null,
@@ -19996,10 +20016,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "db2862ca17f6d2bc041afb31ba35f9251f073525",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "web_kiosk": {
     "digest_issue": null,
@@ -22779,10 +22803,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "yandex_alice": {
     "digest_issue": null,
@@ -26018,10 +26046,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": null,
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "yandex_music": {
     "digest_issue": null,
@@ -29257,10 +29289,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "f7f46ff0055a4f4545f6bfa5cc70308ed5094873",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "yandex_smarthome": {
     "digest_issue": null,
@@ -32496,10 +32532,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "f7f46ff0055a4f4545f6bfa5cc70308ed5094873",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "yandex_station": {
     "digest_issue": null,
@@ -35735,10 +35775,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "4bc52c058043a59d11b03a7b6abcb9e6d3a701f2",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "yandex_ynison": {
     "digest_issue": null,
@@ -38974,10 +39018,14 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "f7f46ff0055a4f4545f6bfa5cc70308ed5094873",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   },
   "zvuk_music": {
     "digest_issue": null,
@@ -42213,9 +42261,13 @@
       8108,
       8080,
       8101,
-      5753
+      5753,
+      8112,
+      8093,
+      8082,
+      8081
     ],
     "last_synced_sha": "ab5531a84f10718e641daa0b00580c025fbbd369",
-    "pulls_cursor": "2026-11-24T15:54:29Z"
+    "pulls_cursor": "2026-11-24T17:49:51Z"
   }
 }
