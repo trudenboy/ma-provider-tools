@@ -32942,10 +32942,11 @@
       8023,
       8141,
       8146,
-      8138
+      8138,
+      8105
     ],
     "last_synced_sha": "15dea9b72911a0bd27963b5ae1514f86cea296fd",
-    "pulls_cursor": "2026-11-25T15:14:19Z"
+    "pulls_cursor": "2026-11-25T15:24:49Z"
   },
   "yandex_station": {
     "digest_issue": null,
